@@ -1,0 +1,79 @@
+{
+  "name": "quizfesto-platform",
+  "description": "QuizeFesto is the online platform where you can participate on many quizzes created by our team and win excited prizes.",
+  "version": "3.0.0",
+  "private": true,
+  "keywords": [
+    "NextJS",
+    "ReactJS",
+    "JavaScript",
+    "Fullstack",
+    "Prisma ORM",
+    "PostgreSQL"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com:gandharthakar/quizfesto-new.git"
+  },
+  "author": "Gandhar Thakar",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/gandharthakar/quizfesto-new/issues"
+  },
+  "homepage": "https://github.com/gandharthakar/quizfesto-new#readme",
+  "scripts": {
+    "dev": "next dev",
+    "build": "prisma generate && next build",
+    "build-only": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "generate": "npx prisma generate",
+    "dbpush": "npx prisma db push",
+    "migrate": "npx prisma migrate dev",
+    "studio": "npx prisma studio"
+  },
+  "dependencies": {
+    "@hookform/resolvers": "^3.10.0",
+    "@prisma/client": "^6.2.1",
+    "@reduxjs/toolkit": "^2.5.0",
+    "bcrypt": "^5.1.1",
+    "cookies-next": "^5.1.0",
+    "copy-to-clipboard": "^3.3.3",
+    "cors": "^2.8.5",
+    "express-rate-limit": "^7.5.0",
+    "html-react-parser": "^5.2.2",
+    "jsonwebtoken": "^9.0.2",
+    "jwt-decode": "^4.0.0",
+    "next": "15.1.4",
+    "next-auth": "^4.24.11",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-hook-form": "^7.54.2",
+    "react-icons": "^5.4.0",
+    "react-redux": "^9.2.0",
+    "react-timer-hook": "^3.0.8",
+    "sweetalert2": "^11.15.10",
+    "swiper": "^11.1.15",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3",
+    "@types/bcrypt": "^5.0.2",
+    "@types/cors": "^2.8.17",
+    "@types/jsonwebtoken": "^9.0.7",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "autoprefixer": "^10.4.20",
+    "eslint": "^9",
+    "eslint-config-next": "15.1.4",
+    "nodemailer": "^6.9.16",
+    "postcss": "^8",
+    "prisma": "^6.2.1",
+    "tailwindcss": "^3.4.17",
+    "typescript": "^5"
+  },
+  "browserslist": [
+    "last 100 versions"
+  ]
+}

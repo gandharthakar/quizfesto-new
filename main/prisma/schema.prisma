@@ -1,0 +1,155 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  // url      = env("DATABASE_URL")
+  url       = env("POSTGRES_PRISMA_URL")
+  directUrl = env("POSTGRES_URL_NON_POOLING")
+}
+
+model QF_User {
+  user_id             String                  @id @default(uuid())
+  user_full_name      String
+  user_email          String                  @unique
+  user_password       String
+  user_phone          String?
+  user_photo          String?
+  user_gender         String?
+  role                Role?                   @default(User)
+  isBlockedByAdmin    String?
+  user_participations QF_User_Participation[]
+  Aggrigate_Scores    QF_Aggrigate_Scores[]
+  QF_Winners          QF_Winners[]
+  createdAt           DateTime                @default(now())
+  updatedAt           DateTime                @updatedAt
+}
+
+model QF_Admin_User {
+  admin_user_id       String   @id @default(uuid())
+  admin_user_name     String
+  admin_user_email    String   @unique
+  admin_user_password String
+  admin_user_photo    String?
+  admin_user_phone    String?
+  admin_user_gender   String?
+  role                Role?    @default(Admin)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+}
+
+model QF_User_Participation {
+  user_participation_id      String   @id @default(uuid())
+  quiz_total_question        Int
+  quiz_total_marks           Int
+  quiz_estimated_time        String
+  quiz_display_time          String
+  quiz_time_taken            String
+  quiz_id                    String
+  quiz_title                 String
+  quiz_cover_photo           String?
+  quiz_total_score           Int
+  quiz_correct_answers_count Int
+  User                       QF_User? @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+  user_id                    String?
+  createdAt                  DateTime @default(now())
+  updatedAt                  DateTime @updatedAt
+}
+
+model QF_Quiz {
+  quiz_id                String        @id @default(uuid())
+  quiz_title             String
+  quiz_summary           String
+  quiz_display_time      String
+  quiz_estimated_time    String
+  quiz_total_question    Int
+  quiz_total_marks       Int
+  quiz_status            String
+  quiz_about_text        String?
+  quiz_terms             String[]
+  quiz_cover_photo       String?
+  Questions              QF_Question[]
+  quiz_categories        String[]
+  negative_marking_score Int
+  createdAt              DateTime      @default(now())
+  updatedAt              DateTime      @updatedAt
+}
+
+model QF_Question {
+  question_id    String      @id @default(uuid())
+  question_title String
+  question_marks Int
+  quizid         String
+  quiz           QF_Quiz     @relation(fields: [quizid], references: [quiz_id], onDelete: Cascade) // Foreign key with cascade delete
+  Options        QF_Option[]
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+}
+
+model QF_Option {
+  option_id      String      @id @default(uuid())
+  options        String[]
+  correct_option String
+  questionid     String
+  question       QF_Question @relation(fields: [questionid], references: [question_id], onDelete: Cascade) // Foreign key with cascade delete
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+}
+
+model QF_Quiz_Category {
+  category_id    String   @id @default(uuid())
+  category_title String   @unique
+  category_slug  String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model QF_Winning_Prizes {
+  prize_id          String   @id @default(uuid())
+  prize_type        Int      @unique
+  prize_description String
+  prize_cover_photo String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+model QF_Winners {
+  winner_id          String   @id @default(uuid())
+  winner_type        Int      @unique
+  user_id            String?  @unique
+  winner_date        String
+  winner_description String
+  User               QF_User? @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+}
+
+model QF_Homepage_Categories {
+  home_cat_id String   @id @default(uuid())
+  home_cats   String[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model QF_Aggrigate_Scores {
+  ags_id          String   @id @default(uuid())
+  aggregate_score Int
+  record_date     String
+  record_time     String
+  User            QF_User? @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+  user_id         String?  @unique
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+enum Role {
+  User
+  Admin
+}

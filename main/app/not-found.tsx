@@ -1,7 +1,6 @@
 import Link from 'next/link';
 import ThemeCheckerSingle from '@/app/libs/themeCheckerSingle';
-import { FaCaretLeft } from "react-icons/fa6";
-import { FaCaretRight, FaLongArrowAltLeft } from "react-icons/fa";
+import { FaCaretRight } from "react-icons/fa";
 
 export default function NotFound() {
     return (

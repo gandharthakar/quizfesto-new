@@ -19,19 +19,24 @@ function SitePagination(props: PaginationType) {
     const handlePrevious = () => {
         if (pageNumber > 1) {
             setPageNumber(pageNumber - 1);
-            onPageChange(pageNumber - 1);
+            if (onPageChange) {
+                onPageChange(pageNumber - 1);
+            }
         }
     };
 
     const handleNext = () => {
         if (pageNumber < totalPages) {
             setPageNumber(pageNumber + 1);
-            onPageChange(pageNumber + 1);
+            if (onPageChange) {
+                onPageChange(pageNumber + 1);
+            }
         }
     };
 
     return (
         <div className={`max-w-[280px] mx-auto ${parentClassList}`}>
+            <input type="hidden" value={dataPerPage} />
             <div className="flex justify-between gap-x-[15px] items-center">
                 <div>
                     <button

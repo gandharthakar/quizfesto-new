@@ -11,7 +11,9 @@ function CommonModal(props: CommonModalPropsType) {
 
     const handleBackDropClick = () => {
         if (hide_modal_on_backdrop_click) {
-            setOpenState(false);
+            if (setOpenState) {
+                setOpenState(false);
+            }
             if (callBackAfterModalClose) {
                 callBackAfterModalClose();
             }
@@ -21,7 +23,9 @@ function CommonModal(props: CommonModalPropsType) {
 
     useEffect(() => {
         if (open_modal_on_page_load) {
-            setOpenState(true);
+            if (setOpenState) {
+                setOpenState(true);
+            }
         }
     }, [open_modal_on_page_load, setOpenState]);
 

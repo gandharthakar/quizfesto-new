@@ -36,7 +36,6 @@ export default function QuizPrizes() {
                 setLoading2(false);
                 setLoading3(false);
             } else {
-                /* eslint-disable no-unused-vars */
                 for (let i = 0; i < body.prizes.length; i++) {
                     if (body.prizes[i].prize_type === 1) {
                         setPrize1Photo(body.prizes[i].prize_cover_photo);
@@ -70,7 +69,6 @@ export default function QuizPrizes() {
 
     useEffect(() => {
         getPrizes();
-        //eslint-disable-next-line
     }, []);
 
     return (

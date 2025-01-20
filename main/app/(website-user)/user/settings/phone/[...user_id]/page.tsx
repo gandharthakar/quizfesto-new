@@ -1,6 +1,5 @@
 'use client';
 
-import z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { useEffect, useState } from "react";
@@ -61,7 +60,6 @@ export default function Page() {
         }
     }
 
-    //eslint-disable-next-line
     const getUser = async () => {
         const baseURI = window.location.origin;
         const resp = await fetch(`${baseURI}/api/site/auth-user/get-single-user`, {

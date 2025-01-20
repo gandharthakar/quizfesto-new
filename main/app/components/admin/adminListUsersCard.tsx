@@ -62,9 +62,9 @@ function AdminListUsersCard(props: AdminUsersListCardType) {
 
     useEffect(() => {
 
-        const menuHandler = (e: any) => {
+        const menuHandler = (e: MouseEvent) => {
             if (menuRef.current !== null) {
-                if (!menuRef.current.contains(e.target)) {
+                if (!menuRef.current.contains(e.target as Node)) {
                     setIsMenuOpen(false);
                 }
             }
@@ -86,7 +86,7 @@ function AdminListUsersCard(props: AdminUsersListCardType) {
                             className="input-chrb"
                             value={user_id}
                             checked={checkboxChecked}
-                            onChange={() => onCheckboxChange(user_id)}
+                            onChange={() => onCheckboxChange ? onCheckboxChange(user_id) : null}
                         />
                         <label htmlFor={user_id} className="label">
                             <div>

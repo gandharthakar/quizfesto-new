@@ -12,7 +12,7 @@ import { AdminCategoriesListCardType } from "@/app/types/components/admin/compon
 function AdminListCategoryCard(props: AdminCategoriesListCardType) {
 
     const {
-        cat_id,
+        category_id,
         category_title,
         category_slug,
         checkboxName,
@@ -34,7 +34,7 @@ function AdminListCategoryCard(props: AdminCategoriesListCardType) {
             const baseURI = window.location.origin;
             const resp = await fetch(`${baseURI}/api/admin/categories/crud/delete`, {
                 method: "DELETE",
-                body: JSON.stringify({ category_id: cat_id })
+                body: JSON.stringify({ category_id: category_id })
             });
             const body = await resp.json();
             if (body.success) {
@@ -61,16 +61,15 @@ function AdminListCategoryCard(props: AdminCategoriesListCardType) {
 
     useEffect(() => {
 
-        const menuHandler = (e: any) => {
+        const menuHandler = (e: MouseEvent) => {
             if (menuRef.current !== null) {
-                if (!menuRef.current.contains(e.target)) {
+                if (!menuRef.current.contains(e.target as Node)) {
                     setIsMenuOpen(false);
                 }
             }
         };
 
         document.addEventListener('mousedown', menuHandler);
-        //eslint-disable-next-line
     }, []);
 
     return (
@@ -80,14 +79,14 @@ function AdminListCategoryCard(props: AdminCategoriesListCardType) {
                     <div className="alqc-chrb">
                         <input
                             type="checkbox"
-                            id={cat_id}
+                            id={category_id}
                             name={checkboxName}
                             className="input-chrb"
-                            value={cat_id}
+                            value={category_id}
                             checked={checkboxChecked}
-                            onChange={() => onCheckboxChange(cat_id)}
+                            onChange={() => onCheckboxChange ? onCheckboxChange(category_id) : null}
                         />
-                        <label htmlFor={cat_id} className="label">
+                        <label htmlFor={category_id} className="label">
                             <div>
                                 <div className="squere-box">
                                     <IoMdCheckmark size={18} className="svg-icon" />
@@ -120,7 +119,7 @@ function AdminListCategoryCard(props: AdminCategoriesListCardType) {
                         <ul className={`absolute right-0 z-10 mt-2 w-40 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none dark:bg-zinc-950 dark:ring-zinc-800 ${isMenuOpen ? 'block' : 'hidden'}`}>
                             <li className="w-full">
                                 <Link
-                                    href={`/admin/categories/edit-category/${cat_id}`}
+                                    href={`/admin/categories/edit-category/${category_id}`}
                                     title="Edit"
                                     className="transition-all delay-75 block w-full py-[10px] px-[15px] font-ubuntu text-[16px] text-zinc-900 hover:bg-zinc-100 dark:text-zinc-200 dark:hover:bg-zinc-800"
                                     onClick={handleClick}

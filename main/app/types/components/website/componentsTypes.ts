@@ -1,8 +1,10 @@
 
+import React, { Dispatch, SetStateAction } from 'react';
+
 export type CommonModalPropsType = {
     open_modal_on_page_load?: boolean,
     openState?: boolean,
-    setOpenState?: any,
+    setOpenState?: Dispatch<SetStateAction<boolean>>,
     modal_heading: string,
     backdrop?: boolean,
     hide_modal_on_backdrop_click?: boolean,
@@ -22,7 +24,7 @@ export type FAQComponentType = {
     children: React.ReactNode,
     show_icon?: boolean,
     is_open?: boolean,
-    onClick: any
+    onClick: () => void
 }
 
 export type PaginationType = {
@@ -30,20 +32,20 @@ export type PaginationType = {
     dataPerPage: number,
     currentPage: number,
     parentClassList: string,
-    onPageChange?: any
+    onPageChange?: (pageNumber: number) => void
 }
 
 
 export type QuizInfoModalComponentType = {
     open_modal_on_page_load?: boolean,
     openState?: boolean,
-    setOpenState?: any,
+    setOpenState?: Dispatch<SetStateAction<boolean>>,
     modal_heading: string,
     backdrop?: boolean,
     hide_modal_on_backdrop_click?: boolean,
     modal_max_width?: number,
     children: React.ReactNode
-    callBackAfterModalClose?: any,
+    callBackAfterModalClose?: () => void,
 }
 
 export type MyParticipationCardType = {

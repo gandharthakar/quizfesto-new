@@ -8,9 +8,9 @@ import { dump_faqs_content } from "@/app/constant/datafaker";
 
 export default function Page() {
 
-    const [activeIndex, setActiveIndex] = useState<number | null>(null);
+    const [activeIndex, setActiveIndex] = useState<number | string | null>(null);
 
-    const handleItemClick = (index: any) => {
+    const handleItemClick = (index: (number | string | null)) => {
         setActiveIndex((prevIndex) => (prevIndex === index ? null : index));
     };
 

@@ -49,9 +49,9 @@ function AdminHeaderProfileMenu() {
 
     useEffect(() => {
 
-        const menuHandler = (e: any) => {
+        const menuHandler = (e: MouseEvent) => {
             if (menuRef.current !== null) {
-                if (!menuRef.current.contains(e.target)) {
+                if (!menuRef.current.contains(e.target as Node)) {
                     setIsMenuOpen(false);
                 }
             }
@@ -61,7 +61,6 @@ function AdminHeaderProfileMenu() {
 
         const gtco = getCookie("is_admin_user");
 
-        /* eslint-disable no-unused-vars */
         let admin_id: JWTDecAdmin = {
             is_admin_user: '',
             exp: 0,

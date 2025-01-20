@@ -22,7 +22,7 @@ function WinnersUsersForm(props: WinnerUserFormType) {
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const buttonText = winning_position_text ? "Update" : "Save";
 
-    const InputChange = (e: any) => {
+    const InputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
         const value = e.target.value;
         setInput(value);
 
@@ -69,10 +69,9 @@ function WinnersUsersForm(props: WinnerUserFormType) {
         }
     }
 
-    const handleSubmitForm = async (e: any) => {
+    const handleSubmitForm = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
 
-        /* eslint-disable no-unused-vars */
         let isValidForm = false;
         if (input == '') {
             isValidForm = false;

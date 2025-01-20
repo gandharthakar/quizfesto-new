@@ -14,7 +14,6 @@ function CheckAuthUser({ children }: { children: React.ReactNode }) {
 
     useEffect(() => {
         const authid = getCookie('is_auth_user');
-        /* eslint-disable no-unused-vars */
         let user_id: JWTDec = {
             is_auth_user: '',
             exp: 0,

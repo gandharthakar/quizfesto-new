@@ -103,9 +103,9 @@ function AdminListQuestionCard(props: AdminQuestionsListCardType) {
 
     useEffect(() => {
 
-        const menuHandler = (e: any) => {
+        const menuHandler = (e: MouseEvent) => {
             if (menuRef.current !== null) {
-                if (!menuRef.current.contains(e.target)) {
+                if (!menuRef.current.contains(e.target as Node)) {
                     setIsMenuOpen(false);
                 }
             }
@@ -117,6 +117,7 @@ function AdminListQuestionCard(props: AdminQuestionsListCardType) {
 
     return (
         <>
+            <input type="hidden" value={checkboxValue} />
             <div className="transition-all delay-75 border-[2px] border-solid p-[15px] border-zinc-300 bg-white hover:border-zinc-600 dark:bg-zinc-800 dark:border-zinc-600 dark:hover:border-zinc-400">
                 <div className="flex gap-x-[15px] items-start">
                     <div className="alqc-chrb">
@@ -127,7 +128,7 @@ function AdminListQuestionCard(props: AdminQuestionsListCardType) {
                             className="input-chrb"
                             value={question_id}
                             checked={checkboxChecked}
-                            onChange={() => onCheckboxChange(question_id)}
+                            onChange={() => onCheckboxChange ? onCheckboxChange(question_id) : null}
                         />
                         <label htmlFor={question_id} className="label">
                             <div>

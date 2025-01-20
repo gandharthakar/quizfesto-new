@@ -77,7 +77,6 @@ export default function Page() {
 
     useEffect(() => {
         checkAuthUser();
-        //eslint-disable-next-line
     }, [checkAuthUser]);
 
     return (

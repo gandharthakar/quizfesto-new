@@ -14,9 +14,9 @@ import { AdminQuizesListCardType } from "@/app/types/components/admin/components
 function AdminListQuizCard(props: AdminQuizesListCardType) {
 
     const {
-        quizid,
+        quiz_id,
         quiz_title,
-        quiz_publish_status,
+        quiz_status,
         total_questions,
         checkboxName,
         checkboxChecked,
@@ -36,7 +36,7 @@ function AdminListQuizCard(props: AdminQuizesListCardType) {
             const baseURI = window.location.origin;
             const resp = await fetch(`${baseURI}/api/admin/quizes/crud/delete`, {
                 method: "DELETE",
-                body: JSON.stringify({ quiz_id: quizid }),
+                body: JSON.stringify({ quiz_id: quiz_id }),
             });
             const body = await resp.json();
             if (body.success) {
@@ -66,7 +66,7 @@ function AdminListQuizCard(props: AdminQuizesListCardType) {
         const baseURI = window.location.origin;
         const resp = await fetch(`${baseURI}/api/admin/quizes/crud/create-duplicate`, {
             method: "POST",
-            body: JSON.stringify({ quiz_id: quizid }),
+            body: JSON.stringify({ quiz_id: quiz_id }),
         });
         const body = await resp.json();
         if (body.success) {
@@ -90,9 +90,9 @@ function AdminListQuizCard(props: AdminQuizesListCardType) {
         }
     }
 
-    const handleCopyQuizId = () => {
+    const handleCopyquiz_id = () => {
         setIsMenuOpen(false);
-        copy(quizid);
+        copy(quiz_id);
         Swal.fire({
             title: "Success!",
             text: "Quiz ID Copied Successfully!",
@@ -103,16 +103,15 @@ function AdminListQuizCard(props: AdminQuizesListCardType) {
 
     useEffect(() => {
 
-        const menuHandler = (e: any) => {
+        const menuHandler = (e: MouseEvent) => {
             if (menuRef.current !== null) {
-                if (!menuRef.current.contains(e.target)) {
+                if (!menuRef.current.contains(e.target as Node)) {
                     setIsMenuOpen(false);
                 }
             }
         };
 
         document.addEventListener('mousedown', menuHandler);
-        //eslint-disable-next-line
     }, []);
 
     return (
@@ -122,14 +121,14 @@ function AdminListQuizCard(props: AdminQuizesListCardType) {
                     <div className="alqc-chrb">
                         <input
                             type="checkbox"
-                            id={quizid}
+                            id={quiz_id}
                             name={checkboxName}
                             className="input-chrb"
-                            value={quizid}
+                            value={quiz_id}
                             checked={checkboxChecked}
-                            onChange={() => onCheckboxChange(quizid)}
+                            onChange={() => onCheckboxChange ? onCheckboxChange(quiz_id) : null}
                         />
-                        <label htmlFor={quizid} className="label">
+                        <label htmlFor={quiz_id} className="label">
                             <div>
                                 <div className="squere-box">
                                     <IoMdCheckmark size={18} className="svg-icon" />
@@ -146,7 +145,7 @@ function AdminListQuizCard(props: AdminQuizesListCardType) {
                         <div>
                             <h6 className="transition-all delay-75 font-noto_sans text-[14px] md:text-[16px] text-zinc-800 dark:text-zinc-200">
                                 <span className="font-semibold">Status : </span>
-                                {quiz_publish_status == "draft" ? (<span className="text-red-500 font-bold">Draft</span>) : (<span className="text-green-500 font-bold">Published</span>)}
+                                {quiz_status == "draft" ? (<span className="text-red-500 font-bold">Draft</span>) : (<span className="text-green-500 font-bold">Published</span>)}
                             </h6>
                             <h5 className="transition-all delay-75 font-noto_sans text-[14px] md:text-[16px] text-zinc-800 dark:text-zinc-200">
                                 <span className="font-semibold">Total Questions : </span>
@@ -184,7 +183,7 @@ function AdminListQuizCard(props: AdminQuizesListCardType) {
                                     type="button"
                                     title="Copy Quiz ID"
                                     className="transition-all delay-75 block w-full py-[10px] px-[15px] font-ubuntu text-[16px] text-zinc-900 hover:bg-zinc-100 dark:text-zinc-200 dark:hover:bg-zinc-800"
-                                    onClick={handleCopyQuizId}
+                                    onClick={handleCopyquiz_id}
                                 >
                                     <div className="flex gap-x-[5px] items-center">
                                         <svg width="100" height="100" className="w-[22px] h-[22px] md:w-[22px] md:h-[22px]" viewBox="0 0 20 21" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -205,7 +204,7 @@ function AdminListQuizCard(props: AdminQuizesListCardType) {
                             </li>
                             <li className="w-full">
                                 <Link
-                                    href={`/admin/quizes/edit-quiz/${quizid}`}
+                                    href={`/admin/quizes/edit-quiz/${quiz_id}`}
                                     title="Edit"
                                     className="transition-all delay-75 block w-full py-[10px] px-[15px] font-ubuntu text-[16px] text-zinc-900 hover:bg-zinc-100 dark:text-zinc-200 dark:hover:bg-zinc-800"
                                     onClick={handleClick}

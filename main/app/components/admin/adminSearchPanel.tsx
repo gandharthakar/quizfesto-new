@@ -17,9 +17,9 @@ function AdminSearchPanel(props: AdminSearchPanelType) {
 
     useEffect(() => {
 
-        const menuHandler = (e: any) => {
+        const menuHandler = (e: MouseEvent) => {
             if (spRef.current !== null) {
-                if (!spRef.current.contains(e.target)) {
+                if (!spRef.current.contains(e.target as Node)) {
                     setSearchPanelOpen(false);
                 }
             }

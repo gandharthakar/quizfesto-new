@@ -1,4 +1,13 @@
 
+export type AdminStatsDataCardType = {
+    total_quizes: number,
+    total_questions: number,
+    total_options: number,
+    total_categories: number,
+    total_users: number,
+    total_winners: number
+}
+
 export type AdminBreadcrumbsMenuType = {
     menu_item_id: number,
     menu_title: string,
@@ -14,13 +23,13 @@ export type AdminBreadcrumbsType = {
 
 
 export type AdminCategoriesListCardType = {
-    cat_id: string,
+    category_id: string,
     category_title: string,
     category_slug: string,
     checkboxName?: string,
     checkboxChecked?: boolean,
     checkboxValue?: string,
-    onCheckboxChange?: any
+    onCheckboxChange?: (itemId: string) => void
 }
 
 export type AdminQuestionsListCardType = {
@@ -30,7 +39,7 @@ export type AdminQuestionsListCardType = {
     checkboxName?: string,
     checkboxChecked?: boolean,
     checkboxValue?: string,
-    onCheckboxChange?: any
+    onCheckboxChange?: (question_id: string) => void
 }
 
 
@@ -41,19 +50,19 @@ export type AdminOptionsListCardType = {
     checkboxName?: string,
     checkboxChecked?: boolean,
     checkboxValue?: string,
-    onCheckboxChange?: any
+    onCheckboxChange?: (option_id: string) => void
 }
 
 
 export type AdminQuizesListCardType = {
-    quizid: string,
+    quiz_id: string,
     quiz_title: string,
-    quiz_publish_status: string,
+    quiz_status: string,
     total_questions: number,
     checkboxName?: string,
     checkboxChecked?: boolean,
     checkboxValue?: string,
-    onCheckboxChange?: any
+    onCheckboxChange?: (itemId: string) => void
 }
 
 
@@ -65,14 +74,14 @@ export type AdminUsersListCardType = {
     checkboxName?: string,
     checkboxChecked?: boolean,
     checkboxValue?: string,
-    onCheckboxChange?: any
+    onCheckboxChange?: (user_id: string) => void
 }
 
 
 export type AdminSearchPanelType = {
     sarchInputVal: string,
-    searchInputChange?: any,
-    searchInputKeyDown?: any,
+    searchInputChange?: (e: React.ChangeEvent<HTMLInputElement>) => void,
+    searchInputKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void,
 }
 
 
@@ -89,6 +98,7 @@ export type AdminSubMenuItemType = {
 export type AdminMenuItemType = {
     parentMenuItemURI: string,
     parentMenuItemTitle: string,
+    //eslint-disable-next-line
     parentMenuItemIcon: any,
     parentMenuItemActArr: string[],
     parentMenuItemPathName: string,
@@ -105,6 +115,7 @@ export type WinnerPrizeFormType = {
 }
 
 export type WinnerUserFormType = {
+    winner_id?: string,
     winner_type: number,
     winning_position_text: string,
     user_id?: string,
@@ -112,4 +123,37 @@ export type WinnerUserFormType = {
     user_full_name: string,
     winner_description: string,
     user_profile_picture?: string
+}
+
+export type RTSPkgSelectType = {
+    value: string,
+    label: string,
+}
+
+export type AdminOptionsDataType = {
+    option_id: string,
+    options: string[],
+    question_text: string,
+    search_tems: string[]
+}
+
+export type AdminQuestionDataType = {
+    question_title: string,
+    question_marks: number,
+    question_id: string
+}
+
+
+export type AdminQuizDataType = {
+    quiz_id: string,
+    quiz_title: string,
+    quiz_status: string,
+}
+
+
+export type AdminUserDataType = {
+    user_id: string,
+    user_name: string,
+    user_role: string,
+    user_block_status: string
 }

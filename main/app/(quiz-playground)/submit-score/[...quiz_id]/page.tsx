@@ -93,6 +93,7 @@ export default function Page() {
         }
     }
 
+    //eslint-disable-next-line
     const fireEvent = (el: any, eventName: string) => {
         const event = new Event(eventName, { bubbles: true });
         el.dispatchEvent(event);
@@ -206,6 +207,7 @@ export default function Page() {
 
     return (
         <>
+            {usrAnsw.map(() => null)}
             <div className="transition-all delay-75 flex flex-col justify-center items-center px-[15px] py-[50px] min-h-screen bg-white dark:bg-zinc-950">
                 <div className="w-full pb-[20px]">
                     <div className="text-center">

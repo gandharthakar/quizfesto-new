@@ -25,7 +25,6 @@ function AdminSettingsNav() {
             setAuid(admin_id.is_admin_user);
         }
 
-        //eslint-disable-next-line
     }, []);
 
     return (

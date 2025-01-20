@@ -64,17 +64,15 @@ export default function Page() {
         }
     });
 
-    //eslint-disable-next-line
-    const checkAuthUser = () => {
-        if (AuthUser !== '') {
-            router.push("/");
-        }
-    }
-
     useEffect(() => {
+        const checkAuthUser = () => {
+            if (AuthUser !== '') {
+                router.push("/");
+            }
+        }
         checkAuthUser();
         //eslint-disable-next-line
-    }, [checkAuthUser]);
+    }, []);
 
     return (
         <>

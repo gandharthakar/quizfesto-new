@@ -35,7 +35,7 @@ function AdminSubMenuComp(props: AdminMenuItemType) {
         }
     }
 
-    const handleSubMenuItemClick = (cb: any) => {
+    const handleSubMenuItemClick = (cb?: () => void) => {
         setIsMenuOpen(false);
         if (cb) {
             cb();
@@ -44,9 +44,9 @@ function AdminSubMenuComp(props: AdminMenuItemType) {
 
     useEffect(() => {
 
-        const menuHandler = (e: any) => {
+        const menuHandler = (e: MouseEvent) => {
             if (menuRef.current !== null) {
-                if (!menuRef.current.contains(e.target)) {
+                if (!menuRef.current.contains(e.target as Node)) {
                     setIsMenuOpen(false);
                 }
             }

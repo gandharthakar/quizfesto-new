@@ -9,6 +9,7 @@ import Swal from "sweetalert2";
 import { getCookie } from "cookies-next/client";
 import { jwtDecode } from "jwt-decode";
 import { JWTDec } from "@/app/types/commonTypes";
+import { convertBase64 } from "@/app/libs/helpers/helperFunctions";
 
 export default function Page() {
 
@@ -38,15 +39,15 @@ export default function Page() {
     const [userImage, setUserImage] = useState<string>("");
     const [isLoadRmv, setIsLoadRmv] = useState<boolean>(false);
 
-    const handleFileChange = async (e: any) => {
-        const file = e.target.files[0];
+    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files && e.target.files[0];
         if (!file) {
             setImageFile('');
             return;
         } else {
             const gfnext = file.name;
             const fext = gfnext.split('.').pop();
-            setFileExt(fext);
+            setFileExt(fext ?? "");
             setPrevImageURI(URL.createObjectURL(file));
 
             if (file.size > 500 * 1024) {
@@ -73,22 +74,6 @@ export default function Page() {
         setImageFile(base64);
     }
 
-    const convertBase64 = (file: any) => {
-        return new Promise<string>((resolve, reject) => {
-            const fileReader = new FileReader();
-            fileReader.readAsDataURL(file)
-            fileReader.onload = () => {
-                //eslint-disable-next-line
-                typeof fileReader.result === "string" ?
-                    resolve(fileReader.result)
-                    : reject("Unexpected type received from FileReader");
-            }
-            fileReader.onerror = (error) => {
-                reject(error);
-            }
-        })
-    }
-
     const removeImageButtonClick = async () => {
         setIsLoadRmv(true);
         const baseURI = window.location.origin;
@@ -111,7 +96,6 @@ export default function Page() {
         }
     }
 
-    //eslint-disable-next-line
     const getUser = async () => {
         const baseURI = window.location.origin;
         const resp = await fetch(`${baseURI}/api/site/auth-user/get-single-user`, {
@@ -138,10 +122,9 @@ export default function Page() {
         }
     }
 
-    const handleSubmit = async (e: any) => {
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
 
-        /* eslint-disable no-unused-vars */
         let isValidImage: boolean = false;
 
         // Get file extention.

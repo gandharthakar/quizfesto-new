@@ -10,7 +10,7 @@ Here is the link --> <a href="https://quizfesto-platform.vercel.app/" title="Cli
 
 ### Screenshot Of The Project
 
-<img src="https://raw.githubusercontent.com/gandharthakar/quizfesto-platform/refs/heads/main/main/public/images/screenshot.png" alt="Project Screenshot" />
+<img src="https://raw.githubusercontent.com/gandharthakar/quizfesto-new/refs/heads/main/main/public/images/screenshot.png" alt="Project Screenshot" />
 
 ### Major Technologies Used
 <p>

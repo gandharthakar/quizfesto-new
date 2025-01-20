@@ -20,7 +20,6 @@ export default function HeaderProfileMenu() {
     const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
     const menuRef = useRef<HTMLDivElement>(null);
 
-    //eslint-disable-next-line
     const getUser = async () => {
         const gau = getCookie('is_auth_user');
         if (gau) {
@@ -40,21 +39,19 @@ export default function HeaderProfileMenu() {
 
     useEffect(() => {
 
-        const menuHandler = (e: any) => {
+        const menuHandler = (e: MouseEvent) => {
             if (menuRef.current !== null) {
-                if (!menuRef.current.contains(e.target)) {
+                if (!menuRef.current.contains(e.target as Node)) {
                     setIsMenuOpen(false);
                 }
             }
         };
 
         document.addEventListener('mousedown', menuHandler);
-        //eslint-disable-next-line
     }, []);
 
     useEffect(() => {
         getUser();
-        //eslint-disable-next-line
     }, []);
 
     return (

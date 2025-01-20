@@ -33,7 +33,8 @@ export default function QuizCard(props: QuizCardPropsType) {
     const userID = AuthUser !== '' ? AuthUser : '1';
     const prtLink = userID !== '1' ? `/play-quiz/${quiz_id}/${userID}` : '/sign-in';
 
-    const [haveTerms, setHaveTerms] = useState<boolean>(quiz_terms && quiz_terms.length ? true : false);
+    // const [haveTerms, setHaveTerms] = useState<boolean>(quiz_terms && quiz_terms.length ? true : false);
+    const haveTerms = quiz_terms && quiz_terms.length ? true : false;
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [qapbu, setQapbu] = useState<boolean>(false);
     const [isAdminBlockedYou, setIsAdminBlockedYou] = useState<boolean>(false);

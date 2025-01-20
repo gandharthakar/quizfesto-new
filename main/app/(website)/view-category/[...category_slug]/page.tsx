@@ -24,7 +24,7 @@ function Page() {
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [catName, setCatName] = useState<string>('Category');
 
-    const handleSearchInputChange = (e: any) => {
+    const handleSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setSrchInp(e.target.value);
         if (srchInp.length === 1) {
             setCurrentPage(1);
@@ -33,8 +33,9 @@ function Page() {
         }
     }
 
-    const handleSearchInputKeyDown = (e: any) => {
-        setSrchInp(e.target.value);
+    const handleSearchInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        setSrchInp("");
+        // setSrchInp(e.target.value);
         if (e.key === "Backspace") {
             setCurrentPage(1);
             setQuizList(GFG(quizData, currentPage, dataPerPage));
@@ -42,7 +43,7 @@ function Page() {
         }
     }
 
-    const handleSearchLogic = (e: any) => {
+    const handleSearchLogic = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         if (srchInp == '') {
             Swal.fire({

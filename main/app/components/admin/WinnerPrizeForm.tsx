@@ -1,12 +1,12 @@
 'use client';
 
 import Image from "next/image";
-import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { MdOutlineAddAPhoto } from "react-icons/md";
 import { RiCloseLargeFill } from "react-icons/ri";
 import Swal from "sweetalert2";
 import { WinnerPrizeFormType } from "@/app/types/components/admin/componentsTypes";
+import { convertBase64 } from "@/app/libs/helpers/helperFunctions";
 
 function WinnerPrizeForm(props: WinnerPrizeFormType) {
 
@@ -14,7 +14,6 @@ function WinnerPrizeForm(props: WinnerPrizeFormType) {
 
     const defaultImage = "https://placehold.co/700x500/png";
 
-    const router = useRouter();
     const [profileImage, setProfileImage] = useState<string>("");
     const [imageFile, setImageFile] = useState<string>('');
     const [fileExt, setFileExt] = useState<string>('');
@@ -25,15 +24,15 @@ function WinnerPrizeForm(props: WinnerPrizeFormType) {
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [btnTxt, setBtnTxt] = useState<string>("Save");
 
-    const handleImageFileInput = async (e: any) => {
-        const file = e.target.files[0];
+    const handleImageFileInput = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files && e.target.files[0];
         if (!file) {
             setImageFile('');
             return;
         } else {
             const gfnext = file.name;
             const fext = gfnext.split('.').pop();
-            setFileExt(fext);
+            setFileExt(fext ?? "");
             setProfileImage(URL.createObjectURL(file));
 
             if (file.size > 500 * 1024) {
@@ -94,23 +93,7 @@ function WinnerPrizeForm(props: WinnerPrizeFormType) {
         }
     }
 
-    const convertBase64 = (file: any) => {
-        return new Promise<string>((resolve, reject) => {
-            const fileReader = new FileReader();
-            fileReader.readAsDataURL(file)
-            fileReader.onload = () => {
-                //eslint-disable-next-line
-                typeof fileReader.result === "string" ?
-                    resolve(fileReader.result)
-                    : reject("Unexpected type received from FileReader");
-            }
-            fileReader.onerror = (error) => {
-                reject(error);
-            }
-        })
-    }
-
-    const handleChangeDscr = (e: any) => {
+    const handleChangeDscr = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value;
         setDescr(value);
         if (value == '') {
@@ -120,10 +103,9 @@ function WinnerPrizeForm(props: WinnerPrizeFormType) {
         }
     }
 
-    const handleSubmit = async (e: any) => {
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
 
-        /* eslint-disable no-unused-vars */
         let validPrizeCoverPhoto: boolean = false;
 
         if (descr == '') {
@@ -250,6 +232,7 @@ function WinnerPrizeForm(props: WinnerPrizeFormType) {
 
     return (
         <>
+            <input type="hidden" value={profileImage} />
             <div className="transition-all delay-75 relative border-[2px] border-solid p-[15px] border-zinc-300 bg-white hover:border-zinc-600 dark:bg-zinc-800 dark:border-zinc-600 dark:hover:border-zinc-400">
                 {
                     isLoading ?

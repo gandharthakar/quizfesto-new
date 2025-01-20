@@ -7,19 +7,18 @@ import { useStopwatch } from "react-timer-hook";
 import { FaClock } from "react-icons/fa6";
 // import { IoIosCheckmarkCircle } from "react-icons/io";
 import QuizInfoModal from "@/app/components/quizInfomodal";
-import { useRouter, useParams } from "next/navigation";
+import { useParams } from "next/navigation";
 // import { dump_quiz_data } from "@/app/constant/datafaker";
 // import { clear_tqd, set_tqd } from "@/app/redux-service/slices/quiz-playground/transferQuizDataslice";
 import Image from "next/image";
 import Swal from "sweetalert2";
 import Link from "next/link";
 import { IoIosWarning } from "react-icons/io";
-import { QuizQAType, QuizQuestionType, UserQuizGivenAns } from "@/app/types/pages/website/quizPlaygroundPageTypes";
+import { QuizDataPayloadType, QuizQAType, QuizQuestionType, UserQuizGivenAns } from "@/app/types/pages/website/quizPlaygroundPageTypes";
 import { shuffle_array } from "@/app/libs/helpers/helperFunctions";
 // import { RootState } from "@/app/redux-service/store";
 // import { useSelector } from "react-redux";
 
-/* eslint-disable no-unused-vars */
 let currentQuestionIndex: number = 0;
 //eslint-disable-next-line
 let atm_data: UserQuizGivenAns[] = [];
@@ -27,7 +26,6 @@ let atm_data: UserQuizGivenAns[] = [];
 export default function Page() {
 
     // console.log("comp re-render.");
-    const router = useRouter();
     const params = useParams<{ quiz_id: string[] }>();
     const quiz_id = params.quiz_id[0];
     const user_id = params.quiz_id[1];
@@ -90,7 +88,7 @@ export default function Page() {
     const [isSubmited, setIsSubmited] = useState<boolean>(false);
     const [negScore_ss, setNegScore_ss] = useState<number>(0);
 
-    const CreateRadioButton = (opt_id: string, opt_txt: string, sa: string, ch: any) => {
+    const CreateRadioButton = (opt_id: string, opt_txt: string, sa: string, ch: (e: React.ChangeEvent<HTMLInputElement>) => void) => {
         return (
             <>
                 <input
@@ -124,7 +122,7 @@ export default function Page() {
         return currentQuestionOptions.map((itm, idx) => (<li key={idx}>{CreateRadioButton(idx.toString(), itm, selectedAnswer, handleChange)}</li>));
     }, [currentQuestionOptions, selectedAnswer]);
 
-    const handleScoreSubmissionClick = async (data: any, cac: number, ts: number) => {
+    const handleScoreSubmissionClick = async (data: QuizDataPayloadType, cac: number, ts: number) => {
         setIsLoading_ss(true);
         const prepData = {
             quiz_id: data.quiz_id,
@@ -168,10 +166,9 @@ export default function Page() {
         }
     }
 
-    const handleClick = async (e: any) => {
+    const handleClick = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
 
-        /* eslint-disable no-unused-vars */
         let isValidForm: boolean = false;
         setIsError(true);
 
@@ -199,7 +196,9 @@ export default function Page() {
                 }
             });
             setCurrentQuestionMarks(quesData.questions[currentQuestionIndex].question_marks);
-            setCurrentQuestionOptions(shuffle_array(quesData.questions[currentQuestionIndex].question_options.split(", ") ?? []));
+            const s1 = quesData.questions[currentQuestionIndex].question_options;
+            const qsar = s1 ? s1.split(", ") : [];
+            setCurrentQuestionOptions(shuffle_array(qsar ?? []));
 
             const obj = {
                 question_id: currentQuestion.question_id,
@@ -383,6 +382,8 @@ export default function Page() {
 
     return (
         <>
+            <input type="hidden" value={qzId_ss + qzTitla_ss + qzCP_ss + timeTaken_ss + estTime_ss + qdt_ss + totalMarks_ss + totalQues_ss + negScore} />
+            {usrAnsw_ss.map(() => null)}
             {
                 isAdminBlockedYou ?
                     (

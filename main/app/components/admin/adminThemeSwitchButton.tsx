@@ -22,13 +22,13 @@ function AdminThemeSwitchButton() {
         }
     });
 
-    const toggleTheme = () => {
-        if (!ThemeMode) {
-            dispatch(set_admin_dark_mode());
-        } else {
-            dispatch(unset_admin_dark_mode());
-        }
-    }
+    // const toggleTheme = () => {
+    //     if (!ThemeMode) {
+    //         dispatch(set_admin_dark_mode());
+    //     } else {
+    //         dispatch(unset_admin_dark_mode());
+    //     }
+    // }
 
     return (
         <>

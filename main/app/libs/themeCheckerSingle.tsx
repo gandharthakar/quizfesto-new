@@ -1,14 +1,15 @@
 'use client';
 
-import { useDispatch, useSelector } from "react-redux";
-import { RootState } from "@/app/libs/redux-service/store";
+import { useDispatch } from "react-redux";
+// import { useDispatch, useSelector } from "react-redux";
+// import { RootState } from "@/app/libs/redux-service/store";
 import { useEffect } from "react";
 import { set_dark_mode, unset_dark_mode } from "@/app/libs/redux-service/slices/theme-mode/themeSwitcherSlice";
 
 const ThemeCheckerSingle = () => {
     // let isDarkMode:boolean = false;
     const dispatch = useDispatch();
-    const ThemeMode = useSelector((state: RootState) => state.site_theme_mode.dark_theme_mode);
+    // const ThemeMode = useSelector((state: RootState) => state.site_theme_mode.dark_theme_mode);
 
     useEffect(() => {
         // Automatically Check and Set Dark Mode.

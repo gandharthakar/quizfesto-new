@@ -14,7 +14,7 @@ import Image from "next/image";
 export default function HomeTestimonialsSection() {
     const pgn = {
         clickable: true,
-        renderBullet: function (index: any, className: any) {
+        renderBullet: function (index: number, className: string) {
             return '<div class="' + className + '"></div>';
         },
     };

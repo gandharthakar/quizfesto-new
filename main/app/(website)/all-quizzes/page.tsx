@@ -19,7 +19,7 @@ export default function Page() {
     const [quizList, setQuizList] = useState<QuizCardPropsType[]>([]);
     const [isLoading, setIsLoading] = useState<boolean>(true);
 
-    const handleSearchInputChange = (e: any) => {
+    const handleSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setSrchInp(e.target.value);
         if (srchInp.length === 1) {
             setCurrentPage(1);
@@ -28,8 +28,9 @@ export default function Page() {
         }
     }
 
-    const handleSearchInputKeyDown = (e: any) => {
-        setSrchInp(e.target.value);
+    const handleSearchInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        setSrchInp("");
+        // setSrchInp(e.target.value);
         if (e.key === "Backspace") {
             setCurrentPage(1);
             setQuizList(GFG(quizData, currentPage, dataPerPage));
@@ -37,7 +38,7 @@ export default function Page() {
         }
     }
 
-    const handleSearchLogic = (e: any) => {
+    const handleSearchLogic = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         if (srchInp == '') {
             Swal.fire({

@@ -9,7 +9,7 @@ import { FaPowerOff } from "react-icons/fa6";
 import { ImCog } from "react-icons/im";
 import { IoChatboxEllipses } from "react-icons/io5";
 import { AiOutlineTrophy } from "react-icons/ai";
-import { usePathname, redirect, useParams } from "next/navigation";
+import { usePathname, useParams } from "next/navigation";
 import { close_user_area_menu } from "@/app/libs/redux-service/slices/user-area/userAreaMenuToggleSlice";
 import { useEffect, useState } from "react";
 
@@ -26,7 +26,6 @@ export default function UserAreaNavBar() {
     const [userName, setUserName] = useState<string>("");
     const settingRoutes: string[] = [`/user/settings/${user_id}`, `/user/settings/password/${user_id}`, `/user/settings/phone/${user_id}`, `/user/settings/profle-photo/${user_id}`];
 
-    //eslint-disable-next-line
     const getUser = async () => {
         const baseURI = window.location.origin;
         const resp = await fetch(`${baseURI}/api/site/auth-user/get-single-user`, {

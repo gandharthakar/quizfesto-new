@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from "react";
-import z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, SubmitHandler } from "react-hook-form";
 import Swal from 'sweetalert2';
@@ -11,6 +10,8 @@ import { FaRegTrashCan } from "react-icons/fa6";
 import AdminBreadcrumbs from "@/app/components/admin/adminBreadcrumbs";
 import { convertBase64, validatePhone } from "@/app/libs/helpers/helperFunctions";
 import { UserDataPayloadType } from "@/app/types/pages/admin/adminPageCommonTypes";
+import { AdminCreateUserFormVS, AdminCreateUserValidationSchema } from "@/app/libs/zod/schemas/adminValidationSchemas";
+import TokenChecker from "@/app/libs/tokenChecker";
 
 function Page() {
 
@@ -84,41 +85,8 @@ function Page() {
         setImageFile(base64);
     }
 
-    const validationSchema = z.object({
-        full_name: z.string({
-            required_error: "Please enter Full Name",
-            invalid_type_error: "Full Name must be in string format."
-        }).min(1, { message: "Full name must be contains at least 1 characters." }),
-
-        email: z.string({
-            required_error: "Please enter email address.",
-            invalid_type_error: "Email must be in string format."
-        }).email({
-            message: "Please enter valid email address."
-        }).min(1),
-
-        role: z.string({
-            required_error: "Please select a role."
-        }).min(1, { message: "Please select a role." }),
-
-        password: z.string({
-            invalid_type_error: "Password must be in string format."
-        }).min(8).max(16),
-
-        confirmPassword: z.string({
-            invalid_type_error: "Confirm password must be in string format."
-        }).min(8).max(16)
-
-
-    }).refine((data) => data.password === data.confirmPassword, {
-        path: ["confirmPassword"],
-        message: "Your password didn't match."
-    });
-
-    type validationSchema = z.infer<typeof validationSchema>;
-
-    const { register, handleSubmit, reset, formState: { errors } } = useForm<validationSchema>({
-        resolver: zodResolver(validationSchema),
+    const { register, handleSubmit, reset, formState: { errors } } = useForm<AdminCreateUserFormVS>({
+        resolver: zodResolver(AdminCreateUserValidationSchema),
     });
 
     const submitData = async (data: UserDataPayloadType) => {
@@ -152,7 +120,7 @@ function Page() {
         }
     }
 
-    const handleFormSubmit: SubmitHandler<validationSchema> = async (formdata) => {
+    const handleFormSubmit: SubmitHandler<AdminCreateUserFormVS> = async (formdata) => {
 
         // Validate Phone Number.
         const validPhone = validatePhone(phone);
@@ -228,6 +196,7 @@ function Page() {
 
     return (
         <>
+            <TokenChecker is_admin={true} />
             <div className="py-[25px]">
                 <div className="pb-[25px]">
                     <AdminBreadcrumbs

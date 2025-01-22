@@ -20,8 +20,8 @@ import { QuizCardPropsType, quizCategoriesType } from "@/app/types/pages/website
 
 export default function Page() {
 
-    const params = useParams<{ quiz_id: string }>();
-    const qz_id = params.quiz_id;
+    const params = useParams<{ quiz_id: string[] }>();
+    const qz_id = params.quiz_id[0];
 
     const defaultImage = "https://placehold.co/1000x700/png";
 
@@ -44,7 +44,7 @@ export default function Page() {
     const AuthUser = useSelector((state: RootState) => state.auth_user_id);
     const AuthUserCh = useSelector((state: RootState) => state.auth_user_id.auth_user_id);
     const userID = AuthUser.auth_user_id ? AuthUser.auth_user_id : '1';
-    const prtLink = userID !== '1' ? `/play-quiz/${qz_id}/${userID}` : '/sign-in';
+    // const prtLink = userID !== '1' ? `/play-quiz/${qz_id}/${userID}` : '/sign-in';
 
     useEffect(() => {
         const win = typeof window !== 'undefined' && window.location.origin
@@ -69,8 +69,6 @@ export default function Page() {
         const resp = await fetch(`${baseURI}/api/site/get-quizes/single/only-info`, {
             method: "POST",
             body: JSON.stringify({ quiz_id: qz_id }),
-            cache: 'no-store',
-            next: { revalidate: 60 }
         });
         const body = await resp.json();
         if (body.success) {
@@ -98,8 +96,6 @@ export default function Page() {
         const resp = await fetch(`${baseURI}/api/site/get-quizes/bulk-list/related-quizes`, {
             method: "POST",
             body: JSON.stringify({ quiz_id: qz_id }),
-            cache: 'no-store',
-            next: { revalidate: 60 }
         });
         const body = await resp.json();
         if (body.success) {
@@ -115,8 +111,6 @@ export default function Page() {
         const resp = await fetch(`${baseURI}/api/site/check-quiz`, {
             method: "POST",
             body: JSON.stringify({ quiz_id: qz_id, user_id: userID }),
-            cache: 'no-store',
-            next: { revalidate: 60 }
         });
         const body = await resp.json();
         if (body.success) {
@@ -133,8 +127,6 @@ export default function Page() {
         const resp = await fetch(`${baseURI}/api/site/check-block-status`, {
             method: "POST",
             body: JSON.stringify({ user_id: userID }),
-            cache: 'no-store',
-            next: { revalidate: 60 }
         });
         const body = await resp.json();
         if (body.success) {
@@ -387,7 +379,8 @@ export default function Page() {
                                                                         )
                                                                         :
                                                                         (
-                                                                            <Link href={prtLink} title="Participate" className="transition-all delay-75 block w-full text-center px-[15px] py-[8px] md:px-[25px] md:py-[10px] font-ubuntu text-[18px] md:text-[20px] text-white bg-theme-color-1 hover:bg-theme-color-1-hover-dark">
+                                                                            // <Link href={prtLink} title="Participate" className="transition-all delay-75 block w-full text-center px-[15px] py-[8px] md:px-[25px] md:py-[10px] font-ubuntu text-[18px] md:text-[20px] text-white bg-theme-color-1 hover:bg-theme-color-1-hover-dark"></Link>
+                                                                            <Link href={`/play-quiz/${qz_id}/${userID}`} title="Participate" className="transition-all delay-75 block w-full text-center px-[15px] py-[8px] md:px-[25px] md:py-[10px] font-ubuntu text-[18px] md:text-[20px] text-white bg-theme-color-1 hover:bg-theme-color-1-hover-dark">
                                                                                 Participate
                                                                             </Link>
                                                                         )
@@ -528,7 +521,8 @@ export default function Page() {
                                                                                 )
                                                                                 :
                                                                                 (
-                                                                                    <Link href={prtLink} title="Participate" className="transition-all delay-75 block w-full text-center px-[15px] py-[8px] md:px-[25px] md:py-[10px] font-ubuntu text-[18px] md:text-[20px] text-white bg-theme-color-1 hover:bg-theme-color-1-hover-dark">
+                                                                                    // <Link href={prtLink} title="Participate" className="transition-all delay-75 block w-full text-center px-[15px] py-[8px] md:px-[25px] md:py-[10px] font-ubuntu text-[18px] md:text-[20px] text-white bg-theme-color-1 hover:bg-theme-color-1-hover-dark"></Link>
+                                                                                    <Link href={`/play-quiz/${qz_id}/${userID}`} title="Participate" className="transition-all delay-75 block w-full text-center px-[15px] py-[8px] md:px-[25px] md:py-[10px] font-ubuntu text-[18px] md:text-[20px] text-white bg-theme-color-1 hover:bg-theme-color-1-hover-dark">
                                                                                         Participate
                                                                                     </Link>
                                                                                 )

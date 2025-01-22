@@ -1,36 +1,25 @@
 'use client';
 
-import z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, SubmitHandler } from "react-hook-form";
 import AdminSettingsNav from "@/app/components/admin/adminSettingsNav";
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Swal from "sweetalert2";
+import { AdminPhoneSettingsFormVS, AdminPhoneSettingsValidationSchema } from "@/app/libs/zod/schemas/adminValidationSchemas";
+import TokenChecker from "@/app/libs/tokenChecker";
 
 function Page() {
 
-    const param = useParams();
-    const user_id = param.userid;
+    const param = useParams<{ userid: string[] }>();
+    const user_id = param.userid[0];
     const [isLoading, setIsLoading] = useState<boolean>(true);
 
-    const validationSchema = z.object({
-        phone_number: z.string({
-            required_error: "Please enter phone number.",
-            invalid_type_error: "Phone Number must be in numeric format."
-        }).trim().min(10).max(13)
-            .refine((value) => !isNaN(Number(value)), {
-                message: 'Invalid phone number format (must be digits)',
-            }),
+    const { register, handleSubmit, setValue, formState: { errors } } = useForm<AdminPhoneSettingsFormVS>({
+        resolver: zodResolver(AdminPhoneSettingsValidationSchema),
     });
 
-    type validationSchema = z.infer<typeof validationSchema>;
-
-    const { register, handleSubmit, setValue, formState: { errors } } = useForm<validationSchema>({
-        resolver: zodResolver(validationSchema),
-    });
-
-    const handleFormSubmit: SubmitHandler<validationSchema> = async (formdata) => {
+    const handleFormSubmit: SubmitHandler<AdminPhoneSettingsFormVS> = async (formdata) => {
         setIsLoading(true);
         const baseURI = window.location.origin;
         const resp = await fetch(`${baseURI}/api/admin/auth-user/settings/phone/set`, {
@@ -62,16 +51,23 @@ function Page() {
     const getUser = async () => {
         setIsLoading(true);
         const baseURI = window.location.origin;
-        const resp = await fetch(`${baseURI}/api/admin/auth-user/settings/phone/get`, {
-            method: 'POST',
-            body: JSON.stringify({ user_id }),
-        });
-        const body = await resp.json();
-        if (body.success) {
-            setValue("phone_number", body.user_phone);
-            setIsLoading(false);
-        } else {
-            setIsLoading(false);
+        try {
+            const resp = await fetch(`${baseURI}/api/admin/auth-user/settings/phone/get`, {
+                method: 'POST',
+                body: JSON.stringify({ user_id }),
+            });
+            if (!resp.ok) {
+                setIsLoading(false);
+            }
+            const body = await resp.json();
+            if (body.success) {
+                setValue("phone_number", body.user_phone);
+                setIsLoading(false);
+            } else {
+                setIsLoading(false);
+            }
+        } catch (error) {
+            console.log(error);
         }
     }
 
@@ -81,39 +77,42 @@ function Page() {
     }, []);
 
     return (
-        <div className="pt-[15px] pb-[25px]">
-            <div className="pb-[25px]">
-                <AdminSettingsNav />
-            </div>
+        <>
+            <TokenChecker is_admin={true} />
+            <div className="pt-[15px] pb-[25px]">
+                <div className="pb-[25px]">
+                    <AdminSettingsNav />
+                </div>
 
-            <div className="lg:max-w-[500px]">
-                <form onSubmit={handleSubmit(handleFormSubmit)}>
-                    <div className="pb-[20px]">
-                        <input
-                            type="text"
-                            id="uasp-gsfn"
-                            className="ws-input-m1"
-                            autoComplete="off"
-                            placeholder="Phone"
-                            {...register("phone_number")}
-                        />
-                        {errors.phone_number && (<div className="ws-input-error">{errors.phone_number.message}</div>)}
-                    </div>
-                    <div className="text-right">
-                        {
-                            isLoading ?
-                                (<div className="transition-all delay-75 font-noto_sans text-[14px] md:text-[16px] text-zinc-800 dark:text-zinc-200 font-semibold">Loading...</div>)
-                                :
-                                (
-                                    <button type="submit" title="Save Changes" className="ws-button-m1">
-                                        Save Changes
-                                    </button>
-                                )
-                        }
-                    </div>
-                </form>
+                <div className="lg:max-w-[500px]">
+                    <form onSubmit={handleSubmit(handleFormSubmit)}>
+                        <div className="pb-[20px]">
+                            <input
+                                type="text"
+                                id="uasp-gsfn"
+                                className="ws-input-m1"
+                                autoComplete="off"
+                                placeholder="Phone"
+                                {...register("phone_number")}
+                            />
+                            {errors.phone_number && (<div className="ws-input-error">{errors.phone_number.message}</div>)}
+                        </div>
+                        <div className="text-right">
+                            {
+                                isLoading ?
+                                    (<div className="transition-all delay-75 font-noto_sans text-[14px] md:text-[16px] text-zinc-800 dark:text-zinc-200 font-semibold">Loading...</div>)
+                                    :
+                                    (
+                                        <button type="submit" title="Save Changes" className="ws-button-m1">
+                                            Save Changes
+                                        </button>
+                                    )
+                            }
+                        </div>
+                    </form>
+                </div>
             </div>
-        </div>
+        </>
     )
 }
 

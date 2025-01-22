@@ -1,40 +1,22 @@
 'use client';
 
-import z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, SubmitHandler } from "react-hook-form";
 import Swal from "sweetalert2";
 import { useState } from "react";
 import AdminBreadcrumbs from "@/app/components/admin/adminBreadcrumbs";
+import { AdminQuestionsFormVS, AdminQuestionsValidationSchema } from "@/app/libs/zod/schemas/adminValidationSchemas";
+import TokenChecker from "@/app/libs/tokenChecker";
 
 function Page() {
 
     const [isLoading, setIsLoading] = useState<boolean>(false);
 
-    const validationSchema = z.object({
-        quiz_id: z.string({
-            required_error: "Please enter quiz ID",
-            invalid_type_error: "Quiz ID must be in string format."
-        }).min(5, { message: "Quiz ID must be contains at least 5 characters." }),
-
-        question_text: z.string({
-            required_error: "Please enter question text",
-            invalid_type_error: "Question text must be in string format."
-        }).min(5, { message: "Question text must be contains at least 5 characters." }),
-
-        question_marks: z.number({
-            required_error: "Please enter question marks",
-            invalid_type_error: "Question marks must be in string format."
-        }).min(1, { message: "Question marks must be gretter than or is equal to 1." }),
+    const { register, handleSubmit, reset, formState: { errors } } = useForm<AdminQuestionsFormVS>({
+        resolver: zodResolver(AdminQuestionsValidationSchema),
     });
 
-    type validationSchema = z.infer<typeof validationSchema>;
-
-    const { register, handleSubmit, reset, formState: { errors } } = useForm<validationSchema>({
-        resolver: zodResolver(validationSchema),
-    });
-
-    const handleFormSubmit: SubmitHandler<validationSchema> = async (formdata) => {
+    const handleFormSubmit: SubmitHandler<AdminQuestionsFormVS> = async (formdata) => {
         setIsLoading(true);
         const prepData = {
             quiz_id: formdata.quiz_id,
@@ -84,6 +66,7 @@ function Page() {
 
     return (
         <>
+            <TokenChecker is_admin={true} />
             <div className="py-[25px]">
                 <div className="pb-[25px]">
                     <AdminBreadcrumbs

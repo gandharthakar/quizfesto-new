@@ -31,7 +31,7 @@ export default function QuizCard(props: QuizCardPropsType) {
     // const user_id = "1";`/play-quiz/${quiz_id}/${userID}`
     const AuthUser = useSelector((state: RootState) => state.auth_user_id.auth_user_id);
     const userID = AuthUser !== '' ? AuthUser : '1';
-    const prtLink = userID !== '1' ? `/play-quiz/${quiz_id}/${userID}` : '/sign-in';
+    // const prtLink = userID !== '1' ? `/play-quiz/${quiz_id}/${userID}` : '/sign-in';
 
     // const [haveTerms, setHaveTerms] = useState<boolean>(quiz_terms && quiz_terms.length ? true : false);
     const haveTerms = quiz_terms && quiz_terms.length ? true : false;
@@ -44,8 +44,6 @@ export default function QuizCard(props: QuizCardPropsType) {
         const resp = await fetch(`${baseURI}/api/site/check-quiz`, {
             method: "POST",
             body: JSON.stringify({ quiz_id, user_id: AuthUser }),
-            cache: 'no-store',
-            next: { revalidate: 60 }
         });
         const body = await resp.json();
         if (body.success) {
@@ -62,8 +60,6 @@ export default function QuizCard(props: QuizCardPropsType) {
         const resp = await fetch(`${baseURI}/api/site/check-block-status`, {
             method: "POST",
             body: JSON.stringify({ user_id: userID }),
-            cache: 'no-store',
-            next: { revalidate: 60 }
         });
         const body = await resp.json();
         if (body.success) {
@@ -217,7 +213,8 @@ export default function QuizCard(props: QuizCardPropsType) {
                                                                         )
                                                                         :
                                                                         (
-                                                                            <Link href={prtLink} title="Participate" className="transition-all delay-75 inline-block px-[15px] py-[6px] md:px-[25px] md:py-[8px] font-ubuntu text-[16px] md:text-[18px] text-white bg-theme-color-1 hover:bg-theme-color-1-hover-dark">
+                                                                            // <Link href={prtLink} title="Participate" className="transition-all delay-75 inline-block px-[15px] py-[6px] md:px-[25px] md:py-[8px] font-ubuntu text-[16px] md:text-[18px] text-white bg-theme-color-1 hover:bg-theme-color-1-hover-dark"></Link>
+                                                                            <Link href={`/play-quiz/${quiz_id}/${userID}`} title="Participate" className="transition-all delay-75 inline-block px-[15px] py-[6px] md:px-[25px] md:py-[8px] font-ubuntu text-[16px] md:text-[18px] text-white bg-theme-color-1 hover:bg-theme-color-1-hover-dark">
                                                                                 Participate
                                                                             </Link>
                                                                         )

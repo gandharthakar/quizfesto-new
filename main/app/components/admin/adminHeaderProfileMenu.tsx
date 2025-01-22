@@ -37,8 +37,6 @@ function AdminHeaderProfileMenu() {
         const resp = await fetch(`${baseURI}/api/admin/auth-user/get-user`, {
             method: 'POST',
             body: JSON.stringify({ user_id: auid }),
-            cache: 'no-store',
-            next: { revalidate: 60 }
         });
         const body = await resp.json();
         if (body.success) {

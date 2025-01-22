@@ -39,7 +39,7 @@ export default function Header(props: { isSticky?: boolean }) {
     return (
         <>
             <div className={`top-[20px] left-[15px] menu-ms-1:top-[25px] z-[20] ${isSticky ? 'fixed' : 'absolute'}`}>
-                <Link href="/" title="QuizFesto Home" as="image">
+                <Link href="/" title="QuizFesto Home">
                     <Image
                         src={SiteLogo}
                         alt="logo"

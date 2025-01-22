@@ -5,11 +5,12 @@ import { useEffect, useState } from "react";
 import Swal from "sweetalert2";
 import AdminBreadcrumbs from "@/app/components/admin/adminBreadcrumbs";
 import { convertToSlug } from "@/app/libs/helpers/helperFunctions";
+import TokenChecker from "@/app/libs/tokenChecker";
 
 function Page() {
 
-    const parms = useParams();
-    const cat_id = parms.category_id;
+    const parms = useParams<{ category_id: string[] }>();
+    const cat_id = parms.category_id[0];
     const [catTitle, setCatTitle] = useState<string>("");
     const [catSlug, setCatSlug] = useState<string>("");
     const [catError, setCatError] = useState<string>("");
@@ -79,8 +80,6 @@ function Page() {
         const resp = await fetch(`${baseURI}/api/admin/categories/crud/read`, {
             method: "POST",
             body: JSON.stringify({ category_id: cat_id }),
-            cache: 'no-store',
-            next: { revalidate: 60 }
         });
         const body = await resp.json();
         if (body.success) {
@@ -122,6 +121,7 @@ function Page() {
 
     return (
         <>
+            <TokenChecker is_admin={true} />
             <div className="py-[25px]">
                 <div className="pb-[25px]">
                     <AdminBreadcrumbs

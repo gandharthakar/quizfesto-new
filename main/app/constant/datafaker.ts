@@ -649,102 +649,102 @@ const dump_list_of_quizes = [
 const dump_list_of_questions = [
     {
         question_id: 21,
-        question_title: "This is question - 1 ?", 
+        question_title: "This is question - 1 ?",
         question_mark: 2
     },
     {
         question_id: 22,
-        question_title: "This is question - 2 ?", 
+        question_title: "This is question - 2 ?",
         question_mark: 2
     },
     {
         question_id: 23,
-        question_title: "This is question - 3 ?", 
+        question_title: "This is question - 3 ?",
         question_mark: 2
     },
     {
         question_id: 24,
-        question_title: "This is question - 4 ?", 
+        question_title: "This is question - 4 ?",
         question_mark: 2
     },
     {
         question_id: 25,
-        question_title: "This is question - 5 ?", 
+        question_title: "This is question - 5 ?",
         question_mark: 2
     },
     {
         question_id: 26,
-        question_title: "This is question - 6 ?", 
+        question_title: "This is question - 6 ?",
         question_mark: 2
     },
     {
         question_id: 27,
-        question_title: "This is question - 7 ?", 
+        question_title: "This is question - 7 ?",
         question_mark: 2
     },
     {
         question_id: 28,
-        question_title: "This is question - 8 ?", 
+        question_title: "This is question - 8 ?",
         question_mark: 2
     },
     {
         question_id: 29,
-        question_title: "This is question - 9 ?", 
+        question_title: "This is question - 9 ?",
         question_mark: 2
     },
     {
         question_id: 30,
-        question_title: "This is question - 10 ?", 
+        question_title: "This is question - 10 ?",
         question_mark: 2
     },
     {
         question_id: 31,
-        question_title: "This is question - 11 ?", 
+        question_title: "This is question - 11 ?",
         question_mark: 2
     },
     {
         question_id: 32,
-        question_title: "This is question - 12 ?", 
+        question_title: "This is question - 12 ?",
         question_mark: 2
     },
     {
         question_id: 33,
-        question_title: "This is question - 13 ?", 
+        question_title: "This is question - 13 ?",
         question_mark: 2
     },
     {
         question_id: 34,
-        question_title: "This is question - 14 ?", 
+        question_title: "This is question - 14 ?",
         question_mark: 2
     },
     {
         question_id: 35,
-        question_title: "This is question - 15 ?", 
+        question_title: "This is question - 15 ?",
         question_mark: 2
     },
     {
         question_id: 36,
-        question_title: "This is question - 16 ?", 
+        question_title: "This is question - 16 ?",
         question_mark: 2
     },
     {
         question_id: 37,
-        question_title: "This is question - 17 ?", 
+        question_title: "This is question - 17 ?",
         question_mark: 2
     },
     {
         question_id: 38,
-        question_title: "This is question - 18 ?", 
+        question_title: "This is question - 18 ?",
         question_mark: 2
     },
     {
         question_id: 39,
-        question_title: "This is question - 19 ?", 
+        question_title: "This is question - 19 ?",
         question_mark: 2
     },
     {
         question_id: 40,
-        question_title: "This is question - 20 ?", 
+        question_title: "This is question - 20 ?",
         question_mark: 2
     },
 ];
@@ -994,6 +994,9 @@ const dump_list_of_users = [
     },
 ];
 
+const redirectURIAdmin = "/admin/login";
+const redirectURISite = "/sign-in";
+
 export {
     dump_cats_homepage,
     dump_testimonials_homepage,
@@ -1002,10 +1005,12 @@ export {
     dump_faqs_content,
     dump_quizzes_list,
     dump_quiz_data,
-    dump_my_participation, 
-    dump_list_of_quizes, 
-    dump_list_of_questions, 
-    dump_list_of_options, 
-    dump_list_of_categories, 
-    dump_list_of_users, 
+    dump_my_participation,
+    dump_list_of_quizes,
+    dump_list_of_questions,
+    dump_list_of_options,
+    dump_list_of_categories,
+    dump_list_of_users,
+    redirectURIAdmin,
+    redirectURISite
 }

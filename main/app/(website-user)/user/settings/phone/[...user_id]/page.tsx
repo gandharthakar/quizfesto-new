@@ -5,25 +5,15 @@ import { useForm, SubmitHandler } from "react-hook-form";
 import { useEffect, useState } from "react";
 import Swal from "sweetalert2";
 import { useParams, useRouter } from "next/navigation";
-import { getCookie } from "cookies-next/client";
-import { jwtDecode } from "jwt-decode";
-import { JWTDec } from "@/app/types/commonTypes";
 import { userPhoneSettingsFormVS, userPhoneSettingsValidationSchema } from "@/app/libs/zod/schemas/userAreaValidationSchemas";
+import TokenChecker from "@/app/libs/tokenChecker";
+import AuthChecker from "@/app/libs/authChecker";
 
 export default function Page() {
 
     const router = useRouter();
-    const params = useParams<{ user_id: string }>();
-    const user_id = params.user_id;
-
-    const gau = getCookie('is_auth_user');
-    if (gau) {
-        const user_id_ck: JWTDec = jwtDecode(gau);
-        const fin_uid = user_id_ck.is_auth_user;
-        if (user_id !== fin_uid) {
-            router.push('/logout');
-        }
-    }
+    const params = useParams<{ user_id: string[] }>();
+    const user_id = params.user_id[0];
 
     const [isLoading, setIsLoading] = useState<boolean>(true);
 
@@ -65,8 +55,6 @@ export default function Page() {
         const resp = await fetch(`${baseURI}/api/site/auth-user/get-single-user`, {
             method: 'POST',
             body: JSON.stringify({ user_id }),
-            cache: 'no-store',
-            next: { revalidate: 60 }
         });
         const body = await resp.json();
         if (body.success) {
@@ -88,13 +76,10 @@ export default function Page() {
         //eslint-disable-next-line
     }, []);
 
-    // useEffect(() => {
-    //     setValue("phone_number", phone??'');
-    // //eslint-disable-next-line
-    // }, [phone]);
-
     return (
         <>
+            <AuthChecker />
+            <TokenChecker is_admin={false} />
             <div className="pt-[25px] lg:pt-0">
                 <div className="transition-all delay-75 bg-white border-[2px] border-solid border-zinc-300 px-[20px] py-[20px] md:px-[40px] md:py-[30px] lg:max-w-[800px] dark:bg-zinc-950 dark:border-zinc-700">
                     <form onSubmit={handleSubmit(handleFormSubmit)}>

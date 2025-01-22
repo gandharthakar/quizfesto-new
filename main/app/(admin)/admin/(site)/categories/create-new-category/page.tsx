@@ -4,6 +4,7 @@ import { useState } from "react";
 import Swal from "sweetalert2";
 import AdminBreadcrumbs from "@/app/components/admin/adminBreadcrumbs";
 import { convertToSlug } from "@/app/libs/helpers/helperFunctions";
+import TokenChecker from "@/app/libs/tokenChecker";
 
 function Page() {
 
@@ -89,6 +90,7 @@ function Page() {
 
     return (
         <>
+            <TokenChecker is_admin={true} />
             <div className="py-[25px]">
                 <div className="pb-[25px]">
                     <AdminBreadcrumbs

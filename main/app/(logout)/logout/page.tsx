@@ -1,6 +1,6 @@
 'use client';
 
-import { deleteCookie } from "cookies-next";
+import { deleteCookie } from "cookies-next/client";
 import { signOut } from "next-auth/react";
 import { useEffect } from "react";
 

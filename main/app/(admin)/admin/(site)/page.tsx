@@ -8,6 +8,7 @@ import { FaRegUser } from "react-icons/fa";
 import { GoTrophy } from "react-icons/go";
 import { useEffect, useState } from "react";
 import { AdminStatsDataCardType } from "@/app/types/components/admin/componentsTypes";
+import TokenChecker from "@/app/libs/tokenChecker";
 
 function Page() {
 
@@ -23,13 +24,20 @@ function Page() {
 
     const getStats = async () => {
         const baseURI = window.location.origin;
-        const resp = await fetch(`${baseURI}/api/admin/stats`, {
-            method: "GET"
-        });
-        const body = await resp.json();
-        if (body.success) {
-            setStats(body.stats);
-            setIsLoading(false);
+        try {
+            const resp = await fetch(`${baseURI}/api/admin/stats`, {
+                method: "GET"
+            });
+            if (!resp.ok) {
+                setIsLoading(false);
+            }
+            const body = await resp.json();
+            if (body.success) {
+                setStats(body.stats);
+                setIsLoading(false);
+            }
+        } catch (error) {
+            console.log(error);
         }
     }
 
@@ -39,6 +47,7 @@ function Page() {
 
     return (
         <>
+            <TokenChecker is_admin={true} />
             <div className="py-[25px]">
                 <div className="pb-[20px]">
                     <h1 className="transition-all delay-75 text-zinc-900 text-[16px] md:text-[20px] font-ubuntu font-semibold dark:text-zinc-200">

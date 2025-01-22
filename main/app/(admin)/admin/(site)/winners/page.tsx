@@ -1,6 +1,7 @@
 'use client';
 
 import WinnersUsersForm from "@/app/components/admin/winnersUsersForm";
+import TokenChecker from "@/app/libs/tokenChecker";
 import { WinnerUserFormType } from "@/app/types/components/admin/componentsTypes";
 import { useEffect, useState } from "react";
 import Swal from "sweetalert2";
@@ -28,15 +29,22 @@ function Page() {
 
     const readWinners = async () => {
         const baseURI = window.location.origin;
-        const resp = await fetch(`${baseURI}/api/admin/winners/bulk-actions/read-all`, {
-            method: "GET",
-        });
-        const body = await resp.json();
-        if (body.success) {
-            setIsLoading(false);
-            setWinnersData(body.winners);
-        } else {
-            setIsLoading(false);
+        try {
+            const resp = await fetch(`${baseURI}/api/admin/winners/bulk-actions/read-all`, {
+                method: "GET",
+            });
+            if (!resp.ok) {
+                setIsLoading(false);
+            }
+            const body = await resp.json();
+            if (body.success) {
+                setIsLoading(false);
+                setWinnersData(body.winners);
+            } else {
+                setIsLoading(false);
+            }
+        } catch (error) {
+            console.log(error);
         }
     }
 
@@ -76,6 +84,7 @@ function Page() {
 
     return (
         <>
+            <TokenChecker is_admin={true} />
             <div className="py-[25px]">
                 <div className="pb-[25px] flex items-center gap-[15px]">
                     <button

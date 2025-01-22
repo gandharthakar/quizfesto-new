@@ -7,14 +7,15 @@ import { useParams, useRouter } from "next/navigation";
 import Swal from "sweetalert2";
 import { FaCloudUploadAlt, FaRegTrashAlt } from "react-icons/fa";
 import { convertBase64 } from "@/app/libs/helpers/helperFunctions";
+import TokenChecker from "@/app/libs/tokenChecker";
 
 const Page = () => {
 
     const defaultImage = "https://placehold.co/1000x1000/png";
 
     const router = useRouter();
-    const param = useParams();
-    const user_id = param.userid;
+    const param = useParams<{ userid: string[] }>();
+    const user_id = param.userid[0];
 
     const [prevImageURI, setPrevImageURI] = useState<string>(defaultImage);
     const [imageFile, setImageFile] = useState<string>('');
@@ -93,28 +94,35 @@ const Page = () => {
 
     const getUser = async () => {
         const baseURI = window.location.origin;
-        const resp = await fetch(`${baseURI}/api/admin/auth-user/settings/photo/get`, {
-            method: 'POST',
-            body: JSON.stringify({ user_id }),
-        });
-        const body = await resp.json();
-        if (body.success) {
-            if (body.user_photo == '' || body.user_photo == null) {
-
-                setAlreadyHaveImage(false);
-            } else {
-                setAlreadyHaveImage(true);
-                setUserImage(body.user_photo);
-            }
-            setIsLoading(false);
-        } else {
-            Swal.fire({
-                title: "Error!",
-                text: body.message,
-                icon: "error",
-                timer: 4000
+        try {
+            const resp = await fetch(`${baseURI}/api/admin/auth-user/settings/photo/get`, {
+                method: 'POST',
+                body: JSON.stringify({ user_id }),
             });
-            setIsLoading(false);
+            if (!resp.ok) {
+                setIsLoading(false);
+            }
+            const body = await resp.json();
+            if (body.success) {
+                if (body.user_photo == '' || body.user_photo == null) {
+
+                    setAlreadyHaveImage(false);
+                } else {
+                    setAlreadyHaveImage(true);
+                    setUserImage(body.user_photo);
+                }
+                setIsLoading(false);
+            } else {
+                Swal.fire({
+                    title: "Error!",
+                    text: body.message,
+                    icon: "error",
+                    timer: 4000
+                });
+                setIsLoading(false);
+            }
+        } catch (error) {
+            console.log(error);
         }
     }
 
@@ -184,6 +192,7 @@ const Page = () => {
 
     return (
         <>
+            <TokenChecker is_admin={true} />
             <div className="pt-[15px] pb-[25px]">
                 <div className="pb-[25px]">
                     <AdminSettingsNav />

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Select from "react-tailwindcss-select";
 import Swal from "sweetalert2";
 import { RTSPkgSelectType } from "@/app/types/components/admin/componentsTypes";
+import TokenChecker from "@/app/libs/tokenChecker";
 
 function Page() {
 
@@ -139,30 +140,37 @@ function Page() {
 
     const getCats = async () => {
         const baseURI = window.location.origin;
-        const resp = await fetch(`${baseURI}/api/admin/categories/bulk-actions/read-all`, {
-            method: "GET",
-        });
-        const body = await resp.json();
-        if (body.success) {
-            const cts = body.cat_data;
-            const opts: RTSPkgSelectType[] = [];
-            for (let i = 0; i < cts.length; i++) {
-                const obj = {
-                    value: cts[i].category_id,
-                    label: cts[i].category_title
-                }
-                opts.push(obj);
-            }
-            setHomeCatOpts(opts);
-            setIsLoading(false);
-        } else {
-            Swal.fire({
-                title: "Error!",
-                text: body.message,
-                icon: "error",
-                timer: 4000
+        try {
+            const resp = await fetch(`${baseURI}/api/admin/categories/bulk-actions/read-all`, {
+                method: "GET",
             });
-            setIsLoading(false);
+            if (!resp.ok) {
+                setIsLoading(false);
+            }
+            const body = await resp.json();
+            if (body.success) {
+                const cts = body.cat_data;
+                const opts: RTSPkgSelectType[] = [];
+                for (let i = 0; i < cts.length; i++) {
+                    const obj = {
+                        value: cts[i].category_id,
+                        label: cts[i].category_title
+                    }
+                    opts.push(obj);
+                }
+                setHomeCatOpts(opts);
+                setIsLoading(false);
+            } else {
+                Swal.fire({
+                    title: "Error!",
+                    text: body.message,
+                    icon: "error",
+                    timer: 4000
+                });
+                setIsLoading(false);
+            }
+        } catch (error) {
+            console.log(error);
         }
     }
 
@@ -180,6 +188,7 @@ function Page() {
 
     return (
         <>
+            <TokenChecker is_admin={true} />
             <div className="py-[25px]">
                 <form onSubmit={handleSubmit}>
                     <div className="transition-all delay-75 border-[2px] border-solid p-[15px] md:p-[25px] border-zinc-300 bg-white dark:bg-zinc-800 dark:border-zinc-600">

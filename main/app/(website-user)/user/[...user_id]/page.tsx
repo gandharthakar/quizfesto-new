@@ -4,31 +4,20 @@ import { FaTrophy } from "react-icons/fa6";
 import { IoChatboxEllipses } from "react-icons/io5";
 import { FaFlag } from "react-icons/fa6";
 import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { FaLongArrowAltRight } from "react-icons/fa";
-import { getCookie } from "cookies-next/client";
-import { jwtDecode } from "jwt-decode";
 import { IoIosWarning } from "react-icons/io";
 import Swal from "sweetalert2";
-import { JWTDec } from "@/app/types/commonTypes";
 import { CheckWinnerType, UserStatsType } from "@/app/types/pages/website/user-area/userAreaPageTypes";
+import TokenChecker from "@/app/libs/tokenChecker";
+import AuthChecker from "@/app/libs/authChecker";
 
 export default function Page() {
 
-    const router = useRouter();
-    const params = useParams<{ user_id: string }>();
-    const user_id = params.user_id;
-
-    const gau = getCookie('is_auth_user');
-    if (gau) {
-        const user_id_ck: JWTDec = jwtDecode(gau);
-        const fin_uid = user_id_ck.is_auth_user;
-        if (user_id !== fin_uid) {
-            router.push('/logout');
-        }
-    }
+    const params = useParams<{ user_id: string[] }>();
+    const user_id = params.user_id[0];
 
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [userStats, setUserStats] = useState<UserStatsType>({
@@ -104,6 +93,8 @@ export default function Page() {
 
     return (
         <>
+            <AuthChecker />
+            <TokenChecker is_admin={false} />
             <div className="py-[25px]">
 
                 {

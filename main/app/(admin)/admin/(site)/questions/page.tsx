@@ -13,6 +13,7 @@ import SitePagination from "@/app/components/sitePagination";
 import { FaEllipsisVertical } from "react-icons/fa6";
 import { GFG } from "@/app/libs/helpers/helperFunctions";
 import { AdminQuestionDataType } from "@/app/types/components/admin/componentsTypes";
+import TokenChecker from "@/app/libs/tokenChecker";
 
 function Page() {
 
@@ -191,17 +192,24 @@ function Page() {
 
     const getCatData = async () => {
         const baseURI = window.location.origin;
-        const resp = await fetch(`${baseURI}/api/admin/questions/bulk-actions/read-all`, {
-            method: "GET",
-        });
-        const body = await resp.json();
-        if (body.success) {
-            setIsLoading(false);
-            setQestionListData(GFG(body.questions, currentPage, dataPerPage));
-            setQuestionData(body.questions);
-            setTotalPages(Math.ceil(body.questions.length / dataPerPage));
-        } else {
-            setIsLoading(false);
+        try {
+            const resp = await fetch(`${baseURI}/api/admin/questions/bulk-actions/read-all`, {
+                method: "GET",
+            });
+            if (!resp.ok) {
+                setIsLoading(false);
+            }
+            const body = await resp.json();
+            if (body.success) {
+                setIsLoading(false);
+                setQestionListData(GFG(body.questions, currentPage, dataPerPage));
+                setQuestionData(body.questions);
+                setTotalPages(Math.ceil(body.questions.length / dataPerPage));
+            } else {
+                setIsLoading(false);
+            }
+        } catch (error) {
+            console.log(error);
         }
     }
 
@@ -235,6 +243,7 @@ function Page() {
 
     return (
         <>
+            <TokenChecker is_admin={true} />
             <div className="py-[25px]">
                 <div className="pb-[25px]">
                     <div className="flex gap-x-[15px] gap-y-[10px] flex-wrap items-center">

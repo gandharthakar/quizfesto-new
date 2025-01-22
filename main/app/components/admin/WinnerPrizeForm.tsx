@@ -21,6 +21,8 @@ function WinnerPrizeForm(props: WinnerPrizeFormType) {
     const [imageDimensions, setImageDimensions] = useState<boolean>(false);
     const [descr, setDescr] = useState<string>("");
     const [descError, setDescError] = useState<string>("");
+    const [scoreLimit, setScoreLimit] = useState<string>("");
+    const [SLError, setSLError] = useState<string>("");
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [btnTxt, setBtnTxt] = useState<string>("Save");
 
@@ -65,6 +67,7 @@ function WinnerPrizeForm(props: WinnerPrizeFormType) {
         setFileExt("");
         setImageFileSize(false);
         setImageDimensions(false);
+        setScoreLimit("");
     }
 
     const removePrize = async () => {
@@ -100,6 +103,20 @@ function WinnerPrizeForm(props: WinnerPrizeFormType) {
             setDescError("Please enter some value.");
         } else {
             setDescError("");
+        }
+    }
+
+    const handleChangeSL = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const value = e.target.value;
+        setScoreLimit(value);
+        if (value == '') {
+            setSLError("Please enter score limit");
+        } else {
+            if (isNaN(Number(value))) {
+                setSLError("Please enter numbers only.");
+            } else {
+                setSLError("");
+            }
         }
     }
 
@@ -156,11 +173,26 @@ function WinnerPrizeForm(props: WinnerPrizeFormType) {
             }
         }
 
-        if (validPrizeCoverPhoto && descr) {
+        let validSL = false;
+        if (scoreLimit == '') {
+            setSLError("Please enter score limit");
+            validSL = false;
+        } else {
+            if (isNaN(Number(scoreLimit))) {
+                setSLError("Please enter numbers only.");
+                validSL = false;
+            } else {
+                setSLError("");
+                validSL = true;
+            }
+        }
+
+        if (validPrizeCoverPhoto && descr && validSL) {
             const data = {
                 prize_type: prize_type_text,
                 prize_photo: imageFile,
                 prize_description: descr,
+                winning_score_limit: Number(scoreLimit)
             }
             setIsLoading(true);
             const baseURI = window.location.origin;
@@ -187,7 +219,7 @@ function WinnerPrizeForm(props: WinnerPrizeFormType) {
                     title: "Error!",
                     text: body.message,
                     icon: "error",
-                    timer: 1500
+                    timer: 10000
                 });
             }
         }
@@ -196,32 +228,40 @@ function WinnerPrizeForm(props: WinnerPrizeFormType) {
     const getPrize = async () => {
         setIsLoading(true);
         const baseURI = window.location.origin;
-        const resp = await fetch(`${baseURI}/api/admin/prizes/read`, {
-            method: "POST",
-            body: JSON.stringify({ prize_type: prize_type_text }),
-            cache: 'no-store',
-            next: { revalidate: 60 }
-        });
-        const body = await resp.json();
-        if (body.success) {
-            setIsLoading(false);
-            // Swal.fire({
-            //     title: "Success!",
-            //     text: body.message,
-            //     icon: "success",
-            //     timer: 4000
-            // });
-            if (body.message == "No Prize Found!") {
-                setBtnTxt("Save");
-            } else {
-                setBtnTxt("Update");
-                setDescr(body.prize_description);
-                setProfileImage(body.prize_cover_photo);
-                setImageFile(body.prize_cover_photo);
-                setFileExt("png");
-                setImageFileSize(true);
-                setImageDimensions(true);
+        try {
+            const resp = await fetch(`${baseURI}/api/admin/prizes/read`, {
+                method: "POST",
+                body: JSON.stringify({ prize_type: prize_type_text }),
+            });
+            if (!resp.ok) {
+                setIsLoading(false);
             }
+            const body = await resp.json();
+            if (body.success) {
+                setIsLoading(false);
+                // Swal.fire({
+                //     title: "Success!",
+                //     text: body.message,
+                //     icon: "success",
+                //     timer: 4000
+                // });
+                if (body.message == "No Prize Found!") {
+                    setBtnTxt("Save");
+                } else {
+                    setBtnTxt("Update");
+                    setDescr(body.prize_description);
+                    setProfileImage(body.prize_cover_photo);
+                    setImageFile(body.prize_cover_photo);
+                    setScoreLimit(body.winning_score_limit);
+                    setFileExt("png");
+                    setImageFileSize(true);
+                    setImageDimensions(true);
+                }
+            } else {
+                setIsLoading(false);
+            }
+        } catch (error) {
+            console.log(error);
         }
     }
 
@@ -274,16 +314,33 @@ function WinnerPrizeForm(props: WinnerPrizeFormType) {
                                 </h6>
                             </div>
                             <div className="pb-[20px]">
-                                <input
-                                    type="text"
-                                    name="description"
-                                    className="ws-input-pwd-m1-v1"
-                                    placeholder="Description"
-                                    value={descr}
-                                    onChange={handleChangeDscr}
-                                    autoComplete="off"
-                                />
-                                {descError && (<div className="ws-input-error mt-[2px]">{descError}</div>)}
+                                <div className="flex flex-col md-t1:flex-row gap-[20px]">
+                                    <div className="w-full flex-auto md-t1:flex-1">
+                                        <input
+                                            type="text"
+                                            name="description"
+                                            className="ws-input-pwd-m1-v1"
+                                            placeholder="Description"
+                                            value={descr}
+                                            onChange={handleChangeDscr}
+                                            autoComplete="off"
+                                        />
+                                        {descError && (<div className="ws-input-error mt-[2px]">{descError}</div>)}
+                                    </div>
+                                    <div className="w-full max-w-none md-t1:max-w-[250px]">
+                                        <input
+                                            type="text"
+                                            name="score_limit"
+                                            className="ws-input-pwd-m1-v1"
+                                            placeholder="Score Limit"
+                                            value={scoreLimit}
+                                            onChange={handleChangeSL}
+                                            autoComplete="off"
+                                        />
+                                        {SLError && (<div className="ws-input-error mt-[2px]">{SLError}</div>)}
+                                    </div>
+                                </div>
+
                             </div>
                             <div className="text-right">
                                 <button

@@ -41,7 +41,7 @@ const handler = NextAuth({
                 });
             } else {
                 const id = fuser.user_id;
-                const token = jwt.sign({ is_auth_user: id }, process.env.JWT_SECRET ?? "", { expiresIn: '30d' });
+                const token = jwt.sign({ is_auth_user: id }, process.env.JWT_SECRET ?? "", { expiresIn: '1h' });
                 const cookieStore = await cookies();
                 cookieStore.set({
                     name: 'is_auth_user',

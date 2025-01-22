@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import Select from "react-tailwindcss-select";
 import { FaRegTrashAlt } from "react-icons/fa";
 import Image from "next/image";
-import z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { HiOutlinePlus } from "react-icons/hi";
@@ -14,12 +13,14 @@ import { useParams } from "next/navigation";
 import AdminBreadcrumbs from "@/app/components/admin/adminBreadcrumbs";
 import { RTSPkgSelectType } from "@/app/types/components/admin/componentsTypes";
 import { convertBase64 } from "@/app/libs/helpers/helperFunctions";
+import { AdminQuizesFormVS, AdminQuizesValidationSchema } from "@/app/libs/zod/schemas/adminValidationSchemas";
+import TokenChecker from "@/app/libs/tokenChecker";
 
 function Page() {
 
     const defaultImage = "https://placehold.co/1000x700/png";
-    const params = useParams();
-    const quiz_id = params.quiz_id;
+    const params = useParams<{ quiz_id: string[] }>();
+    const quiz_id = params.quiz_id[0];
 
     const [quizCats, setQuizCats] = useState<RTSPkgSelectType[]>([]);
     const [alreadyHaveFeImg, setAlreadyHaveFeImg] = useState<boolean>(false);
@@ -107,48 +108,8 @@ function Page() {
         }
     }
 
-    const validationSchema = z.object({
-        quiz_main_title: z.string({
-            required_error: "Please enter quiz title",
-            invalid_type_error: "Quiz title must be in string format."
-        }).min(10, { message: "Quiz title must be contains at least 10 characters." }),
-
-        quiz_summ: z.string({
-            required_error: "Please enter quiz summary",
-            invalid_type_error: "Quiz summary must be in string format."
-        }).min(15, { message: "Quiz summary must be contains at least 15 characters." }),
-
-        quiz_disp_time: z.string({
-            required_error: "Please enter quiz display time",
-            invalid_type_error: "Quiz display time must be in string format."
-        }).min(5, { message: "Quiz display time must be contains at least 5 characters." }),
-
-        quiz_est_time: z.string({
-            required_error: "Please enter quiz estimate time",
-            invalid_type_error: "Quiz estimate time must be in string format."
-        }).min(8, { message: "Quiz estimate time must be contains at least 8 characters." })
-            .max(8, { message: "Quiz estimate time must be contains at least 8 characters." }),
-
-        quiz_total_marks: z.number({
-            required_error: "Please enter quiz total marks",
-            invalid_type_error: "Quiz total marks be in integer (number) format."
-        }),
-
-        quiz_total_ques: z.number({
-            required_error: "Please enter quiz total questions",
-            invalid_type_error: "Quiz total questions be in integer (number) format."
-        }),
-
-        quiz_sts: z.string({
-            required_error: "Please select quiz status",
-            invalid_type_error: "Quiz status must be in string format."
-        }).min(3, { message: "Quiz status must be contains at least 3 characters." }),
-    });
-
-    type validationSchema = z.infer<typeof validationSchema>;
-
-    const { register, handleSubmit, setValue, formState: { errors } } = useForm<validationSchema>({
-        resolver: zodResolver(validationSchema),
+    const { register, handleSubmit, setValue, formState: { errors } } = useForm<AdminQuizesFormVS>({
+        resolver: zodResolver(AdminQuizesValidationSchema),
     });
 
     const clearFileInput = () => {
@@ -161,7 +122,7 @@ function Page() {
         setFileDimensions(false);
     }
 
-    const handleFormSubmit: SubmitHandler<validationSchema> = async (formdata) => {
+    const handleFormSubmit: SubmitHandler<AdminQuizesFormVS> = async (formdata) => {
 
         // Get file extention.
         const allowedFileTypes = ["jpg", "png"];
@@ -364,6 +325,7 @@ function Page() {
 
     return (
         <>
+            <TokenChecker is_admin={true} />
             <div className="py-[25px]">
                 <div className="pb-[25px]">
                     <AdminBreadcrumbs

@@ -17,8 +17,8 @@ export default function UserAreaNavBar() {
 
     const dispatch = useDispatch();
     const pathName = usePathname();
-    const params = useParams<{ user_id: string }>();
-    const user_id = params.user_id;
+    const params = useParams<{ user_id: string[] }>();
+    const user_id = params.user_id[0];
 
     const isMenuOpen = useSelector((state: RootState) => state.user_area_menu_toggle.is_user_area_menu_open);
     const [nameLetter, setNameLetter] = useState<string>('');
@@ -31,8 +31,6 @@ export default function UserAreaNavBar() {
         const resp = await fetch(`${baseURI}/api/site/auth-user/get-single-user`, {
             method: 'POST',
             body: JSON.stringify({ user_id }),
-            cache: 'no-store',
-            next: { revalidate: 60 }
         });
         const body = await resp.json();
         if (body.success) {

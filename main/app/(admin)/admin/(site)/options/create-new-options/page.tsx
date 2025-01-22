@@ -1,40 +1,22 @@
 'use client';
 
-import z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, SubmitHandler } from "react-hook-form";
 import Swal from "sweetalert2";
 import { useState } from "react";
 import AdminBreadcrumbs from "@/app/components/admin/adminBreadcrumbs";
+import { AdminOptionsFormVS, AdminOptionsValidationSchema } from "@/app/libs/zod/schemas/adminValidationSchemas";
+import TokenChecker from "@/app/libs/tokenChecker";
 
 function Page() {
 
     const [isLoading, setIsLoading] = useState<boolean>(false);
 
-    const validationSchema = z.object({
-        question_id: z.string({
-            required_error: "Please enter question ID",
-            invalid_type_error: "Question ID must be in string format."
-        }).min(5, { message: "Question ID must be contains at least 5 characters." }),
-
-        options: z.string({
-            required_error: "Please enter options.",
-            invalid_type_error: "Options text must be in string format."
-        }).min(5, { message: "Options text must be contains at least 5 characters." }),
-
-        correct_option: z.string({
-            required_error: "Please enter correct option.",
-            invalid_type_error: "Correct option text must be in string format."
-        }).min(1, { message: "Correct option text must be contains at least 1 characters." })
+    const { register, handleSubmit, reset, formState: { errors } } = useForm<AdminOptionsFormVS>({
+        resolver: zodResolver(AdminOptionsValidationSchema),
     });
 
-    type validationSchema = z.infer<typeof validationSchema>;
-
-    const { register, handleSubmit, reset, formState: { errors } } = useForm<validationSchema>({
-        resolver: zodResolver(validationSchema),
-    });
-
-    const handleFormSubmit: SubmitHandler<validationSchema> = async (formdata) => {
+    const handleFormSubmit: SubmitHandler<AdminOptionsFormVS> = async (formdata) => {
         setIsLoading(true);
         const baseURI = window.location.origin;
         const resp = await fetch(`${baseURI}/api/admin/options/crud/create`, {
@@ -83,6 +65,7 @@ function Page() {
 
     return (
         <>
+            <TokenChecker is_admin={true} />
             <div className="py-[25px]">
                 <div className="pb-[25px]">
                     <AdminBreadcrumbs

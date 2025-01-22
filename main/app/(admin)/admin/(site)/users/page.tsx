@@ -14,6 +14,7 @@ import { FaEllipsisVertical } from "react-icons/fa6";
 import { GrPowerReset } from "react-icons/gr";
 import { AdminUserDataType } from "@/app/types/components/admin/componentsTypes";
 import { GFG } from "@/app/libs/helpers/helperFunctions";
+import TokenChecker from "@/app/libs/tokenChecker";
 
 function Page() {
 
@@ -297,17 +298,24 @@ function Page() {
 
     const getUserData = async () => {
         const baseURI = window.location.origin;
-        const resp = await fetch(`${baseURI}/api/admin/users/bulk-actions/read-all`, {
-            method: "GET",
-        });
-        const body = await resp.json();
-        if (body.success) {
-            setIsLoading(false);
-            setUserList(GFG(body.users, currentPage, dataPerPage));
-            setUserData(body.users);
-            setTotalPages(Math.ceil(body.users.length / dataPerPage));
-        } else {
-            setIsLoading(false);
+        try {
+            const resp = await fetch(`${baseURI}/api/admin/users/bulk-actions/read-all`, {
+                method: "GET",
+            });
+            if (!resp.ok) {
+                setIsLoading(false);
+            }
+            const body = await resp.json();
+            if (body.success) {
+                setIsLoading(false);
+                setUserList(GFG(body.users, currentPage, dataPerPage));
+                setUserData(body.users);
+                setTotalPages(Math.ceil(body.users.length / dataPerPage));
+            } else {
+                setIsLoading(false);
+            }
+        } catch (error) {
+            console.log(error);
         }
     }
 
@@ -318,6 +326,7 @@ function Page() {
 
     return (
         <>
+            <TokenChecker is_admin={true} />
             <div className="py-[25px]">
                 <div className="pb-[25px]">
                     <div className="flex gap-x-[15px] gap-y-[10px] flex-wrap items-center">

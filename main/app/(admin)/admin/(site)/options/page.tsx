@@ -13,6 +13,7 @@ import { RiDeleteBin6Line } from "react-icons/ri";
 import Swal from "sweetalert2";
 import { GFG } from "@/app/libs/helpers/helperFunctions";
 import { AdminOptionsDataType } from "@/app/types/components/admin/componentsTypes";
+import TokenChecker from "@/app/libs/tokenChecker";
 
 function Page() {
 
@@ -191,19 +192,24 @@ function Page() {
 
     const getOptions = async () => {
         const baseURI = window.location.origin;
-        const resp = await fetch(`${baseURI}/api/admin/options/bulk-actions/read-all`, {
-            method: "GET",
-            cache: 'no-store',
-            next: { revalidate: 60 }
-        });
-        const body = await resp.json();
-        if (body.success) {
-            setIsLoading(false);
-            setOptionsListData(GFG(body.options_list, currentPage, dataPerPage));
-            setOptionData(body.options_list);
-            setTotalPages(Math.ceil(body.options_list.length / dataPerPage));
-        } else {
-            setIsLoading(false);
+        try {
+            const resp = await fetch(`${baseURI}/api/admin/options/bulk-actions/read-all`, {
+                method: "GET",
+            });
+            if (!resp.ok) {
+                setIsLoading(false);
+            }
+            const body = await resp.json();
+            if (body.success) {
+                setIsLoading(false);
+                setOptionsListData(GFG(body.options_list, currentPage, dataPerPage));
+                setOptionData(body.options_list);
+                setTotalPages(Math.ceil(body.options_list.length / dataPerPage));
+            } else {
+                setIsLoading(false);
+            }
+        } catch (error) {
+            console.log(error);
         }
     }
 
@@ -237,6 +243,7 @@ function Page() {
 
     return (
         <>
+            <TokenChecker is_admin={true} />
             <div className="py-[25px]">
                 <div className="pb-[25px]">
                     <div className="flex gap-x-[15px] gap-y-[10px] flex-wrap items-center">

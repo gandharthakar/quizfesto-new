@@ -7,7 +7,7 @@ export default {
     // "./components/**/*.{js,ts,jsx,tsx,mdx}",
     "./app/**/*.{js,ts,jsx,tsx,mdx}",
     // "./app/**/layout.{js,ts,jsx,tsx,mdx}",
-    // "./node_modules/react-tailwindcss-select/dist/index.esm.js",
+    "./node_modules/react-tailwindcss-select/dist/index.esm.js",
   ],
   theme: {
     screens: {
@@ -16,6 +16,8 @@ export default {
 
       'md': '768px',
       // => @media (min-width: 768px) { ... }
+
+      'md-t1': '992px',
 
       'lg': '1025px',
       // => @media (min-width: 1024px) { ... }

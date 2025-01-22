@@ -3,28 +3,17 @@
 import MyParticipationCard from "@/app/components/myParticipationCard";
 import SitePagination from "@/app/components/sitePagination";
 // import { dump_my_participation } from "@/app/constant/datafaker";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import { getCookie } from "cookies-next/client";
-import { jwtDecode } from "jwt-decode";
-import { JWTDec } from "@/app/types/commonTypes";
 import { GFG } from "@/app/libs/helpers/helperFunctions";
 import { MyParticipationCardDataType } from "@/app/types/pages/website/user-area/userAreaPageTypes";
+import TokenChecker from "@/app/libs/tokenChecker";
+import AuthChecker from "@/app/libs/authChecker";
 
 export default function Page() {
 
-    const router = useRouter();
-    const params = useParams<{ user_id: string }>();
-    const user_id = params.user_id;
-
-    const gau = getCookie('is_auth_user');
-    if (gau) {
-        const user_id_ck: JWTDec = jwtDecode(gau);
-        const fin_uid = user_id_ck.is_auth_user;
-        if (user_id !== fin_uid) {
-            router.push('/logout');
-        }
-    }
+    const params = useParams<{ user_id: string[] }>();
+    const user_id = params.user_id[0];
 
     const dataPerPage = 5;
     const [currentPage, setCurrentPage] = useState<number>(1);
@@ -62,6 +51,8 @@ export default function Page() {
 
     return (
         <>
+            <AuthChecker />
+            <TokenChecker is_admin={false} />
             <section className="py-[25px]">
                 <div>
                     {

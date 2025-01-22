@@ -9,10 +9,10 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
-  // url      = env("DATABASE_URL")
-  url       = env("POSTGRES_PRISMA_URL")
-  directUrl = env("POSTGRES_URL_NON_POOLING")
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  // url       = env("POSTGRES_PRISMA_URL")
+  // directUrl = env("POSTGRES_URL_NON_POOLING")
 }
 
 model QF_User {
@@ -24,7 +24,7 @@ model QF_User {
   user_photo          String?
   user_gender         String?
   role                Role?                   @default(User)
-  isBlockedByAdmin    String?
+  isBlockedByAdmin    String?                 @default("false")
   user_participations QF_User_Participation[]
   Aggrigate_Scores    QF_Aggrigate_Scores[]
   QF_Winners          QF_Winners[]
@@ -112,12 +112,13 @@ model QF_Quiz_Category {
 }
 
 model QF_Winning_Prizes {
-  prize_id          String   @id @default(uuid())
-  prize_type        Int      @unique
-  prize_description String
-  prize_cover_photo String?
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  prize_id            String   @id @default(uuid())
+  prize_type          Int      @unique
+  prize_description   String
+  prize_cover_photo   String?
+  winning_score_limit Int
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
 }
 
 model QF_Winners {

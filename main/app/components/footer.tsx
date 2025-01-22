@@ -19,7 +19,7 @@ export default function Footer() {
                 <div className="flex items-start flex-col md:flex-row justify-between gap-y-[20px] gap-x-[20px]">
                     <div className="w-full md:w-auto">
                         <div>
-                            <Link href="/" title="QuizFesto Home" as="image">
+                            <Link href="/" title="QuizFesto Home">
                                 <Image
                                     // src="/images/quizfesto-logo-final.svg"
                                     src={SiteLogo}

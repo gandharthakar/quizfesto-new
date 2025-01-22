@@ -10,6 +10,8 @@ import { JWTDecAdmin } from "@/app/types/commonTypes";
 function AdminSettingsNav() {
 
     const pathName = usePathname();
+    // const params = useParams();
+    // const auid = params.userid;
     const [auid, setAuid] = useState<string>("");
 
     useEffect(() => {

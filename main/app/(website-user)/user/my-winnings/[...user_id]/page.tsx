@@ -1,27 +1,16 @@
 'use client';
 
 import UserAreaWinningCard from "@/app/components/userAreaWinningCard";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import { getCookie } from "cookies-next/client";
-import { jwtDecode } from "jwt-decode";
-import { JWTDec } from "@/app/types/commonTypes";
 import { WinnerUserDataType } from "@/app/types/pages/website/user-area/userAreaPageTypes";
+import TokenChecker from "@/app/libs/tokenChecker";
+import AuthChecker from "@/app/libs/authChecker";
 
 export default function Page() {
 
-    const router = useRouter();
-    const params = useParams<{ user_id: string }>();
-    const user_id = params.user_id;
-
-    const gau = getCookie('is_auth_user');
-    if (gau) {
-        const user_id_ck: JWTDec = jwtDecode(gau);
-        const fin_uid = user_id_ck.is_auth_user;
-        if (user_id !== fin_uid) {
-            router.push('/logout');
-        }
-    }
+    const params = useParams<{ user_id: string[] }>();
+    const user_id = params.user_id[0];
 
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [winData, setWindata] = useState<WinnerUserDataType>();
@@ -48,6 +37,8 @@ export default function Page() {
 
     return (
         <>
+            <AuthChecker />
+            <TokenChecker is_admin={false} />
             <div className="py-[25px]">
                 <div className="grid gap-[20px] grid-cols-1 md:grid-cols-2 xl-s1:grid-cols-3">
                     {

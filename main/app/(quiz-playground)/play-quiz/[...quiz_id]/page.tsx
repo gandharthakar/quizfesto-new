@@ -16,6 +16,8 @@ import Link from "next/link";
 import { IoIosWarning } from "react-icons/io";
 import { QuizDataPayloadType, QuizQAType, QuizQuestionType, UserQuizGivenAns } from "@/app/types/pages/website/quizPlaygroundPageTypes";
 import { shuffle_array } from "@/app/libs/helpers/helperFunctions";
+import TokenChecker from "@/app/libs/tokenChecker";
+import { FaHome } from "react-icons/fa";
 // import { RootState } from "@/app/redux-service/store";
 // import { useSelector } from "react-redux";
 
@@ -297,6 +299,9 @@ export default function Page() {
             method: "POST",
             body: JSON.stringify({ quiz_id }),
         });
+        if (!resp.ok) {
+            setIsLoading(false);
+        }
         const body = await resp.json();
         if (body.success) {
             setIsLoading(false);
@@ -323,6 +328,7 @@ export default function Page() {
     }
 
     const checkIfBlock = async () => {
+        getQuizQuestions();
         const baseURI = window.location.origin;
         const resp = await fetch(`${baseURI}/api/site/check-block-status`, {
             method: "POST",
@@ -333,7 +339,7 @@ export default function Page() {
             if (body.user_block_status == "true") {
                 setIsAdminBlockedYou(true);
             } else {
-                getQuizQuestions();
+
                 setIsAdminBlockedYou(false);
             }
         } else {
@@ -382,13 +388,14 @@ export default function Page() {
 
     return (
         <>
+            <TokenChecker is_admin={false} />
             <input type="hidden" value={qzId_ss + qzTitla_ss + qzCP_ss + timeTaken_ss + estTime_ss + qdt_ss + totalMarks_ss + totalQues_ss + negScore} />
             {usrAnsw_ss.map(() => null)}
             {
                 isAdminBlockedYou ?
                     (
                         <>
-                            <div className="flex flex-col items-center justify-center px-[20px] py-[50px] min-h-screen">
+                            <div className="flex flex-col items-center justify-center px-[20px] py-[50px] min-h-screen bg-white dark:bg-zinc-950">
                                 <div className="pb-[10px]">
                                     <div className="flex items-center gap-x-[10px]">
                                         <IoIosWarning size={30} className="w-[25px] h-[25px] md:w-[30px] md:h-[30px] text-red-600" />
@@ -396,10 +403,18 @@ export default function Page() {
                                         <IoIosWarning size={30} className="w-[25px] h-[25px] md:w-[30px] md:h-[30px] text-red-600" />
                                     </div>
                                 </div>
-                                <div className="text-center">
+                                <div className="pb-[10px] text-center">
                                     <h1 className="transition-all delay-75 font-ubuntu text-[16px] md:text-[18px] font-semibold text-red-600">
                                         Admin Blocked you for participating in quizes
                                     </h1>
+                                </div>
+                                <div className="text-center">
+                                    <Link href="/" title="Back to home" className="inline-block underline underline-offset-2 font-noto_sans text-[14px] text-blue-600 font-semibold">
+                                        <div className="flex gap-x-[5px] items-center">
+                                            <FaHome size={20} />
+                                            <div>Back to home</div>
+                                        </div>
+                                    </Link>
                                 </div>
                             </div>
                         </>

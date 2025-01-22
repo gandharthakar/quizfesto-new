@@ -5,7 +5,6 @@ import Image from "next/image";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/app/libs/redux-service/store";
-import z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { IoIosEye, IoIosEyeOff } from "react-icons/io";
@@ -14,6 +13,7 @@ import { BiLinkExternal } from "react-icons/bi";
 import Swal from "sweetalert2";
 import { setCookie } from "cookies-next/client";
 import { useRouter } from "next/navigation";
+import { AdminLoginFormVS, AdminLoginValidationSchema } from "@/app/libs/zod/schemas/adminValidationSchemas";
 
 function Page() {
 
@@ -23,26 +23,11 @@ function Page() {
     const [showPassword, setShowPassword] = useState<boolean>(false);
     const [isLoading, setIsLoading] = useState<boolean>(false);
 
-    const validationSchema = z.object({
-        email: z.string({
-            required_error: "Please enter email address.",
-            invalid_type_error: "Email must be in string format."
-        }).email({
-            message: "Please enter valid email address."
-        }).min(1),
-
-        password: z.string({
-            invalid_type_error: "Password must be in string format."
-        }).min(8).max(16),
+    const { register, handleSubmit, reset, formState: { errors } } = useForm<AdminLoginFormVS>({
+        resolver: zodResolver(AdminLoginValidationSchema)
     });
 
-    type validationSchema = z.infer<typeof validationSchema>;
-
-    const { register, handleSubmit, reset, formState: { errors } } = useForm<validationSchema>({
-        resolver: zodResolver(validationSchema)
-    });
-
-    const handleFormSubmit: SubmitHandler<validationSchema> = async (formdata) => {
+    const handleFormSubmit: SubmitHandler<AdminLoginFormVS> = async (formdata) => {
         setIsLoading(true);
         const baseURI = window.location.origin;
         const resp = await fetch(`${baseURI}/api/admin/auth-user/sign-in`, {

@@ -6,27 +6,17 @@ import { useEffect, useState } from "react";
 import { FaRegTrashAlt } from "react-icons/fa";
 import { FaCloudUploadAlt } from "react-icons/fa";
 import Swal from "sweetalert2";
-import { getCookie } from "cookies-next/client";
-import { jwtDecode } from "jwt-decode";
-import { JWTDec } from "@/app/types/commonTypes";
 import { convertBase64 } from "@/app/libs/helpers/helperFunctions";
+import TokenChecker from "@/app/libs/tokenChecker";
+import AuthChecker from "@/app/libs/authChecker";
 
 export default function Page() {
 
     const defaultImage = "https://placehold.co/1000x1000/png";
 
     const router = useRouter();
-    const params = useParams<{ user_id: string }>();
-    const user_id = params.user_id;
-
-    const gau = getCookie('is_auth_user');
-    if (gau) {
-        const user_id_ck: JWTDec = jwtDecode(gau);
-        const fin_uid = user_id_ck.is_auth_user;
-        if (user_id !== fin_uid) {
-            router.push('/logout');
-        }
-    }
+    const params = useParams<{ user_id: string[] }>();
+    const user_id = params.user_id[0];
 
     const [prevImageURI, setPrevImageURI] = useState<string>(defaultImage);
     const [imageFile, setImageFile] = useState<string>('');
@@ -188,6 +178,8 @@ export default function Page() {
 
     return (
         <>
+            <AuthChecker />
+            <TokenChecker is_admin={false} />
             <div className="pt-[25px] lg:pt-0">
                 <div className="transition-all delay-75 bg-white border-[2px] border-solid border-zinc-300 px-[20px] py-[20px] md:px-[40px] md:py-[30px] lg:max-w-[800px] dark:bg-zinc-950 dark:border-zinc-700">
                     {

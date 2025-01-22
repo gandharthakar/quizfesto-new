@@ -16,14 +16,16 @@ type Children = {
 
 export default function RootLayout({ children, }: Readonly<Children>) {
 	return (
-		<div className="flex overflow-hidden">
-			<AdminAreaNav />
-			<div className="transition-all delay-75 bg-zinc-100 min-h-screen flex-1 dark:bg-zinc-900">
-				<AdminAreaTopHeader />
-				<div className="px-[15px]">
-					{children}
+		<>
+			<div className="flex overflow-hidden">
+				<AdminAreaNav />
+				<div className="transition-all delay-75 bg-zinc-100 min-h-screen flex-1 dark:bg-zinc-900">
+					<AdminAreaTopHeader />
+					<div className="px-[15px]">
+						{children}
+					</div>
 				</div>
 			</div>
-		</div>
+		</>
 	);
 }

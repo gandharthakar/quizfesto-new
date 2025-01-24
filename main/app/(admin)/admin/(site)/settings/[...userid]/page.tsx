@@ -8,6 +8,8 @@ import { useParams } from "next/navigation";
 import Swal from "sweetalert2";
 import { AdminGeneralSettingsFormVS, AdminGeneralSettingsValidationSchema } from "@/app/libs/zod/schemas/adminValidationSchemas";
 import TokenChecker from "@/app/libs/tokenChecker";
+import { getCookie } from "cookies-next/client";
+import { adminAuthUserCookieName } from "@/app/constant/datafaker";
 
 function Page() {
 
@@ -23,25 +25,40 @@ function Page() {
     const handleFormSubmit: SubmitHandler<AdminGeneralSettingsFormVS> = async (formdata) => {
         setIsLoading(true);
         const baseURI = window.location.origin;
-        const resp = await fetch(`${baseURI}/api/admin/auth-user/settings/general/set`, {
-            method: 'POST',
-            body: JSON.stringify({ user_id: AuthUser, user_full_name: formdata.full_name, user_email: formdata.email, user_gender: gender })
-        });
-        const body = await resp.json();
-        if (body.success) {
-            Swal.fire({
-                title: "Success!",
-                text: body.message,
-                icon: "success",
-                timer: 4000
+        const token = getCookie(adminAuthUserCookieName);
+        try {
+            const resp = await fetch(`${baseURI}/api/admin/auth-user/settings/general/set`, {
+                method: 'POST',
+                body: JSON.stringify({ token, user_full_name: formdata.full_name, user_email: formdata.email, user_gender: gender })
             });
-            //this will reload the page without doing SSR
-            // router.refresh();
-            setIsLoading(false);
-        } else {
+            if (!resp.ok) {
+                setIsLoading(false);
+            }
+            const body = await resp.json();
+            if (body.success) {
+                Swal.fire({
+                    title: "Success!",
+                    text: body.message,
+                    icon: "success",
+                    timer: 4000
+                });
+                //this will reload the page without doing SSR
+                // router.refresh();
+                setIsLoading(false);
+            } else {
+                Swal.fire({
+                    title: "Error!",
+                    text: body.message,
+                    icon: "error",
+                    timer: 4000
+                });
+                setIsLoading(false);
+            }
+            //eslint-disable-next-line
+        } catch (error: any) {
             Swal.fire({
                 title: "Error!",
-                text: body.message,
+                text: error.message,
                 icon: "error",
                 timer: 4000
             });
@@ -52,10 +69,10 @@ function Page() {
     const getUser = async () => {
         setIsLoading(true);
         const baseURI = window.location.origin;
+        const token = getCookie(adminAuthUserCookieName);
         try {
-            const resp = await fetch(`${baseURI}/api/admin/auth-user/settings/general/get`, {
-                method: 'POST',
-                body: JSON.stringify({ user_id: AuthUser }),
+            const resp = await fetch(`${baseURI}/api/admin/auth-user/settings/general/get?token=${token}`, {
+                method: 'GET',
             });
             if (!resp.ok) {
                 setIsLoading(false);
@@ -71,10 +88,16 @@ function Page() {
             } else {
                 setIsLoading(false);
             }
-        } catch (error) {
-            console.log(error);
+            //eslint-disable-next-line
+        } catch (error: any) {
+            Swal.fire({
+                title: "Error!",
+                text: error.message,
+                icon: "error",
+                timer: 4000
+            });
+            setIsLoading(false);
         }
-
     }
 
     useEffect(() => {
@@ -84,6 +107,7 @@ function Page() {
 
     return (
         <>
+            <input type="hidden" value={AuthUser} />
             <TokenChecker is_admin={true} />
             <div className="pt-[15px] pb-[25px]">
                 <div className="pb-[25px]">

@@ -6,6 +6,8 @@ import Swal from "sweetalert2";
 import AdminBreadcrumbs from "@/app/components/admin/adminBreadcrumbs";
 import { convertToSlug } from "@/app/libs/helpers/helperFunctions";
 import TokenChecker from "@/app/libs/tokenChecker";
+import { getCookie } from "cookies-next/client";
+import { adminAuthUserCookieName } from "@/app/constant/datafaker";
 
 function Page() {
 
@@ -44,32 +46,47 @@ function Page() {
         } else {
             setCatError("");
             setIsLoading(true);
+            const token = getCookie(adminAuthUserCookieName);
             const prepData = {
+                token,
                 category_id: cat_id,
                 category_title: catTitle,
                 category_slug: catSlug
             }
             const baseURI = window.location.origin;
-            const resp = await fetch(`${baseURI}/api/admin/categories/crud/update`, {
-                method: "POST",
-                body: JSON.stringify(prepData)
-            });
-            const body = await resp.json();
-            if (body.success) {
-                setIsLoading(false);
-                Swal.fire({
-                    title: "Success!",
-                    text: body.message,
-                    icon: "success",
-                    timer: 3000
+            try {
+                const resp = await fetch(`${baseURI}/api/admin/categories/crud/update`, {
+                    method: "POST",
+                    body: JSON.stringify(prepData)
                 });
-            } else {
-                setIsLoading(false);
+                if (!resp.ok) {
+                    setIsLoading(false);
+                }
+                const body = await resp.json();
+                if (body.success) {
+                    Swal.fire({
+                        title: "Success!",
+                        text: body.message,
+                        icon: "success",
+                        timer: 3000
+                    });
+                    setIsLoading(false);
+                } else {
+                    Swal.fire({
+                        title: "Error!",
+                        text: body.message,
+                        icon: "error",
+                        timer: 3000
+                    });
+                    setIsLoading(false);
+                }
+                //eslint-disable-next-line
+            } catch (error: any) {
                 Swal.fire({
                     title: "Error!",
-                    text: body.message,
+                    text: error.message,
                     icon: "error",
-                    timer: 3000
+                    timer: 4000
                 });
             }
         }
@@ -77,22 +94,35 @@ function Page() {
 
     const getCategoryDetails = async () => {
         const baseURI = window.location.origin;
-        const resp = await fetch(`${baseURI}/api/admin/categories/crud/read`, {
-            method: "POST",
-            body: JSON.stringify({ category_id: cat_id }),
-        });
-        const body = await resp.json();
-        if (body.success) {
-            setCatTitle(body.cat_data.category_title);
-            setCatSlug(body.cat_data.category_slug);
-            setIsLoading(false);
-        } else {
-            setIsLoading(false);
+        const token = getCookie(adminAuthUserCookieName);
+        try {
+            const resp = await fetch(`${baseURI}/api/admin/categories/crud/read?token=${token}&category_id=${cat_id}`, {
+                method: "GET",
+            });
+            if (!resp.ok) {
+                setIsLoading(false);
+            }
+            const body = await resp.json();
+            if (body.success) {
+                setCatTitle(body.cat_data.category_title);
+                setCatSlug(body.cat_data.category_slug);
+                setIsLoading(false);
+            } else {
+                Swal.fire({
+                    title: "Error!",
+                    text: body.message,
+                    icon: "error",
+                    timer: 2000
+                });
+                setIsLoading(false);
+            }
+            //eslint-disable-next-line
+        } catch (error: any) {
             Swal.fire({
                 title: "Error!",
-                text: body.message,
+                text: error.message,
                 icon: "error",
-                timer: 2000
+                timer: 4000
             });
         }
     }

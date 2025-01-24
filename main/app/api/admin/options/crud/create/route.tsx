@@ -1,5 +1,6 @@
 import prisma from "@/app/libs/db";
 import { NextResponse } from "next/server";
+import jwt from "jsonwebtoken";
 
 interface Respo {
     success: boolean,
@@ -12,25 +13,69 @@ export async function POST(req: Request) {
         message: ''
     }
 
-    let sts: number = 400;
+    let sts: number = 200;
+    let isTrueAdminUser: boolean = false;
 
     try {
 
         const body = await req.json();
-        const { question_id, options, correct_option } = body;
+        const { token, question_id, options, correct_option } = body;
 
-        if (question_id && options && correct_option) {
-            await prisma.qF_Option.create({
-                data: {
-                    questionid: question_id,
-                    options,
-                    correct_option,
+        if (token && question_id && options && correct_option) {
+            const res = jwt.verify(token as string, process.env.JWT_SECRET ?? "") as { is_admin_user: string };
+
+            if (res) {
+
+                const user_id = res.is_admin_user;
+
+                const fu__in__usrtblmdl = await prisma.qF_User.findFirst({
+                    where: {
+                        AND: [
+                            {
+                                user_id
+                            },
+                            {
+                                role: "Admin"
+                            }
+                        ]
+                    }
+                });
+                const fu__in__admntblmdl = await prisma.qF_Admin_User.findFirst({
+                    where: {
+                        admin_user_id: user_id,
+                    }
+                });
+
+                if (fu__in__usrtblmdl) {
+                    isTrueAdminUser = true;
+                } else {
+                    if (fu__in__admntblmdl) {
+                        isTrueAdminUser = true;
+                    } else {
+                        isTrueAdminUser = false;
+                    }
                 }
-            });
-            sts = 201;
-            resp = {
-                success: true,
-                message: "Options Created Successfully!"
+
+                if (isTrueAdminUser) {
+                    await prisma.qF_Option.create({
+                        data: {
+                            questionid: question_id,
+                            options,
+                            correct_option,
+                        }
+                    });
+                    sts = 201;
+                    resp = {
+                        success: true,
+                        message: "Options Created Successfully!"
+                    }
+                } else {
+                    sts = 200;
+                    resp = {
+                        success: false,
+                        message: "User Not Found."
+                    }
+                }
             }
         } else {
             sts = 400;
@@ -43,12 +88,38 @@ export async function POST(req: Request) {
         return NextResponse.json(resp, { status: sts });
         //eslint-disable-next-line
     } catch (error: any) {
-        sts = 500;
-        resp = {
-            success: false,
-            message: error.message
+        // sts = 500;
+        // resp = {
+        //     success: false,
+        //     message: error.message
+        // }
+        if (error.message == "jwt expired") {
+            resp = {
+                success: false,
+                message: "Your session is expired, Please login again."
+            }
+        } else if (error.message == "jwt malformed" || error.message == "jwt must be a string") {
+            resp = {
+                success: false,
+                message: "Wrong information provided."
+            }
+        } else if (error.message == "invalid signature" || error.message == "invalid token") {
+            resp = {
+                success: false,
+                message: "Invalid information provided."
+            }
+        } else if (error.message == "jwt must be provided") {
+            sts = 400;
+            resp = {
+                success: false,
+                message: "Missing required fields."
+            }
+        } else {
+            resp = {
+                success: false,
+                message: error.message
+            }
         }
-        console.log(error.message);
         return NextResponse.json(resp, { status: sts });
     }
 }

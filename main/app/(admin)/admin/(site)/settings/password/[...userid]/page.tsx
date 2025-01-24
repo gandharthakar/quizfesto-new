@@ -9,6 +9,8 @@ import Swal from "sweetalert2";
 import { useParams } from "next/navigation";
 import { AdminPasswordSettingsFormVS, AdminPasswordSettingsValidationSchema } from "@/app/libs/zod/schemas/adminValidationSchemas";
 import TokenChecker from "@/app/libs/tokenChecker";
+import { getCookie } from "cookies-next/client";
+import { adminAuthUserCookieName } from "@/app/constant/datafaker";
 
 function Page() {
 
@@ -25,24 +27,36 @@ function Page() {
     const handleFormSubmit: SubmitHandler<AdminPasswordSettingsFormVS> = async (formdata) => {
         setIsLoading(true);
         const baseURI = window.location.origin;
-        const resp = await fetch(`${baseURI}/api/admin/auth-user/settings/password`, {
-            method: 'POST',
-            body: JSON.stringify({ user_id: AuthUser, password: formdata.password, confirm_password: formdata.confirmPassword })
-        });
-        const body = await resp.json();
-        if (body.success) {
-            Swal.fire({
-                title: "Success!",
-                text: body.message,
-                icon: "success",
-                timer: 4000
+        const token = getCookie(adminAuthUserCookieName);
+        try {
+            const resp = await fetch(`${baseURI}/api/admin/auth-user/settings/password`, {
+                method: 'POST',
+                body: JSON.stringify({ token, password: formdata.password, confirm_password: formdata.confirmPassword })
             });
-            setIsLoading(false);
-            reset();
-        } else {
+            const body = await resp.json();
+            if (body.success) {
+                Swal.fire({
+                    title: "Success!",
+                    text: body.message,
+                    icon: "success",
+                    timer: 4000
+                });
+                setIsLoading(false);
+                reset();
+            } else {
+                Swal.fire({
+                    title: "Error!",
+                    text: body.message,
+                    icon: "error",
+                    timer: 4000
+                });
+                setIsLoading(false);
+            }
+            //eslint-disable-next-line
+        } catch (error: any) {
             Swal.fire({
                 title: "Error!",
-                text: body.message,
+                text: error.message,
                 icon: "error",
                 timer: 4000
             });
@@ -52,6 +66,7 @@ function Page() {
 
     return (
         <>
+            <input type="hidden" value={AuthUser} />
             <TokenChecker is_admin={true} />
             <div className="pt-[15px] pb-[25px]">
                 <div className="pb-[25px]">

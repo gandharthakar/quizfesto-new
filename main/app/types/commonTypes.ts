@@ -9,3 +9,8 @@ export type JWTDecAdmin = {
     exp: number,
     iat: number
 }
+
+export type CommonAPIResponse = {
+    success: boolean,
+    message: string
+}

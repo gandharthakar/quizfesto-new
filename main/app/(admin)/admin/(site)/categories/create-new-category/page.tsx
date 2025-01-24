@@ -5,6 +5,8 @@ import Swal from "sweetalert2";
 import AdminBreadcrumbs from "@/app/components/admin/adminBreadcrumbs";
 import { convertToSlug } from "@/app/libs/helpers/helperFunctions";
 import TokenChecker from "@/app/libs/tokenChecker";
+import { getCookie } from "cookies-next/client";
+import { adminAuthUserCookieName } from "@/app/constant/datafaker";
 
 function Page() {
 
@@ -41,33 +43,48 @@ function Page() {
         } else {
             setCatError("");
             setIsLoading(true);
+            const token = getCookie(adminAuthUserCookieName);
             const prepData = {
+                token,
                 category_title: catTitle,
                 category_slug: catSlug
             }
             const baseURI = window.location.origin;
-            const resp = await fetch(`${baseURI}/api/admin/categories/crud/create`, {
-                method: "POST",
-                body: JSON.stringify(prepData)
-            });
-            const body = await resp.json();
-            if (body.success) {
-                setIsLoading(false);
-                Swal.fire({
-                    title: "Success!",
-                    text: body.message,
-                    icon: "success",
-                    timer: 3000
+            try {
+                const resp = await fetch(`${baseURI}/api/admin/categories/crud/create`, {
+                    method: "POST",
+                    body: JSON.stringify(prepData)
                 });
-                setCatTitle("");
-                setCatSlug("");
-            } else {
-                setIsLoading(false);
+                if (!resp.ok) {
+                    setIsLoading(false);
+                }
+                const body = await resp.json();
+                if (body.success) {
+                    Swal.fire({
+                        title: "Success!",
+                        text: body.message,
+                        icon: "success",
+                        timer: 3000
+                    });
+                    setCatTitle("");
+                    setCatSlug("");
+                    setIsLoading(false);
+                } else {
+                    Swal.fire({
+                        title: "Error!",
+                        text: body.message,
+                        icon: "error",
+                        timer: 3000
+                    });
+                    setIsLoading(false);
+                }
+                //eslint-disable-next-line
+            } catch (error: any) {
                 Swal.fire({
                     title: "Error!",
-                    text: body.message,
+                    text: error.message,
                     icon: "error",
-                    timer: 3000
+                    timer: 4000
                 });
             }
         }

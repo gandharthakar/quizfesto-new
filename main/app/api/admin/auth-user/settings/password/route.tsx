@@ -1,6 +1,7 @@
 import prisma from "@/app/libs/db";
 import { NextResponse } from "next/server";
 import { hash } from "bcrypt";
+import jwt from "jsonwebtoken";
 
 interface ShtResp {
     success: boolean,
@@ -9,7 +10,7 @@ interface ShtResp {
 
 export async function POST(req: Request) {
 
-    let sts: number = 400;
+    let sts: number = 200;
 
     let resp: ShtResp = {
         success: false,
@@ -21,81 +22,87 @@ export async function POST(req: Request) {
     try {
 
         const body = await req.json();
-        const { user_id, password, confirm_password } = body;
+        const { token, password, confirm_password } = body;
 
-        if (user_id && password && confirm_password) {
+        if (token && password && confirm_password) {
+            const res = jwt.verify(token as string, process.env.JWT_SECRET ?? "") as { is_admin_user: string };
 
-            const fu__in__usrtblmdl = await prisma.qF_User.findFirst({
-                where: {
-                    AND: [
-                        {
-                            user_id
-                        },
-                        {
-                            role: "Admin"
-                        }
-                    ]
-                }
-            });
-            const fu__in__admntblmdl = await prisma.qF_Admin_User.findFirst({
-                where: {
-                    admin_user_id: user_id,
-                }
-            });
+            if (res) {
 
-            if (fu__in__usrtblmdl) {
-                isTrueAdminUser = true;
-            } else {
-                if (fu__in__admntblmdl) {
-                    isTrueAdminUser = true;
-                } else {
-                    isTrueAdminUser = false;
-                }
-            }
+                const user_id = res.is_admin_user;
 
-            if (isTrueAdminUser) {
-
-                if (password === confirm_password) {
-                    const hashPassword = await hash(password, 10);
-                    if (fu__in__usrtblmdl) {
-                        await prisma.qF_User.update({
-                            where: {
+                const fu__in__usrtblmdl = await prisma.qF_User.findFirst({
+                    where: {
+                        AND: [
+                            {
                                 user_id
                             },
-                            data: {
-                                user_password: hashPassword,
+                            {
+                                role: "Admin"
                             }
-                        });
+                        ]
+                    }
+                });
+                const fu__in__admntblmdl = await prisma.qF_Admin_User.findFirst({
+                    where: {
+                        admin_user_id: user_id,
+                    }
+                });
+
+                if (fu__in__usrtblmdl) {
+                    isTrueAdminUser = true;
+                } else {
+                    if (fu__in__admntblmdl) {
+                        isTrueAdminUser = true;
                     } else {
-                        if (fu__in__admntblmdl) {
-                            await prisma.qF_Admin_User.update({
+                        isTrueAdminUser = false;
+                    }
+                }
+
+                if (isTrueAdminUser) {
+
+                    if (password === confirm_password) {
+                        const hashPassword = await hash(password, 10);
+                        if (fu__in__usrtblmdl) {
+                            await prisma.qF_User.update({
                                 where: {
-                                    admin_user_id: user_id
+                                    user_id
                                 },
                                 data: {
-                                    admin_user_password: hashPassword
+                                    user_password: hashPassword,
                                 }
                             });
+                        } else {
+                            if (fu__in__admntblmdl) {
+                                await prisma.qF_Admin_User.update({
+                                    where: {
+                                        admin_user_id: user_id
+                                    },
+                                    data: {
+                                        admin_user_password: hashPassword
+                                    }
+                                });
+                            }
                         }
+                        resp = {
+                            success: true,
+                            message: 'Password Updated.',
+                        }
+                        sts = 200;
+                    } else {
+                        resp = {
+                            success: false,
+                            message: "Password & Confirm Password Doesn't Match.",
+                        }
+                        sts = 422;
                     }
-                    resp = {
-                        success: true,
-                        message: 'Password Updated.',
-                    }
-                    sts = 200;
                 } else {
                     resp = {
                         success: false,
-                        message: "Password & Confirm Password Doesn't Match.",
+                        message: 'User Not Found.',
                     }
-                    sts = 422;
+                    sts = 200;
                 }
-            } else {
-                resp = {
-                    success: false,
-                    message: 'User Not Found.',
-                }
-                sts = 200;
             }
         } else {
             resp = {

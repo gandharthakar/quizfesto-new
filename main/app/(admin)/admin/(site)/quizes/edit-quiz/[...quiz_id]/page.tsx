@@ -15,6 +15,8 @@ import { RTSPkgSelectType } from "@/app/types/components/admin/componentsTypes";
 import { convertBase64 } from "@/app/libs/helpers/helperFunctions";
 import { AdminQuizesFormVS, AdminQuizesValidationSchema } from "@/app/libs/zod/schemas/adminValidationSchemas";
 import TokenChecker from "@/app/libs/tokenChecker";
+import { getCookie } from "cookies-next/client";
+import { adminAuthUserCookieName } from "@/app/constant/datafaker";
 
 function Page() {
 
@@ -176,7 +178,9 @@ function Page() {
             }
         }
 
+        const token = getCookie(adminAuthUserCookieName);
         const prepData = {
+            token,
             quiz_id,
             quiz_title: formdata.quiz_main_title,
             quiz_summary: formdata.quiz_summ,
@@ -193,52 +197,76 @@ function Page() {
         }
         setIsLoading(true);
         const baseURI = window.location.origin;
-        const resp = await fetch(`${baseURI}/api/admin/quizes/crud/update`, {
-            method: "POST",
-            body: JSON.stringify(prepData),
-        });
-        const body = await resp.json();
-        if (body.success) {
-            Swal.fire({
-                title: "Success!",
-                text: body.message,
-                icon: "success",
-                timer: 3000
+        try {
+            const resp = await fetch(`${baseURI}/api/admin/quizes/crud/update`, {
+                method: "POST",
+                body: JSON.stringify(prepData),
             });
-            setIsLoading(false);
-        } else {
+            if (!resp.ok) {
+                setIsLoading(false);
+            }
+            const body = await resp.json();
+            if (body.success) {
+                Swal.fire({
+                    title: "Success!",
+                    text: body.message,
+                    icon: "success",
+                    timer: 3000
+                });
+                setIsLoading(false);
+            } else {
+                Swal.fire({
+                    title: "Error!",
+                    text: body.message,
+                    icon: "error",
+                    timer: 3000
+                });
+                setIsLoading(false);
+            }
+            //eslint-disable-next-line
+        } catch (error: any) {
             Swal.fire({
                 title: "Error!",
-                text: body.message,
+                text: error.message,
                 icon: "error",
-                timer: 3000
+                timer: 4000
             });
-            setIsLoading(false);
         }
     }
 
     const getCats = async () => {
         const baseURI = window.location.origin;
-        const resp = await fetch(`${baseURI}/api/admin/categories/bulk-actions/read-all`, {
-            method: "GET"
-        });
-        const body = await resp.json();
-        if (body.success) {
-            const cts = body.cat_data;
-            //eslint-disable-next-line
-            let opts: RTSPkgSelectType[] = [];
-            for (let i = 0; i < cts.length; i++) {
-                const obj = {
-                    value: cts[i].category_id,
-                    label: cts[i].category_title
+        const token = getCookie(adminAuthUserCookieName);
+        try {
+            const resp = await fetch(`${baseURI}/api/admin/categories/bulk-actions/read-all?token=${token}`, {
+                method: "GET"
+            });
+            const body = await resp.json();
+            if (body.success) {
+                const cts = body.cat_data;
+                //eslint-disable-next-line
+                let opts: RTSPkgSelectType[] = [];
+                for (let i = 0; i < cts.length; i++) {
+                    const obj = {
+                        value: cts[i].category_id,
+                        label: cts[i].category_title
+                    }
+                    opts.push(obj);
                 }
-                opts.push(obj);
+                setOptions(opts);
+            } else {
+                Swal.fire({
+                    title: "Error!",
+                    text: body.message,
+                    icon: "error",
+                    timer: 4000
+                });
             }
-            setOptions(opts);
-        } else {
+            //eslint-disable-next-line
+        } catch (error: any) {
             Swal.fire({
                 title: "Error!",
-                text: body.message,
+                text: error.message,
                 icon: "error",
                 timer: 4000
             });
@@ -247,56 +275,70 @@ function Page() {
 
     const getQuiz = async () => {
         const baseURI = window.location.origin;
-        const resp = await fetch(`${baseURI}/api/admin/quizes/crud/read`, {
-            method: "POST",
-            body: JSON.stringify({ quiz_id })
-        });
-        const body = await resp.json();
-        if (body.success) {
-
-            setValue("quiz_main_title", body.quiz.quiz_title);
-            setValue("quiz_summ", body.quiz.quiz_summary);
-            setValue("quiz_disp_time", body.quiz.quiz_display_time);
-            setValue("quiz_est_time", body.quiz.quiz_estimated_time);
-            setValue("quiz_total_ques", body.quiz.quiz_total_question);
-            setValue("quiz_total_marks", body.quiz.quiz_total_marks);
-            setValue("quiz_sts", body.quiz.quiz_status);
-            setNegMarks(body.quiz.negative_marking_score);
-
-            if (body.quiz.quiz_about_text) {
-                setQuizAboutContent(body.quiz.quiz_about_text);
+        const token = getCookie(adminAuthUserCookieName);
+        try {
+            const resp = await fetch(`${baseURI}/api/admin/quizes/crud/read?token=${token}&quiz_id=${quiz_id}`, {
+                method: "GET",
+            });
+            if (!resp.ok) {
+                setIsLoading(false);
             }
+            const body = await resp.json();
+            if (body.success) {
 
-            if (body.quiz.quiz_categories.length > 0) {
-                setQuizCats(body.quiz.quiz_categories);
-            }
+                setValue("quiz_main_title", body.quiz.quiz_title);
+                setValue("quiz_summ", body.quiz.quiz_summary);
+                setValue("quiz_disp_time", body.quiz.quiz_display_time);
+                setValue("quiz_est_time", body.quiz.quiz_estimated_time);
+                setValue("quiz_total_ques", body.quiz.quiz_total_question);
+                setValue("quiz_total_marks", body.quiz.quiz_total_marks);
+                setValue("quiz_sts", body.quiz.quiz_status);
+                setNegMarks(body.quiz.negative_marking_score);
 
-            if (body.quiz.quiz_terms.length > 0) {
-                const terms = body.quiz.quiz_terms.map((itm: quizTrms) => {
-                    return {
-                        quiz_terms: itm
-                    }
+                if (body.quiz.quiz_about_text) {
+                    setQuizAboutContent(body.quiz.quiz_about_text);
+                }
+
+                if (body.quiz.quiz_categories.length > 0) {
+                    setQuizCats(body.quiz.quiz_categories);
+                }
+
+                if (body.quiz.quiz_terms.length > 0) {
+                    const terms = body.quiz.quiz_terms.map((itm: quizTrms) => {
+                        return {
+                            quiz_terms: itm
+                        }
+                    });
+                    setQuizTerms(terms);
+                }
+
+                if (body.quiz.quiz_cover_photo) {
+                    setAlreadyHaveFeImg(true);
+                    setImgPrevOld(body.quiz.quiz_cover_photo);
+                    setFileInput(body.quiz.quiz_cover_photo);
+                    setImgPrevFresh(body.quiz.quiz_cover_photo);
+                    setFileExt('jpg');
+                    setFileSize(true);
+                    setFileDimensions(true);
+                }
+
+                setIsLoading(false);
+            } else {
+                Swal.fire({
+                    title: "Error!",
+                    text: body.message,
+                    icon: "error",
+                    timer: 3000
                 });
-                setQuizTerms(terms);
+                setIsLoading(false);
             }
-
-            if (body.quiz.quiz_cover_photo) {
-                setAlreadyHaveFeImg(true);
-                setImgPrevOld(body.quiz.quiz_cover_photo);
-                setFileInput(body.quiz.quiz_cover_photo);
-                setImgPrevFresh(body.quiz.quiz_cover_photo);
-                setFileExt('jpg');
-                setFileSize(true);
-                setFileDimensions(true);
-            }
-
-            setIsLoading(false);
-        } else {
+            //eslint-disable-next-line
+        } catch (error: any) {
             Swal.fire({
                 title: "Error!",
-                text: body.message,
+                text: error.message,
                 icon: "error",
-                timer: 3000
+                timer: 4000
             });
             setIsLoading(false);
         }
@@ -441,7 +483,7 @@ function Page() {
                                                 className="transition-all delay-75 block mb-[5px] font-noto_sans text-[16px] font-semibold text-zinc-900 dark:text-zinc-300"
                                                 htmlFor="cq-qnms"
                                             >
-                                                Negative Marking Score <span className="text-red-500">*</span>
+                                                Negative Marking Score
                                             </label>
                                             <input
                                                 type="text"

@@ -5,6 +5,8 @@ import Select from "react-tailwindcss-select";
 import Swal from "sweetalert2";
 import { RTSPkgSelectType } from "@/app/types/components/admin/componentsTypes";
 import TokenChecker from "@/app/libs/tokenChecker";
+import { getCookie } from "cookies-next/client";
+import { adminAuthUserCookieName } from "@/app/constant/datafaker";
 
 function Page() {
 
@@ -22,33 +24,93 @@ function Page() {
         setIsLoading(true);
         let isCatsExist = false;
         const baseURI = window.location.origin;
-        const resp = await fetch(`${baseURI}/api/admin/categories/home-categories/read`, {
-            method: "GET",
-        });
-        const body = await resp.json();
-        if (body.success) {
-            isCatsExist = true;
-            setHomeCats(body.home_cats);
-            setHomeCatsId(body.home_cats_id);
-            if (cb_update) {
-                cb_update();
+        const token = getCookie(adminAuthUserCookieName);
+        try {
+            const resp = await fetch(`${baseURI}/api/admin/categories/home-categories/read?token=${token}`, {
+                method: "GET",
+            });
+            const body = await resp.json();
+            if (body.success) {
+                isCatsExist = true;
+                setHomeCats(body.home_cats);
+                setHomeCatsId(body.home_cats_id);
+                if (cb_update) {
+                    cb_update();
+                }
+            } else {
+                isCatsExist = false;
+                if (cb_new) {
+                    cb_new();
+                }
             }
-        } else {
-            isCatsExist = false;
-            if (cb_new) {
-                cb_new();
-            }
+            return isCatsExist;
+            //eslint-disable-next-line
+        } catch (error: any) {
+            Swal.fire({
+                title: "Error!",
+                text: error.message,
+                icon: "error",
+                timer: 4000
+            });
         }
-        return isCatsExist;
     }
 
     const clearCats = async () => {
         const conf = confirm("Are you sure want to clear home page top categories ?");
         if (conf) {
             const baseURI = window.location.origin;
-            const resp = await fetch(`${baseURI}/api/admin/categories/home-categories/clear`, {
-                method: "DELETE",
+            const token = getCookie(adminAuthUserCookieName);
+            try {
+                const resp = await fetch(`${baseURI}/api/admin/categories/home-categories/clear?token=${token}`, {
+                    method: "DELETE",
+                });
+                const body = await resp.json();
+                if (body.success) {
+                    Swal.fire({
+                        title: "Success!",
+                        text: body.message,
+                        icon: "success",
+                        timer: 2000
+                    });
+                    const set = setTimeout(() => {
+                        window.location.reload();
+                        clearTimeout(set);
+                    }, 2000);
+                } else {
+                    Swal.fire({
+                        title: "Error!",
+                        text: body.message,
+                        icon: "error",
+                        timer: 2000
+                    });
+                }
+                //eslint-disable-next-line
+            } catch (error: any) {
+                Swal.fire({
+                    title: "Error!",
+                    text: error.message,
+                    icon: "error",
+                    timer: 4000
+                });
+            }
+        }
+    }
+
+    const setHomeCatsDB = async () => {
+        const cats: string[] = [];
+        for (let i = 0; i < homeCats.length; i++) {
+            cats.push(homeCats[i].value);
+        }
+        const baseURI = window.location.origin;
+        const token = getCookie(adminAuthUserCookieName);
+        try {
+            const resp = await fetch(`${baseURI}/api/admin/categories/home-categories/create-update`, {
+                method: "POST",
+                body: JSON.stringify({ token, home_cats: cats })
             });
+            if (!resp.ok) {
+                setIsLoading(false);
+            }
             const body = await resp.json();
             if (body.success) {
                 Swal.fire({
@@ -61,6 +123,7 @@ function Page() {
                     window.location.reload();
                     clearTimeout(set);
                 }, 2000);
+                setIsLoading(false);
             } else {
                 Swal.fire({
                     title: "Error!",
@@ -68,33 +131,16 @@ function Page() {
                     icon: "error",
                     timer: 2000
                 });
+                setIsLoading(false);
             }
-        }
-    }
-
-    const setHomeCatsDB = async () => {
-        const cats: string[] = [];
-        for (let i = 0; i < homeCats.length; i++) {
-            cats.push(homeCats[i].value);
-        }
-        const baseURI = window.location.origin;
-        const resp = await fetch(`${baseURI}/api/admin/categories/home-categories/create-update`, {
-            method: "POST",
-            body: JSON.stringify({ home_cats: cats })
-        });
-        const body = await resp.json();
-        if (body.success) {
+            //eslint-disable-next-line
+        } catch (error: any) {
             Swal.fire({
-                title: "Success!",
-                text: body.message,
-                icon: "success",
-                timer: 2000
+                title: "Error!",
+                text: error.message,
+                icon: "error",
+                timer: 4000
             });
-            const set = setTimeout(() => {
-                window.location.reload();
-                clearTimeout(set);
-            }, 2000);
-            setIsLoading(false);
         }
     }
 
@@ -104,23 +150,45 @@ function Page() {
             cats.push(homeCats[i].value);
         }
         const baseURI = window.location.origin;
-        const resp = await fetch(`${baseURI}/api/admin/categories/home-categories/create-update`, {
-            method: "POST",
-            body: JSON.stringify({ home_cats: cats, home_cats_id: homeCatsId })
-        });
-        const body = await resp.json();
-        if (body.success) {
-            Swal.fire({
-                title: "Success!",
-                text: body.message,
-                icon: "success",
-                timer: 2000
+        const token = getCookie(adminAuthUserCookieName);
+        try {
+            const resp = await fetch(`${baseURI}/api/admin/categories/home-categories/create-update`, {
+                method: "POST",
+                body: JSON.stringify({ token, home_cats: cats, home_cats_id: homeCatsId })
             });
-            const set = setTimeout(() => {
-                window.location.reload();
-                clearTimeout(set);
-            }, 2000);
-            setIsLoading(false);
+            if (!resp.ok) {
+                setIsLoading(false);
+            }
+            const body = await resp.json();
+            if (body.success) {
+                Swal.fire({
+                    title: "Success!",
+                    text: body.message,
+                    icon: "success",
+                    timer: 2000
+                });
+                const set = setTimeout(() => {
+                    window.location.reload();
+                    clearTimeout(set);
+                }, 2000);
+                setIsLoading(false);
+            } else {
+                Swal.fire({
+                    title: "Error!",
+                    text: body.message,
+                    icon: "error",
+                    timer: 2000
+                });
+                setIsLoading(false);
+            }
+            //eslint-disable-next-line
+        } catch (error: any) {
+            Swal.fire({
+                title: "Error!",
+                text: error.message,
+                icon: "error",
+                timer: 4000
+            });
         }
     }
 
@@ -140,8 +208,9 @@ function Page() {
 
     const getCats = async () => {
         const baseURI = window.location.origin;
+        const token = getCookie(adminAuthUserCookieName);
         try {
-            const resp = await fetch(`${baseURI}/api/admin/categories/bulk-actions/read-all`, {
+            const resp = await fetch(`${baseURI}/api/admin/categories/bulk-actions/read-all?token=${token}`, {
                 method: "GET",
             });
             if (!resp.ok) {
@@ -169,8 +238,14 @@ function Page() {
                 });
                 setIsLoading(false);
             }
-        } catch (error) {
-            console.log(error);
+            //eslint-disable-next-line
+        } catch (error: any) {
+            Swal.fire({
+                title: "Error!",
+                text: error.message,
+                icon: "error",
+                timer: 4000
+            });
         }
     }
 

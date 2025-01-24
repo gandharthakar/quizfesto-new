@@ -16,6 +16,8 @@ import { CategoriesType } from "@/app/types/components/website/componentsTypes";
 import { GFG } from "@/app/libs/helpers/helperFunctions";
 import { AdminCategoriesListCardType } from "@/app/types/components/admin/componentsTypes";
 import TokenChecker from "@/app/libs/tokenChecker";
+import { getCookie } from "cookies-next/client";
+import { adminAuthUserCookieName } from "@/app/constant/datafaker";
 
 function Page() {
 
@@ -45,8 +47,9 @@ function Page() {
     }
 
     const handleSearchInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-        // setSrchInp(e.target.value);
-        setSrchInp('');
+        const value = (e.target as HTMLInputElement).value;
+        setSrchInp(value);
+        // setSrchInp('');
         if (e.key === "Backspace") {
             setCurrentPage(1);
             setQuizListCats(GFG(catData, currentPage, dataPerPage));
@@ -135,43 +138,17 @@ function Page() {
     const handleDeleteAllBulkLogic = async () => {
         const conf = confirm("Are you sure want to delete all Categories ?");
         if (conf) {
+            setIsLoading(true);
+            setIsMenuOpen(false);
             const baseURI = window.location.origin;
-            const resp = await fetch(`${baseURI}/api/admin/categories/bulk-actions/delete-all`, {
-                method: "DELETE",
-            });
-            const body = await resp.json();
-            if (body.success) {
-                Swal.fire({
-                    title: "Success!",
-                    text: body.message,
-                    icon: "success",
-                    timer: 2000
-                });
-                const set = setTimeout(() => {
-                    window.location.reload();
-                    clearTimeout(set);
-                }, 2000);
-            } else {
-                Swal.fire({
-                    title: "Error!",
-                    text: body.message,
-                    icon: "error",
-                    timer: 2000
-                });
-            }
-        }
-        setIsMenuOpen(false);
-    }
-
-    const handleDeleteSelectedBulkLogic = async () => {
-        if (selectedItems.length > 0) {
-            const conf = confirm("Are you sure want to delete selected Categories ?");
-            if (conf) {
-                const baseURI = window.location.origin;
-                const resp = await fetch(`${baseURI}/api/admin/categories/bulk-actions/delete-selected`, {
+            const token = getCookie(adminAuthUserCookieName);
+            try {
+                const resp = await fetch(`${baseURI}/api/admin/categories/bulk-actions/delete-all?token=${token}`, {
                     method: "DELETE",
-                    body: JSON.stringify({ category_id_list: selectedItems })
                 });
+                if (!resp.ok) {
+                    setIsLoading(false);
+                }
                 const body = await resp.json();
                 if (body.success) {
                     Swal.fire({
@@ -182,8 +159,76 @@ function Page() {
                     });
                     const set = setTimeout(() => {
                         window.location.reload();
+                        setIsLoading(false);
                         clearTimeout(set);
                     }, 2000);
+                } else {
+                    Swal.fire({
+                        title: "Error!",
+                        text: body.message,
+                        icon: "error",
+                        timer: 2000
+                    });
+                    setIsLoading(false);
+                }
+                //eslint-disable-next-line
+            } catch (error: any) {
+                Swal.fire({
+                    title: "Error!",
+                    text: error.message,
+                    icon: "error",
+                    timer: 4000
+                });
+            }
+        }
+    }
+
+    const handleDeleteSelectedBulkLogic = async () => {
+        if (selectedItems.length > 0) {
+            const conf = confirm("Are you sure want to delete selected Categories ?");
+            if (conf) {
+                setIsLoading(true);
+                setIsMenuOpen(false);
+                const baseURI = window.location.origin;
+                const token = getCookie(adminAuthUserCookieName);
+                try {
+                    const resp = await fetch(`${baseURI}/api/admin/categories/bulk-actions/delete-selected`, {
+                        method: "DELETE",
+                        body: JSON.stringify({ token, category_id_list: selectedItems })
+                    });
+                    if (!resp.ok) {
+                        setIsLoading(false);
+                    }
+                    const body = await resp.json();
+                    if (body.success) {
+                        Swal.fire({
+                            title: "Success!",
+                            text: body.message,
+                            icon: "success",
+                            timer: 2000
+                        });
+                        const set = setTimeout(() => {
+                            window.location.reload();
+                            setIsLoading(false);
+                            clearTimeout(set);
+                        }, 2000);
+                    } else {
+                        Swal.fire({
+                            title: "Error!",
+                            text: body.message,
+                            icon: "error",
+                            timer: 2000
+                        });
+                        setIsLoading(false);
+                    }
+                    //eslint-disable-next-line
+                } catch (error: any) {
+                    Swal.fire({
+                        title: "Error!",
+                        text: error.message,
+                        icon: "error",
+                        timer: 4000
+                    });
                 }
             }
         } else {
@@ -194,7 +239,6 @@ function Page() {
                 timer: 3000
             });
         }
-        setIsMenuOpen(false);
     }
 
     useEffect(() => {
@@ -220,8 +264,9 @@ function Page() {
 
     const getCatData = async () => {
         const baseURI = window.location.origin;
+        const token = getCookie(adminAuthUserCookieName);
         try {
-            const resp = await fetch(`${baseURI}/api/admin/categories/bulk-actions/read-all`, {
+            const resp = await fetch(`${baseURI}/api/admin/categories/bulk-actions/read-all?token=${token}`, {
                 method: "GET",
             });
             if (!resp.ok) {
@@ -236,8 +281,14 @@ function Page() {
             } else {
                 setIsLoading(false);
             }
-        } catch (error) {
-            console.log(error)
+            //eslint-disable-next-line
+        } catch (error: any) {
+            Swal.fire({
+                title: "Error!",
+                text: error.message,
+                icon: "error",
+                timer: 4000
+            });
         }
     }
 

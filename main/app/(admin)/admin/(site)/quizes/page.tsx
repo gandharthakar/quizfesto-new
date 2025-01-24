@@ -14,6 +14,8 @@ import { FaEllipsisVertical } from "react-icons/fa6";
 import { AdminQuizDataType, AdminQuizesListCardType } from "@/app/types/components/admin/componentsTypes";
 import { GFG } from "@/app/libs/helpers/helperFunctions";
 import TokenChecker from "@/app/libs/tokenChecker";
+import { getCookie } from "cookies-next/client";
+import { adminAuthUserCookieName } from "@/app/constant/datafaker";
 
 function Page() {
 
@@ -43,8 +45,9 @@ function Page() {
     }
 
     const handleSearchInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-        setSrchInp("");
-        // setSrchInp(e.target.value);
+        const value = (e.target as HTMLInputElement).value;
+        setSrchInp(value);
+        // setSrchInp("");
         if (e.key === "Backspace") {
             setCurrentPage(1);
             setQuizListData(GFG(quizData, currentPage, dataPerPage));
@@ -130,23 +133,48 @@ function Page() {
         if (selectedItems.length > 0) {
             const conf = confirm("Are you sure want to delete selected Quizes ?");
             if (conf) {
+                setIsMenuOpen(false);
+                setIsLoading(true);
                 const baseURI = window.location.origin;
-                const resp = await fetch(`${baseURI}/api/admin/quizes/bulk-actions/delete-selected`, {
-                    method: "DELETE",
-                    body: JSON.stringify({ quiz_id_list: selectedItems })
-                });
-                const body = await resp.json();
-                if (body.success) {
-                    Swal.fire({
-                        title: "Success!",
-                        text: body.message,
-                        icon: "success",
-                        timer: 2000
+                const token = getCookie(adminAuthUserCookieName);
+                try {
+                    const resp = await fetch(`${baseURI}/api/admin/quizes/bulk-actions/delete-selected`, {
+                        method: "DELETE",
+                        body: JSON.stringify({ token, quiz_id_list: selectedItems })
                     });
-                    const set = setTimeout(() => {
-                        window.location.reload();
-                        clearTimeout(set);
-                    }, 2000);
+                    if (!resp.ok) {
+                        setIsLoading(false);
+                    }
+                    const body = await resp.json();
+                    if (body.success) {
+                        Swal.fire({
+                            title: "Success!",
+                            text: body.message,
+                            icon: "success",
+                            timer: 2000
+                        });
+                        const set = setTimeout(() => {
+                            window.location.reload();
+                            setIsLoading(false);
+                            clearTimeout(set);
+                        }, 2000);
+                    } else {
+                        Swal.fire({
+                            title: "Error!",
+                            text: body.message,
+                            icon: "error",
+                            timer: 2000
+                        });
+                        setIsLoading(false);
+                    }
+                    //eslint-disable-next-line
+                } catch (error: any) {
+                    Swal.fire({
+                        title: "Error!",
+                        text: error.message,
+                        icon: "error",
+                        timer: 4000
+                    });
                 }
             }
         } else {
@@ -162,38 +190,56 @@ function Page() {
     const handleDeleteAllBulkLogic = async () => {
         const conf = confirm("Are you sure want to delete all quizes ?");
         if (conf) {
+            setIsMenuOpen(false);
+            setIsLoading(true);
             const baseURI = window.location.origin;
-            const resp = await fetch(`${baseURI}/api/admin/quizes/bulk-actions/delete-all`, {
-                method: "DELETE",
-            });
-            const body = await resp.json();
-            if (body.success) {
-                Swal.fire({
-                    title: "Success!",
-                    text: body.message,
-                    icon: "success",
-                    timer: 2000
+            const token = getCookie(adminAuthUserCookieName);
+            try {
+                const resp = await fetch(`${baseURI}/api/admin/quizes/bulk-actions/delete-all?token=${token}`, {
+                    method: "DELETE",
                 });
-                const set = setTimeout(() => {
-                    window.location.reload();
-                    clearTimeout(set);
-                }, 2000);
-            } else {
+                if (!resp.ok) {
+                    setIsLoading(false);
+                }
+                const body = await resp.json();
+                if (body.success) {
+                    Swal.fire({
+                        title: "Success!",
+                        text: body.message,
+                        icon: "success",
+                        timer: 2000
+                    });
+                    const set = setTimeout(() => {
+                        window.location.reload();
+                        setIsLoading(false);
+                        clearTimeout(set);
+                    }, 2000);
+                } else {
+                    Swal.fire({
+                        title: "Error!",
+                        text: body.message,
+                        icon: "error",
+                        timer: 2000
+                    });
+                    setIsLoading(false);
+                }
+                //eslint-disable-next-line
+            } catch (error: any) {
                 Swal.fire({
                     title: "Error!",
-                    text: body.message,
+                    text: error.message,
                     icon: "error",
-                    timer: 2000
+                    timer: 4000
                 });
             }
         }
-        setIsMenuOpen(false);
     }
 
     const getQuizes = async () => {
         const baseURI = window.location.origin;
+        const token = getCookie(adminAuthUserCookieName);
         try {
-            const resp = await fetch(`${baseURI}/api/admin/quizes/bulk-actions/read-all`, {
+            const resp = await fetch(`${baseURI}/api/admin/quizes/bulk-actions/read-all?token=${token}`, {
                 method: "GET",
             });
             if (!resp.ok) {
@@ -208,8 +254,15 @@ function Page() {
             } else {
                 setIsLoading(false);
             }
-        } catch (error) {
-            console.log(error);
+            //eslint-disable-next-line
+        } catch (error: any) {
+            Swal.fire({
+                title: "Error!",
+                text: error.message,
+                icon: "error",
+                timer: 4000
+            });
+            setIsLoading(false);
         }
     }
 

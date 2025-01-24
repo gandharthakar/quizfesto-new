@@ -8,6 +8,8 @@ import { useParams } from "next/navigation";
 import AdminBreadcrumbs from "@/app/components/admin/adminBreadcrumbs";
 import { AdminOptionsFormVS, AdminOptionsValidationSchema } from "@/app/libs/zod/schemas/adminValidationSchemas";
 import TokenChecker from "@/app/libs/tokenChecker";
+import { getCookie } from "cookies-next/client";
+import { adminAuthUserCookieName } from "@/app/constant/datafaker";
 
 function Page() {
 
@@ -23,57 +25,83 @@ function Page() {
     const handleFormSubmit: SubmitHandler<AdminOptionsFormVS> = async (formdata) => {
         setIsLoading(true);
         const baseURI = window.location.origin;
-        const resp = await fetch(`${baseURI}/api/admin/options/crud/update`, {
-            method: "POST",
-            body: JSON.stringify({
-                option_id,
-                options: formdata.options.split(", "),
-                correct_option: formdata.correct_option,
-                question_id: formdata.question_id
-            })
-        });
-        const body = await resp.json();
-        if (body.success) {
-            Swal.fire({
-                title: "Success!",
-                text: body.message,
-                icon: "success",
-                timer: 3000
+        const token = getCookie(adminAuthUserCookieName);
+        try {
+            const resp = await fetch(`${baseURI}/api/admin/options/crud/update`, {
+                method: "POST",
+                body: JSON.stringify({
+                    token,
+                    option_id,
+                    options: formdata.options.split(", "),
+                    correct_option: formdata.correct_option,
+                    question_id: formdata.question_id
+                })
             });
-            setIsLoading(false);
-        } else {
+            if (!resp.ok) {
+                setIsLoading(false);
+            }
+            const body = await resp.json();
+            if (body.success) {
+                Swal.fire({
+                    title: "Success!",
+                    text: body.message,
+                    icon: "success",
+                    timer: 3000
+                });
+                setIsLoading(false);
+            } else {
+                Swal.fire({
+                    title: "Error!",
+                    text: body.message,
+                    icon: "error",
+                    timer: 3000
+                });
+                setIsLoading(false);
+            }
+            //eslint-disable-next-line
+        } catch (error: any) {
             Swal.fire({
                 title: "Error!",
-                text: body.message,
+                text: error.message,
                 icon: "error",
-                timer: 3000
+                timer: 4000
             });
-            setIsLoading(false);
         }
     }
 
     const getOption = async () => {
         const baseURI = window.location.origin;
-        const resp = await fetch(`${baseURI}/api/admin/options/crud/read`, {
-            method: "POST",
-            body: JSON.stringify({
-                option_id
-            }),
-        });
-        const body = await resp.json();
-        if (body.success) {
-            setValue("question_id", body.option.questionid);
-            setValue("options", body.option.options.join(", "));
-            setValue("correct_option", body.option.correct_option);
-            setIsLoading(false);
-        } else {
+        const token = getCookie(adminAuthUserCookieName);
+        try {
+            const resp = await fetch(`${baseURI}/api/admin/options/crud/read?token=${token}&option_id=${option_id}`, {
+                method: "GET",
+            });
+            if (!resp.ok) {
+                setIsLoading(false);
+            }
+            const body = await resp.json();
+            if (body.success) {
+                setValue("question_id", body.option.questionid);
+                setValue("options", body.option.options.join(", "));
+                setValue("correct_option", body.option.correct_option);
+                setIsLoading(false);
+            } else {
+                Swal.fire({
+                    title: "Error!",
+                    text: body.message,
+                    icon: "error",
+                    timer: 3000
+                });
+                setIsLoading(false);
+            }
+            //eslint-disable-next-line
+        } catch (error: any) {
             Swal.fire({
                 title: "Error!",
-                text: body.message,
+                text: error.message,
                 icon: "error",
-                timer: 3000
+                timer: 4000
             });
-            setIsLoading(false);
         }
     }
 

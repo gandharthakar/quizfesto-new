@@ -10,6 +10,8 @@ import { IoDuplicateOutline } from "react-icons/io5";
 import copy from "copy-to-clipboard";
 import Swal from "sweetalert2";
 import { AdminQuizesListCardType } from "@/app/types/components/admin/componentsTypes";
+import { getCookie } from "cookies-next/client";
+import { adminAuthUserCookieName } from "@/app/constant/datafaker";
 
 function AdminListQuizCard(props: AdminQuizesListCardType) {
 
@@ -25,6 +27,7 @@ function AdminListQuizCard(props: AdminQuizesListCardType) {
 
     const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
     const menuRef = useRef<HTMLDivElement>(null);
+    const [isLoading, setIsLoading] = useState<boolean>(false);
 
     const handleClick = () => {
         setIsMenuOpen(false);
@@ -33,11 +36,65 @@ function AdminListQuizCard(props: AdminQuizesListCardType) {
     const handleDeleteQuiz = async () => {
         const conf = confirm("Are you sure want to delete this quiz ?");
         if (conf) {
+            setIsMenuOpen(false);
             const baseURI = window.location.origin;
-            const resp = await fetch(`${baseURI}/api/admin/quizes/crud/delete`, {
-                method: "DELETE",
-                body: JSON.stringify({ quiz_id: quiz_id }),
+            const token = getCookie(adminAuthUserCookieName);
+            setIsLoading(true);
+            try {
+                const resp = await fetch(`${baseURI}/api/admin/quizes/crud/delete`, {
+                    method: "DELETE",
+                    body: JSON.stringify({ token, quiz_id: quiz_id }),
+                });
+                if (!resp.ok) {
+                    setIsLoading(false);
+                }
+                const body = await resp.json();
+                if (body.success) {
+                    Swal.fire({
+                        title: "Success!",
+                        text: body.message,
+                        icon: "success",
+                        timer: 3000
+                    });
+                    const set = setTimeout(() => {
+                        window.location.reload();
+                        setIsLoading(false);
+                        clearTimeout(set);
+                    }, 3000);
+                } else {
+                    Swal.fire({
+                        title: "Error!",
+                        text: body.message,
+                        icon: "error",
+                        timer: 3000
+                    });
+                    setIsLoading(false);
+                }
+                //eslint-disable-next-line
+            } catch (error: any) {
+                Swal.fire({
+                    title: "Error!",
+                    text: error.message,
+                    icon: "error",
+                    timer: 4000
+                });
+            }
+        }
+    }
+
+    const handleDuplicateQuiz = async () => {
+        setIsMenuOpen(false);
+        const baseURI = window.location.origin;
+        const token = getCookie(adminAuthUserCookieName);
+        setIsLoading(true);
+        try {
+            const resp = await fetch(`${baseURI}/api/admin/quizes/crud/create-duplicate`, {
+                method: "POST",
+                body: JSON.stringify({ token, quiz_id: quiz_id }),
             });
+            if (!resp.ok) {
+                setIsLoading(false);
+            }
             const body = await resp.json();
             if (body.success) {
                 Swal.fire({
@@ -48,6 +105,7 @@ function AdminListQuizCard(props: AdminQuizesListCardType) {
                 });
                 const set = setTimeout(() => {
                     window.location.reload();
+                    setIsLoading(false);
                     clearTimeout(set);
                 }, 3000);
             } else {
@@ -57,35 +115,15 @@ function AdminListQuizCard(props: AdminQuizesListCardType) {
                     icon: "error",
                     timer: 3000
                 });
+                setIsLoading(false);
             }
-        }
-        setIsMenuOpen(false);
-    }
-
-    const handleDuplicateQuiz = async () => {
-        const baseURI = window.location.origin;
-        const resp = await fetch(`${baseURI}/api/admin/quizes/crud/create-duplicate`, {
-            method: "POST",
-            body: JSON.stringify({ quiz_id: quiz_id }),
-        });
-        const body = await resp.json();
-        if (body.success) {
-            Swal.fire({
-                title: "Success!",
-                text: body.message,
-                icon: "success",
-                timer: 3000
-            });
-            const set = setTimeout(() => {
-                window.location.reload();
-                clearTimeout(set);
-            }, 3000);
-        } else {
+            //eslint-disable-next-line
+        } catch (error: any) {
             Swal.fire({
                 title: "Error!",
-                text: body.message,
+                text: error.message,
                 icon: "error",
-                timer: 3000
+                timer: 4000
             });
         }
     }
@@ -116,7 +154,17 @@ function AdminListQuizCard(props: AdminQuizesListCardType) {
 
     return (
         <>
-            <div className="transition-all delay-75 border-[2px] border-solid p-[15px] border-zinc-300 bg-white hover:border-zinc-600 dark:bg-zinc-800 dark:border-zinc-600 dark:hover:border-zinc-400">
+            <div className="transition-all delay-75 relative border-[2px] border-solid p-[15px] border-zinc-300 bg-white hover:border-zinc-600 dark:bg-zinc-800 dark:border-zinc-600 dark:hover:border-zinc-400">
+                {
+                    isLoading &&
+                    (
+                        <>
+                            <div className={`transition-all delay-75 absolute left-0 top-0 z-[10] bg-[rgba(255,255,255,0.90)] w-full h-full dark:bg-[rgba(9,9,11,0.95)] justify-center items-center flex`}>
+                                <div className="spinner size-5"></div>
+                            </div>
+                        </>
+                    )
+                }
                 <div className="flex gap-x-[15px] items-start">
                     <div className="alqc-chrb">
                         <input

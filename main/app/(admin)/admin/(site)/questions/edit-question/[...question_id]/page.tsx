@@ -8,6 +8,8 @@ import Swal from "sweetalert2";
 import AdminBreadcrumbs from "@/app/components/admin/adminBreadcrumbs";
 import { AdminQuestionsFormVS, AdminQuestionsValidationSchema } from "@/app/libs/zod/schemas/adminValidationSchemas";
 import TokenChecker from "@/app/libs/tokenChecker";
+import { getCookie } from "cookies-next/client";
+import { adminAuthUserCookieName } from "@/app/constant/datafaker";
 
 function Page() {
 
@@ -22,57 +24,85 @@ function Page() {
 
     const handleFormSubmit: SubmitHandler<AdminQuestionsFormVS> = async (formdata) => {
         setIsLoading(true);
+        const token = getCookie(adminAuthUserCookieName);
         const prepData = {
+            token,
             question_id,
             quiz_id: formdata.quiz_id,
             question_title: formdata.question_text,
             question_marks: formdata.question_marks
         }
         const baseURI = window.location.origin;
-        const resp = await fetch(`${baseURI}/api/admin/questions/crud/update`, {
-            method: "POST",
-            body: JSON.stringify(prepData)
-        });
-        const body = await resp.json();
-        if (body.success) {
-            Swal.fire({
-                title: "Success!",
-                text: body.message,
-                icon: "success",
-                timer: 3000
+        try {
+            const resp = await fetch(`${baseURI}/api/admin/questions/crud/update`, {
+                method: "POST",
+                body: JSON.stringify(prepData)
             });
-            setIsLoading(false);
-        } else {
+            if (!resp.ok) {
+                setIsLoading(false);
+            }
+            const body = await resp.json();
+            if (body.success) {
+                Swal.fire({
+                    title: "Success!",
+                    text: body.message,
+                    icon: "success",
+                    timer: 3000
+                });
+                setIsLoading(false);
+            } else {
+                Swal.fire({
+                    title: "Error!",
+                    text: body.message,
+                    icon: "error",
+                    timer: 3000
+                });
+                setIsLoading(false);
+            }
+            //eslint-disable-next-line
+        } catch (error: any) {
             Swal.fire({
                 title: "Error!",
-                text: body.message,
+                text: error.message,
                 icon: "error",
-                timer: 3000
+                timer: 4000
             });
-            setIsLoading(false);
         }
     }
 
     const getQuestion = async () => {
         const baseURI = window.location.origin;
-        const resp = await fetch(`${baseURI}/api/admin/questions/crud/read`, {
-            method: "POST",
-            body: JSON.stringify({ question_id }),
-        });
-        const body = await resp.json();
-        if (body.success) {
-            setValue("quiz_id", body.question.quiz_id);
-            setValue("question_text", body.question.question_title);
-            setValue("question_marks", body.question.question_marks);
-            setIsLoading(false);
-        } else {
+        const token = getCookie(adminAuthUserCookieName);
+        try {
+            const resp = await fetch(`${baseURI}/api/admin/questions/crud/read?token=${token}&question_id=${question_id}`, {
+                method: "GET",
+            });
+            if (!resp.ok) {
+                setIsLoading(false);
+            }
+            const body = await resp.json();
+            if (body.success) {
+                setValue("quiz_id", body.question.quiz_id);
+                setValue("question_text", body.question.question_title);
+                setValue("question_marks", body.question.question_marks);
+                setIsLoading(false);
+            } else {
+                Swal.fire({
+                    title: "Error!",
+                    text: body.message,
+                    icon: "error",
+                    timer: 3000
+                });
+                setIsLoading(false);
+            }
+            //eslint-disable-next-line
+        } catch (error: any) {
             Swal.fire({
                 title: "Error!",
-                text: body.message,
+                text: error.message,
                 icon: "error",
-                timer: 3000
+                timer: 4000
             });
-            setIsLoading(false);
         }
     }
 

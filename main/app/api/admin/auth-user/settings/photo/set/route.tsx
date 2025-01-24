@@ -1,5 +1,6 @@
 import prisma from "@/app/libs/db";
 import { NextResponse } from "next/server";
+import jwt from "jsonwebtoken";
 
 interface Respo {
     success: boolean,
@@ -12,79 +13,87 @@ export async function POST(req: Request) {
         message: ''
     }
 
-    let sts: number = 400;
+    let sts: number = 200;
 
     let isTrueAdminUser: boolean = false;
 
     try {
 
         const body = await req.json();
-        const { user_id, user_photo } = body;
+        const { token, user_photo } = body;
 
-        if (user_id && user_photo) {
-            const fu__in__usrtblmdl = await prisma.qF_User.findFirst({
-                where: {
-                    AND: [
-                        {
-                            user_id
-                        },
-                        {
-                            role: "Admin"
-                        }
-                    ]
-                }
-            });
-            const fu__in__admntblmdl = await prisma.qF_Admin_User.findFirst({
-                where: {
-                    admin_user_id: user_id,
-                }
-            });
+        if (token && user_photo) {
 
-            if (fu__in__usrtblmdl) {
-                isTrueAdminUser = true;
-            } else {
-                if (fu__in__admntblmdl) {
-                    isTrueAdminUser = true;
-                } else {
-                    isTrueAdminUser = false;
-                }
-            }
+            const res = jwt.verify(token as string, process.env.JWT_SECRET ?? "") as { is_admin_user: string };
 
-            if (isTrueAdminUser) {
+            if (res) {
+
+                const user_id = res.is_admin_user;
+
+                const fu__in__usrtblmdl = await prisma.qF_User.findFirst({
+                    where: {
+                        AND: [
+                            {
+                                user_id
+                            },
+                            {
+                                role: "Admin"
+                            }
+                        ]
+                    }
+                });
+                const fu__in__admntblmdl = await prisma.qF_Admin_User.findFirst({
+                    where: {
+                        admin_user_id: user_id,
+                    }
+                });
 
                 if (fu__in__usrtblmdl) {
-                    await prisma.qF_User.update({
-                        where: {
-                            user_id
-                        },
-                        data: {
-                            user_photo
-                        }
-                    });
+                    isTrueAdminUser = true;
                 } else {
                     if (fu__in__admntblmdl) {
-                        await prisma.qF_Admin_User.update({
-                            where: {
-                                admin_user_id: user_id
-                            },
-                            data: {
-                                admin_user_photo: user_photo
-                            }
-                        });
+                        isTrueAdminUser = true;
+                    } else {
+                        isTrueAdminUser = false;
                     }
                 }
 
-                resp = {
-                    success: true,
-                    message: "Profile Photo Updated."
+                if (isTrueAdminUser) {
+
+                    if (fu__in__usrtblmdl) {
+                        await prisma.qF_User.update({
+                            where: {
+                                user_id
+                            },
+                            data: {
+                                user_photo
+                            }
+                        });
+                    } else {
+                        if (fu__in__admntblmdl) {
+                            await prisma.qF_Admin_User.update({
+                                where: {
+                                    admin_user_id: user_id
+                                },
+                                data: {
+                                    admin_user_photo: user_photo
+                                }
+                            });
+                        }
+                    }
+
+                    resp = {
+                        success: true,
+                        message: "Profile Photo Updated."
+                    }
+                    sts = 200;
+                } else {
+                    resp = {
+                        success: false,
+                        message: 'User Not Found.',
+                    }
+                    sts = 200;
                 }
-                sts = 200;
-            } else {
-                resp = {
-                    success: false,
-                    message: 'User Not Found.',
-                }
-                sts = 200;
             }
         } else {
             sts = 400;

@@ -9,6 +9,9 @@ import { GoTrophy } from "react-icons/go";
 import { useEffect, useState } from "react";
 import { AdminStatsDataCardType } from "@/app/types/components/admin/componentsTypes";
 import TokenChecker from "@/app/libs/tokenChecker";
+import Swal from "sweetalert2";
+import { getCookie } from "cookies-next/client";
+import { adminAuthUserCookieName } from "@/app/constant/datafaker";
 
 function Page() {
 
@@ -24,8 +27,9 @@ function Page() {
 
     const getStats = async () => {
         const baseURI = window.location.origin;
+        const token = getCookie(adminAuthUserCookieName);
         try {
-            const resp = await fetch(`${baseURI}/api/admin/stats`, {
+            const resp = await fetch(`${baseURI}/api/admin/stats?token=${token}`, {
                 method: "GET"
             });
             if (!resp.ok) {
@@ -36,8 +40,15 @@ function Page() {
                 setStats(body.stats);
                 setIsLoading(false);
             }
-        } catch (error) {
-            console.log(error);
+            //eslint-disable-next-line
+        } catch (error: any) {
+            Swal.fire({
+                title: "Error!",
+                text: error.message,
+                icon: "error",
+                timer: 4000
+            });
+            setIsLoading(false);
         }
     }
 

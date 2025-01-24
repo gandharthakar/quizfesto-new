@@ -1,5 +1,6 @@
 import prisma from "@/app/libs/db";
 import { NextResponse } from "next/server";
+import jwt from "jsonwebtoken";
 
 interface Respo {
     success: boolean,
@@ -12,42 +13,86 @@ export async function POST(req: Request) {
         message: ''
     }
 
-    let sts: number = 400;
+    let sts: number = 200;
+    let isTrueAdminUser: boolean = false;
 
     try {
 
         const body = await req.json();
-        const { option_id, question_id, options, correct_option } = body;
+        const { token, option_id, question_id, options, correct_option } = body;
 
-        if (option_id && question_id && options && correct_option) {
+        if (token && option_id && question_id && options && correct_option) {
 
-            const existingOptions = await prisma.qF_Option.findFirst({
-                where: {
-                    option_id
-                }
-            });
+            const res = jwt.verify(token as string, process.env.JWT_SECRET ?? "") as { is_admin_user: string };
 
-            if (existingOptions !== null) {
-                await prisma.qF_Option.update({
+            if (res) {
+
+                const user_id = res.is_admin_user;
+
+                const fu__in__usrtblmdl = await prisma.qF_User.findFirst({
                     where: {
-                        option_id
-                    },
-                    data: {
-                        questionid: question_id,
-                        options,
-                        correct_option
+                        AND: [
+                            {
+                                user_id
+                            },
+                            {
+                                role: "Admin"
+                            }
+                        ]
                     }
                 });
-                sts = 200;
-                resp = {
-                    success: true,
-                    message: "Option Updated Successfully!"
+                const fu__in__admntblmdl = await prisma.qF_Admin_User.findFirst({
+                    where: {
+                        admin_user_id: user_id,
+                    }
+                });
+
+                if (fu__in__usrtblmdl) {
+                    isTrueAdminUser = true;
+                } else {
+                    if (fu__in__admntblmdl) {
+                        isTrueAdminUser = true;
+                    } else {
+                        isTrueAdminUser = false;
+                    }
                 }
-            } else {
-                sts = 200;
-                resp = {
-                    success: false,
-                    message: "Option Not Exist!",
+
+                if (isTrueAdminUser) {
+                    const existingOptions = await prisma.qF_Option.findFirst({
+                        where: {
+                            option_id
+                        }
+                    });
+
+                    if (existingOptions !== null) {
+                        await prisma.qF_Option.update({
+                            where: {
+                                option_id
+                            },
+                            data: {
+                                questionid: question_id,
+                                options,
+                                correct_option
+                            }
+                        });
+                        sts = 200;
+                        resp = {
+                            success: true,
+                            message: "Option Updated Successfully!"
+                        }
+                    } else {
+                        sts = 200;
+                        resp = {
+                            success: false,
+                            message: "Option Not Exist!",
+                        }
+                    }
+                } else {
+                    sts = 200;
+                    resp = {
+                        success: false,
+                        message: "User Not Found."
+                    }
                 }
             }
         } else {

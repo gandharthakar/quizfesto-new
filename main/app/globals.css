@@ -269,6 +269,13 @@
 	height: 30px;
 }
 
+.spinner.size-5 {
+	--spinner-width: 3px;
+	width: 35px;
+	height: 35px;
+}
+
+
 @keyframes spinner-c7wet2 {
 	100% {
 		transform: rotate(1turn);

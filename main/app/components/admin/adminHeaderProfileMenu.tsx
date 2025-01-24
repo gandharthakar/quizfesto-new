@@ -9,6 +9,8 @@ import { deleteCookie, getCookie } from "cookies-next/client";
 import { useRouter } from "next/navigation";
 import { jwtDecode } from "jwt-decode";
 import { JWTDecAdmin } from "@/app/types/commonTypes";
+import { adminAuthUserCookieName } from "@/app/constant/datafaker";
+import Swal from "sweetalert2";
 // import Swal from "sweetalert2";
 
 function AdminHeaderProfileMenu() {
@@ -34,14 +36,24 @@ function AdminHeaderProfileMenu() {
 
     const getUser = async () => {
         const baseURI = window.location.origin;
-        const resp = await fetch(`${baseURI}/api/admin/auth-user/get-user`, {
-            method: 'POST',
-            body: JSON.stringify({ user_id: auid }),
-        });
-        const body = await resp.json();
-        if (body.success) {
-            setProfilePhoto(body.user_photo);
-            setUserName(body.user_full_name.charAt(0));
+        const token = getCookie(adminAuthUserCookieName);
+        try {
+            const resp = await fetch(`${baseURI}/api/admin/auth-user/get-user?token=${token}`, {
+                method: 'GET',
+            });
+            const body = await resp.json();
+            if (body.success) {
+                setProfilePhoto(body.user_photo);
+                setUserName(body.user_full_name.charAt(0));
+            }
+            //eslint-disable-next-line
+        } catch (error: any) {
+            Swal.fire({
+                title: "Error!",
+                text: error.message,
+                icon: "error",
+                timer: 4000
+            });
         }
     }
 
@@ -73,7 +85,6 @@ function AdminHeaderProfileMenu() {
             getUser();
         }
 
-        //eslint-disable-next-line
     }, [auid]);
 
     return (

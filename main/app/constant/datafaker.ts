@@ -996,6 +996,8 @@ const dump_list_of_users = [
 
 const redirectURIAdmin = "/admin/login";
 const redirectURISite = "/sign-in";
+const siteAuthUserCookieName = "is_auth_user";
+const adminAuthUserCookieName = "is_admin_user";
 
 export {
     dump_cats_homepage,
@@ -1012,5 +1014,7 @@ export {
     dump_list_of_categories,
     dump_list_of_users,
     redirectURIAdmin,
-    redirectURISite
+    redirectURISite,
+    siteAuthUserCookieName,
+    adminAuthUserCookieName
 }

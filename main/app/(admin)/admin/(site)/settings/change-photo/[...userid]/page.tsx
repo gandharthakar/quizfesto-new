@@ -8,6 +8,8 @@ import Swal from "sweetalert2";
 import { FaCloudUploadAlt, FaRegTrashAlt } from "react-icons/fa";
 import { convertBase64 } from "@/app/libs/helpers/helperFunctions";
 import TokenChecker from "@/app/libs/tokenChecker";
+import { getCookie } from "cookies-next/client";
+import { adminAuthUserCookieName } from "@/app/constant/datafaker";
 
 const Page = () => {
 
@@ -66,38 +68,53 @@ const Page = () => {
     const removeImageButtonClick = async () => {
         setIsLoadRmv(true);
         const baseURI = window.location.origin;
-        const resp = await fetch(`${baseURI}/api/admin/auth-user/settings/photo/remove`, {
-            method: 'DELETE',
-            body: JSON.stringify({ user_id, user_photo: '' })
-        });
-        const body = await resp.json();
-        if (body.success) {
-            Swal.fire({
-                title: "Success!",
-                text: body.message,
-                icon: "success",
-                timer: 4000
+        const token = getCookie(adminAuthUserCookieName);
+        try {
+            const resp = await fetch(`${baseURI}/api/admin/auth-user/settings/photo/remove`, {
+                method: 'DELETE',
+                body: JSON.stringify({ token })
             });
-            router.refresh();
-            setUserImage("");
-            setAlreadyHaveImage(false);
-            setIsLoadRmv(false);
-        } else {
+            if (!resp.ok) {
+                setIsLoading(false);
+            }
+            const body = await resp.json();
+            if (body.success) {
+                Swal.fire({
+                    title: "Success!",
+                    text: body.message,
+                    icon: "success",
+                    timer: 4000
+                });
+                router.refresh();
+                setUserImage("");
+                setAlreadyHaveImage(false);
+                setIsLoadRmv(false);
+            } else {
+                Swal.fire({
+                    title: "Error!",
+                    text: body.message,
+                    icon: "error",
+                    timer: 4000
+                });
+            }
+            //eslint-disable-next-line
+        } catch (error: any) {
             Swal.fire({
                 title: "Error!",
-                text: body.message,
+                text: error.message,
                 icon: "error",
                 timer: 4000
             });
+            setIsLoading(false);
         }
     }
 
     const getUser = async () => {
         const baseURI = window.location.origin;
+        const token = getCookie(adminAuthUserCookieName);
         try {
-            const resp = await fetch(`${baseURI}/api/admin/auth-user/settings/photo/get`, {
-                method: 'POST',
-                body: JSON.stringify({ user_id }),
+            const resp = await fetch(`${baseURI}/api/admin/auth-user/settings/photo/get?token=${token}`, {
+                method: 'GET',
             });
             if (!resp.ok) {
                 setIsLoading(false);
@@ -105,7 +122,6 @@ const Page = () => {
             const body = await resp.json();
             if (body.success) {
                 if (body.user_photo == '' || body.user_photo == null) {
-
                     setAlreadyHaveImage(false);
                 } else {
                     setAlreadyHaveImage(true);
@@ -121,8 +137,15 @@ const Page = () => {
                 });
                 setIsLoading(false);
             }
-        } catch (error) {
-            console.log(error);
+            //eslint-disable-next-line
+        } catch (error: any) {
+            Swal.fire({
+                title: "Error!",
+                text: error.message,
+                icon: "error",
+                timer: 4000
+            });
+            setIsLoading(false);
         }
     }
 
@@ -156,27 +179,42 @@ const Page = () => {
         if (isValidImage) {
             setIsLoading(true);
             const baseURI = window.location.origin;
-            const resp = await fetch(`${baseURI}/api/admin/auth-user/settings/photo/set`, {
-                method: 'POST',
-                body: JSON.stringify({ user_id, user_photo: imageFile })
-            });
-            const body = await resp.json();
-            if (body.success) {
-                Swal.fire({
-                    title: "Success!",
-                    text: body.message,
-                    icon: "success",
-                    timer: 4000
+            const token = getCookie(adminAuthUserCookieName);
+            try {
+                const resp = await fetch(`${baseURI}/api/admin/auth-user/settings/photo/set`, {
+                    method: 'POST',
+                    body: JSON.stringify({ token, user_photo: imageFile })
                 });
-                //this will reload the page without doing SSR
-                router.refresh();
-                setUserImage(imageFile);
-                setIsLoading(false);
-                setAlreadyHaveImage(true);
-            } else {
+                if (!resp.ok) {
+                    setIsLoading(false);
+                }
+                const body = await resp.json();
+                if (body.success) {
+                    Swal.fire({
+                        title: "Success!",
+                        text: body.message,
+                        icon: "success",
+                        timer: 4000
+                    });
+                    //this will reload the page without doing SSR
+                    router.refresh();
+                    setUserImage(imageFile);
+                    setIsLoading(false);
+                    setAlreadyHaveImage(true);
+                } else {
+                    Swal.fire({
+                        title: "Error!",
+                        text: body.message,
+                        icon: "error",
+                        timer: 4000
+                    });
+                    setIsLoading(false);
+                }
+                //eslint-disable-next-line
+            } catch (error: any) {
                 Swal.fire({
                     title: "Error!",
-                    text: body.message,
+                    text: error.message,
                     icon: "error",
                     timer: 4000
                 });
@@ -187,11 +225,11 @@ const Page = () => {
 
     useEffect(() => {
         getUser();
-        //eslint-disable-next-line
     }, []);
 
     return (
         <>
+            <input type="hidden" value={user_id} />
             <TokenChecker is_admin={true} />
             <div className="pt-[15px] pb-[25px]">
                 <div className="pb-[25px]">

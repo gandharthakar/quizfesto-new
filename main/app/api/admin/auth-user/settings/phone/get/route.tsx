@@ -1,5 +1,7 @@
 import prisma from "@/app/libs/db";
 import { NextResponse } from "next/server";
+import { type NextRequest } from 'next/server';
+import jwt from "jsonwebtoken";
 
 interface Respo {
     user_phone: string,
@@ -11,13 +13,13 @@ interface ShtResp {
     message: string
 }
 
-export async function POST(req: Request) {
+export async function GET(req: NextRequest) {
     let resp_main: Respo = {
         user_phone: '',
         success: false
     }
 
-    let sts: number = 400;
+    let sts: number = 200;
 
     let short_resp: ShtResp = {
         success: false,
@@ -28,70 +30,76 @@ export async function POST(req: Request) {
 
     try {
 
-        const body = await req.json();
-        const { user_id } = body;
+        const searchParams = req.nextUrl.searchParams;
+        const token = searchParams.get('token');
+        const res = jwt.verify(token as string, process.env.JWT_SECRET ?? "") as { is_admin_user: string };
 
-        if (!user_id) {
-            short_resp = {
-                success: false,
-                message: 'User id not provided',
-            }
-            MixResp = short_resp;
-            sts = 400;
-        } else {
+        if (res) {
 
-            //eslint-disable-next-line
-            let user: any = {};
-            const fu__in__usrtblmdl = await prisma.qF_User.findFirst({
-                where: {
-                    AND: [
-                        {
-                            user_id
-                        },
-                        {
-                            role: "Admin"
-                        }
-                    ]
-                }
-            });
-            const fu__in__admntblmdl = await prisma.qF_Admin_User.findFirst({
-                where: {
-                    admin_user_id: user_id,
-                }
-            });
+            const user_id = res.is_admin_user;
 
-            if (fu__in__usrtblmdl) {
-                user = fu__in__usrtblmdl;
-            } else {
-                if (fu__in__admntblmdl) {
-                    user = fu__in__admntblmdl;
-                } else {
-                    user = {};
+            if (!user_id) {
+                short_resp = {
+                    success: false,
+                    message: 'User id not provided',
                 }
-            }
-
-            if (fu__in__usrtblmdl) {
-                resp_main = {
-                    user_phone: user.user_phone,
-                    success: true
-                }
-                MixResp = resp_main;
+                MixResp = short_resp;
                 sts = 200;
             } else {
-                if (fu__in__admntblmdl) {
+
+                //eslint-disable-next-line
+                let user: any = {};
+                const fu__in__usrtblmdl = await prisma.qF_User.findFirst({
+                    where: {
+                        AND: [
+                            {
+                                user_id
+                            },
+                            {
+                                role: "Admin"
+                            }
+                        ]
+                    }
+                });
+                const fu__in__admntblmdl = await prisma.qF_Admin_User.findFirst({
+                    where: {
+                        admin_user_id: user_id,
+                    }
+                });
+
+                if (fu__in__usrtblmdl) {
+                    user = fu__in__usrtblmdl;
+                } else {
+                    if (fu__in__admntblmdl) {
+                        user = fu__in__admntblmdl;
+                    } else {
+                        user = {};
+                    }
+                }
+
+                if (fu__in__usrtblmdl) {
                     resp_main = {
-                        user_phone: user.admin_user_phone,
+                        user_phone: user.user_phone,
                         success: true
                     }
                     MixResp = resp_main;
                     sts = 200;
                 } else {
-                    short_resp = {
-                        success: false,
-                        message: 'No User Found.',
+                    if (fu__in__admntblmdl) {
+                        resp_main = {
+                            user_phone: user.admin_user_phone,
+                            success: true
+                        }
+                        MixResp = resp_main;
+                        sts = 200;
+                    } else {
+                        short_resp = {
+                            success: false,
+                            message: 'No User Found.',
+                        }
+                        MixResp = short_resp;
+                        sts = 200;
                     }
-                    MixResp = short_resp;
-                    sts = 200;
                 }
             }
         }
@@ -99,10 +107,38 @@ export async function POST(req: Request) {
         return NextResponse.json(MixResp, { status: sts });
         //eslint-disable-next-line
     } catch (error: any) {
-        sts = 500;
-        short_resp = {
-            success: false,
-            message: error.message
+        // sts = 500;
+        // short_resp = {
+        //     success: false,
+        //     message: error.message
+        // }
+
+        if (error.message == "jwt expired") {
+            short_resp = {
+                success: false,
+                message: "Your session is expired, Please login again."
+            }
+        } else if (error.message == "jwt malformed" || error.message == "jwt must be a string") {
+            short_resp = {
+                success: false,
+                message: "Wrong information provided."
+            }
+        } else if (error.message == "invalid signature" || error.message == "invalid token") {
+            short_resp = {
+                success: false,
+                message: "Invalid information provided."
+            }
+        } else if (error.message == "jwt must be provided") {
+            sts = 400;
+            short_resp = {
+                success: false,
+                message: "Missing required fields."
+            }
+        } else {
+            short_resp = {
+                success: false,
+                message: error.message
+            }
         }
         return NextResponse.json(short_resp, { status: sts });
     }

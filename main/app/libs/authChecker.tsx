@@ -44,7 +44,7 @@ const AuthChecker = () => {
                 }, 4000);
             }
         }
-    }, []);
+    }, [user_id]);
 
     return null;
 };

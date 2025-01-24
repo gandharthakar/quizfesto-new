@@ -45,8 +45,9 @@ function Page() {
     }
 
     const handleSearchInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-        setSrchInp('');
-        // setSrchInp(e.target.value);
+        const value = (e.target as HTMLInputElement).value;
+        setSrchInp(value);
+        // setSrchInp('');
         if (e.key === "Backspace") {
             setCurrentPage(1);
             setUserList(GFG(userData, currentPage, dataPerPage));

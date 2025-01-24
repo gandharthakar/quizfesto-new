@@ -1,5 +1,6 @@
 import prisma from "@/app/libs/db";
 import { NextResponse } from "next/server";
+import jwt from "jsonwebtoken";
 
 interface ShtResp {
     success: boolean,
@@ -8,7 +9,7 @@ interface ShtResp {
 
 export async function POST(req: Request) {
 
-    let sts: number = 400;
+    let sts: number = 200;
 
     let resp: ShtResp = {
         success: false,
@@ -20,77 +21,83 @@ export async function POST(req: Request) {
     try {
 
         const body = await req.json();
-        const { user_id, user_full_name, user_email, user_gender } = body;
+        const { token, user_full_name, user_email, user_gender } = body;
 
-        if (user_id && user_full_name && user_email) {
+        if (token && user_full_name && user_email) {
+            const res = jwt.verify(token as string, process.env.JWT_SECRET ?? "") as { is_admin_user: string };
 
-            const fu__in__usrtblmdl = await prisma.qF_User.findFirst({
-                where: {
-                    AND: [
-                        {
-                            user_id
-                        },
-                        {
-                            role: "Admin"
-                        }
-                    ]
-                }
-            });
-            const fu__in__admntblmdl = await prisma.qF_Admin_User.findFirst({
-                where: {
-                    admin_user_id: user_id,
-                }
-            });
+            if (res) {
 
-            if (fu__in__usrtblmdl) {
-                isTrueAdminUser = true;
-            } else {
-                if (fu__in__admntblmdl) {
-                    isTrueAdminUser = true;
-                } else {
-                    isTrueAdminUser = false;
-                }
-            }
+                const user_id = res.is_admin_user;
 
-            if (isTrueAdminUser) {
+                const fu__in__usrtblmdl = await prisma.qF_User.findFirst({
+                    where: {
+                        AND: [
+                            {
+                                user_id
+                            },
+                            {
+                                role: "Admin"
+                            }
+                        ]
+                    }
+                });
+                const fu__in__admntblmdl = await prisma.qF_Admin_User.findFirst({
+                    where: {
+                        admin_user_id: user_id,
+                    }
+                });
 
                 if (fu__in__usrtblmdl) {
-                    await prisma.qF_User.update({
-                        where: {
-                            user_id
-                        },
-                        data: {
-                            user_full_name,
-                            user_email,
-                            user_gender
-                        }
-                    });
+                    isTrueAdminUser = true;
                 } else {
                     if (fu__in__admntblmdl) {
-                        await prisma.qF_Admin_User.update({
-                            where: {
-                                admin_user_id: user_id
-                            },
-                            data: {
-                                admin_user_name: user_full_name,
-                                admin_user_email: user_email,
-                                admin_user_gender: user_gender
-                            }
-                        });
+                        isTrueAdminUser = true;
+                    } else {
+                        isTrueAdminUser = false;
                     }
                 }
 
-                resp = {
-                    success: true,
-                    message: 'General Settings Updated.',
+                if (isTrueAdminUser) {
+
+                    if (fu__in__usrtblmdl) {
+                        await prisma.qF_User.update({
+                            where: {
+                                user_id
+                            },
+                            data: {
+                                user_full_name,
+                                user_email,
+                                user_gender
+                            }
+                        });
+                    } else {
+                        if (fu__in__admntblmdl) {
+                            await prisma.qF_Admin_User.update({
+                                where: {
+                                    admin_user_id: user_id
+                                },
+                                data: {
+                                    admin_user_name: user_full_name,
+                                    admin_user_email: user_email,
+                                    admin_user_gender: user_gender
+                                }
+                            });
+                        }
+                    }
+
+                    resp = {
+                        success: true,
+                        message: 'General Settings Updated.',
+                    }
+                    sts = 200;
+                } else {
+                    resp = {
+                        success: false,
+                        message: 'User Not Found.',
+                    }
+                    sts = 200;
                 }
-                sts = 200;
-            } else {
-                resp = {
-                    success: false,
-                    message: 'User Not Found.',
-                }
-                sts = 200;
             }
         } else {
             resp = {
@@ -103,10 +110,37 @@ export async function POST(req: Request) {
         return NextResponse.json(resp, { status: sts });
         //eslint-disable-next-line
     } catch (error: any) {
-        sts = 500;
-        resp = {
-            success: false,
-            message: error.message
+        // sts = 500;
+        // resp = {
+        //     success: false,
+        //     message: error.message
+        // }
+        if (error.message == "jwt expired") {
+            resp = {
+                success: false,
+                message: "Your session is expired, Please login again."
+            }
+        } else if (error.message == "jwt malformed" || error.message == "jwt must be a string") {
+            resp = {
+                success: false,
+                message: "Wrong information provided."
+            }
+        } else if (error.message == "invalid signature" || error.message == "invalid token") {
+            resp = {
+                success: false,
+                message: "Invalid information provided."
+            }
+        } else if (error.message == "jwt must be provided") {
+            sts = 400;
+            resp = {
+                success: false,
+                message: "Missing required fields."
+            }
+        } else {
+            resp = {
+                success: false,
+                message: error.message
+            }
         }
         return NextResponse.json(resp, { status: sts });
     }

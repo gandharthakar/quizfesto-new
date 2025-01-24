@@ -14,6 +14,8 @@ import { RTSPkgSelectType } from "@/app/types/components/admin/componentsTypes";
 import { convertBase64 } from "@/app/libs/helpers/helperFunctions";
 import { AdminQuizesFormVS, AdminQuizesValidationSchema } from "@/app/libs/zod/schemas/adminValidationSchemas";
 import TokenChecker from "@/app/libs/tokenChecker";
+import { getCookie } from "cookies-next/client";
+import { adminAuthUserCookieName } from "@/app/constant/datafaker";
 
 function Page() {
 
@@ -173,7 +175,9 @@ function Page() {
             }
         }
 
+        const token = getCookie(adminAuthUserCookieName);
         const prepData = {
+            token,
             quiz_title: formdata.quiz_main_title,
             quiz_summary: formdata.quiz_summ,
             quiz_categories: quizCats && quizCats.length > 0 ? quizCats.map(item => item.value) : [],
@@ -189,57 +193,83 @@ function Page() {
         }
         setIsLoading(true);
         const baseURI = window.location.origin;
-        const resp = await fetch(`${baseURI}/api/admin/quizes/crud/create`, {
-            method: "POST",
-            body: JSON.stringify(prepData),
-        });
-        const body = await resp.json();
-        if (body.success) {
-            Swal.fire({
-                title: "Success!",
-                text: body.message,
-                icon: "success",
-                timer: 3000
+        try {
+            const resp = await fetch(`${baseURI}/api/admin/quizes/crud/create`, {
+                method: "POST",
+                body: JSON.stringify(prepData),
             });
-            clearFileInput();
-            setIsLoading(false);
-            setQuizTerms([]);
-            setQuizAboutContent("");
-            setQuizCats([]);
-            reset();
-        } else {
+            if (!resp.ok) {
+                setIsLoading(false);
+            }
+            const body = await resp.json();
+            if (body.success) {
+                Swal.fire({
+                    title: "Success!",
+                    text: body.message,
+                    icon: "success",
+                    timer: 3000
+                });
+                clearFileInput();
+                setIsLoading(false);
+                setQuizTerms([{ quiz_terms: '' }]);
+                setQuizAboutContent("");
+                setQuizCats([]);
+                setNegMarks("");
+                setNegMErr("");
+                reset();
+            } else {
+                Swal.fire({
+                    title: "Error!",
+                    text: body.message,
+                    icon: "error",
+                    timer: 3000
+                });
+                setIsLoading(false);
+            }
+            //eslint-disable-next-line
+        } catch (error: any) {
             Swal.fire({
                 title: "Error!",
-                text: body.message,
+                text: error.message,
                 icon: "error",
-                timer: 3000
+                timer: 4000
             });
-            setIsLoading(false);
         }
     }
 
     const getCats = async () => {
         const baseURI = window.location.origin;
-        const resp = await fetch(`${baseURI}/api/admin/categories/bulk-actions/read-all`, {
-            method: "GET"
-        });
-        const body = await resp.json();
-        if (body.success) {
-            const cts = body.cat_data;
-            //eslint-disable-next-line
-            let opts: RTSPkgSelectType[] = [];
-            for (let i = 0; i < cts.length; i++) {
-                const obj = {
-                    value: cts[i].category_id,
-                    label: cts[i].category_title
+        const token = getCookie(adminAuthUserCookieName);
+        try {
+            const resp = await fetch(`${baseURI}/api/admin/categories/bulk-actions/read-all?token=${token}`, {
+                method: "GET"
+            });
+            const body = await resp.json();
+            if (body.success) {
+                const cts = body.cat_data;
+                //eslint-disable-next-line
+                let opts: RTSPkgSelectType[] = [];
+                for (let i = 0; i < cts.length; i++) {
+                    const obj = {
+                        value: cts[i].category_id,
+                        label: cts[i].category_title
+                    }
+                    opts.push(obj);
                 }
-                opts.push(obj);
+                setOptions(opts);
+            } else {
+                Swal.fire({
+                    title: "Error!",
+                    text: body.message,
+                    icon: "error",
+                    timer: 4000
+                });
             }
-            setOptions(opts);
-        } else {
+            //eslint-disable-next-line
+        } catch (error: any) {
             Swal.fire({
                 title: "Error!",
-                text: body.message,
+                text: error.message,
                 icon: "error",
                 timer: 4000
             });
@@ -383,7 +413,7 @@ function Page() {
                                                 className="transition-all delay-75 block mb-[5px] font-noto_sans text-[16px] font-semibold text-zinc-900 dark:text-zinc-300"
                                                 htmlFor="cq-qnms"
                                             >
-                                                Negative Marking Score <span className="text-red-500">*</span>
+                                                Negative Marking Score
                                             </label>
                                             <input
                                                 type="text"

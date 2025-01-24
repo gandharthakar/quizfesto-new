@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { getCookie, deleteCookie } from "cookies-next/client";
 import { useEffect } from "react";
 import Swal from "sweetalert2";
-import { redirectURIAdmin, redirectURISite } from "../constant/datafaker";
+import { adminAuthUserCookieName, redirectURIAdmin, redirectURISite, siteAuthUserCookieName } from "@/app/constant/datafaker";
 import { signOut } from "next-auth/react";
 
 const TokenChecker = (props: { is_admin: boolean }) => {
@@ -16,9 +16,9 @@ const TokenChecker = (props: { is_admin: boolean }) => {
         const baseURI = window.location.origin;
         let glsi;
         if (is_admin) {
-            glsi = getCookie('is_admin_user');
+            glsi = getCookie(adminAuthUserCookieName);
         } else {
-            glsi = getCookie('is_auth_user');
+            glsi = getCookie(siteAuthUserCookieName);
         }
 
         if (glsi) {
@@ -42,21 +42,21 @@ const TokenChecker = (props: { is_admin: boolean }) => {
                         if (result.isConfirmed) {
                             if (is_admin) {
                                 router.push(redirectURIAdmin);
-                                deleteCookie('is_admin_user');
+                                deleteCookie(adminAuthUserCookieName);
                             } else {
                                 // router.push(redirectURISite);
                                 signOut({ callbackUrl: redirectURISite });
-                                deleteCookie('is_auth_user');
+                                deleteCookie(siteAuthUserCookieName);
                             }
                         }
                     });
                     if (is_admin) {
                         router.push(redirectURIAdmin);
-                        deleteCookie('is_admin_user');
+                        deleteCookie(adminAuthUserCookieName);
                     } else {
                         // router.push(redirectURISite);
                         signOut({ callbackUrl: redirectURISite });
-                        deleteCookie('is_auth_user');
+                        deleteCookie(siteAuthUserCookieName);
                     }
                 }
             } catch (error) {
@@ -72,27 +72,28 @@ const TokenChecker = (props: { is_admin: boolean }) => {
                 if (result.isConfirmed) {
                     if (is_admin) {
                         router.push(redirectURIAdmin);
-                        deleteCookie('is_admin_user');
+                        deleteCookie(adminAuthUserCookieName);
                     } else {
                         // router.push(redirectURISite);
                         signOut({ callbackUrl: redirectURISite });
-                        deleteCookie('is_auth_user');
+                        deleteCookie(siteAuthUserCookieName);
                     }
                 }
             });
             if (is_admin) {
                 router.push(redirectURIAdmin);
-                deleteCookie('is_admin_user');
+                deleteCookie(adminAuthUserCookieName);
             } else {
                 // router.push(redirectURISite);
                 signOut({ callbackUrl: redirectURISite });
-                deleteCookie('is_auth_user');
+                deleteCookie(siteAuthUserCookieName);
             }
         }
     }
 
     useEffect(() => {
         checkTokenValidity();
+        //eslint-disable-next-line
     }, []);
     return null;
 };

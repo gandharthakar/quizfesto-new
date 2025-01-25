@@ -29,8 +29,9 @@ export default function Page() {
     }
 
     const handleSearchInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-        setSrchInp("");
-        // setSrchInp(e.target.value);
+        const value = (e.target as HTMLInputElement).value;
+        setSrchInp(value);
+        // setSrchInp("");
         if (e.key === "Backspace") {
             setCurrentPage(1);
             setQuizList(GFG(quizData, currentPage, dataPerPage));
@@ -99,8 +100,6 @@ export default function Page() {
         try {
             const resp = await fetch(`${baseURI}/api/site/get-quizes/bulk-list/only-info`, {
                 method: "GET",
-                cache: 'no-store',
-                next: { revalidate: 60 }
             });
             if (!resp.ok) {
                 setIsLoading(false);
@@ -112,10 +111,22 @@ export default function Page() {
                 setQuizData(body.quizes);
                 setTotalPages(Math.ceil(body.quizes.length / dataPerPage));
             } else {
+                Swal.fire({
+                    title: "Error!",
+                    text: body.message,
+                    icon: "error",
+                    timer: 3000
+                });
                 setIsLoading(false);
             }
-        } catch (error) {
-            console.log(error);
+            //eslint-disable-next-line
+        } catch (error: any) {
+            Swal.fire({
+                title: "Error!",
+                text: error.message,
+                icon: "error",
+                timer: 4000
+            });
         }
     }
 

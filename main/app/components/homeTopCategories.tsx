@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { CategoriesType } from "@/app/types/components/website/componentsTypes";
+import Swal from "sweetalert2";
 
 function HomeTopCategories() {
 
@@ -23,10 +24,22 @@ function HomeTopCategories() {
                 setCats(body.home_cats);
                 setIsLoading(false);
             } else {
+                Swal.fire({
+                    title: "Error!",
+                    text: body.message,
+                    icon: "error",
+                    timer: 3000
+                });
                 setIsLoading(false);
             }
-        } catch (error) {
-            console.log(error);
+            //eslint-disable-next-line
+        } catch (error: any) {
+            Swal.fire({
+                title: "Error!",
+                text: error.message,
+                icon: "error",
+                timer: 4000
+            });
         }
     }
 

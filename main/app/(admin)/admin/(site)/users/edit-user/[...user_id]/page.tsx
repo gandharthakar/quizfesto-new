@@ -13,6 +13,8 @@ import { convertBase64, validatePhone, validPassword } from "@/app/libs/helpers/
 import { UserDataPayloadType } from "@/app/types/pages/admin/adminPageCommonTypes";
 import { AdminEditUserFormVS, AdminEditUserValidationSchema } from "@/app/libs/zod/schemas/adminValidationSchemas";
 import TokenChecker from "@/app/libs/tokenChecker";
+import { getCookie } from "cookies-next/client";
+import { adminAuthUserCookieName } from "@/app/constant/datafaker";
 
 function Page() {
 
@@ -131,27 +133,40 @@ function Page() {
     const submitData = async (data: UserDataPayloadType) => {
         setIsLoading(true);
         const baseURI = window.location.origin;
-        const resp = await fetch(`${baseURI}/api/admin/users/crud/update`, {
-            method: "POST",
-            body: JSON.stringify(data),
-        });
-        const body = await resp.json();
-        if (body.success) {
-            Swal.fire({
-                title: "Success!",
-                text: body.message,
-                icon: "success",
-                timer: 3000
+        try {
+            const resp = await fetch(`${baseURI}/api/admin/users/crud/update`, {
+                method: "POST",
+                body: JSON.stringify(data),
             });
-            setIsLoading(false);
-        } else {
+            if (!resp.ok) {
+                setIsLoading(false);
+            }
+            const body = await resp.json();
+            if (body.success) {
+                Swal.fire({
+                    title: "Success!",
+                    text: body.message,
+                    icon: "success",
+                    timer: 3000
+                });
+                setIsLoading(false);
+            } else {
+                Swal.fire({
+                    title: "Error!",
+                    text: body.message,
+                    icon: "error",
+                    timer: 3000
+                });
+                setIsLoading(false);
+            }
+            //eslint-disable-next-line
+        } catch (error: any) {
             Swal.fire({
                 title: "Error!",
-                text: body.message,
+                text: error.message,
                 icon: "error",
-                timer: 3000
+                timer: 4000
             });
-            setIsLoading(false);
         }
     }
 
@@ -193,8 +208,10 @@ function Page() {
             }
         }
 
+        const token = getCookie(adminAuthUserCookieName);
         const prepData: UserDataPayloadType = {
-            user_id: user_id_par?.toString(),
+            token: token as string,
+            uid: user_id_par,
             user_full_name: formdata.full_name,
             user_email: formdata.email,
             user_password: password,
@@ -217,65 +234,95 @@ function Page() {
 
     const getUser = async () => {
         const baseURI = window.location.origin;
-        const resp = await fetch(`${baseURI}/api/admin/users/crud/read`, {
-            method: "POST",
-            body: JSON.stringify({ user_id: user_id_par }),
-        });
-        const body = await resp.json();
-        if (body.success) {
-            // Swal.fire({
-            //     title: "Success!",
-            //     text: body.message,
-            //     icon: "success",
-            //     timer: 3000
-            // });
-            setValue("full_name", body.user.user_full_name);
-            setValue("email", body.user.user_email);
-            setValue("role", body.user.role);
-            setImageFile(body.user.user_photo);
-            setProfileImage(body.user.user_photo);
-            setPhone(body.user.user_phone);
-            setBlockUser(body.user.block_user);
-            setImageDimensions(true);
-            setImageFileSize(true);
-            setIsLoading(false);
-            setFileExt("jpg");
-            if (body.user.user_gender !== null) {
-                setGender(body.user.user_gender);
+        const token = getCookie(adminAuthUserCookieName);
+        try {
+            const resp = await fetch(`${baseURI}/api/admin/users/crud/read?token=${token}&uid=${user_id_par}`, {
+                method: "GET",
+            });
+            if (!resp.ok) {
+                setIsLoading(false);
             }
-        } else {
-            Swal.fire({
-                title: "Error!",
-                text: body.message,
-                icon: "error",
-                timer: 3000
-            });
-            setIsLoading(false);
-        }
-    }
-
-    const resetData = async () => {
-        const conf = confirm("Are you sure want reset participation data ?");
-        if (conf) {
-            const baseURI = window.location.origin;
-            const resp = await fetch(`${baseURI}/api/admin/users/participation-data/delete`, {
-                method: "DELETE",
-                body: JSON.stringify({ user_id: user_id_par }),
-            });
             const body = await resp.json();
             if (body.success) {
-                Swal.fire({
-                    title: "Success!",
-                    text: body.message,
-                    icon: "success",
-                    timer: 3000
-                });
+                // Swal.fire({
+                //     title: "Success!",
+                //     text: body.message,
+                //     icon: "success",
+                //     timer: 3000
+                // });
+                setValue("full_name", body.user.user_full_name);
+                setValue("email", body.user.user_email);
+                setValue("role", body.user.role);
+                setImageFile(body.user.user_photo);
+                setProfileImage(body.user.user_photo);
+                setPhone(body.user.user_phone);
+                setBlockUser(body.user.block_user);
+                setImageDimensions(true);
+                setImageFileSize(true);
+                setIsLoading(false);
+                setFileExt("jpg");
+                if (body.user.user_gender !== null) {
+                    setGender(body.user.user_gender);
+                }
             } else {
                 Swal.fire({
                     title: "Error!",
                     text: body.message,
                     icon: "error",
                     timer: 3000
+                });
+                setIsLoading(false);
+            }
+            //eslint-disable-next-line
+        } catch (error: any) {
+            Swal.fire({
+                title: "Error!",
+                text: error.message,
+                icon: "error",
+                timer: 4000
+            });
+        }
+    }
+
+    const resetData = async () => {
+        const conf = confirm("Are you sure want reset participation data ?");
+        if (conf) {
+            setIsLoading(true);
+            const baseURI = window.location.origin;
+            const token = getCookie(adminAuthUserCookieName);
+            try {
+                const resp = await fetch(`${baseURI}/api/admin/users/participation-data/delete`, {
+                    method: "DELETE",
+                    body: JSON.stringify({ token, uid: user_id_par }),
+                });
+                if (!resp.ok) {
+                    setIsLoading(false);
+                }
+                const body = await resp.json();
+                if (body.success) {
+                    Swal.fire({
+                        title: "Success!",
+                        text: body.message,
+                        icon: "success",
+                        timer: 3000
+                    });
+                    setIsLoading(false);
+                } else {
+                    Swal.fire({
+                        title: "Error!",
+                        text: body.message,
+                        icon: "error",
+                        timer: 3000
+                    });
+                    setIsLoading(false);
+                }
+                //eslint-disable-next-line
+            } catch (error: any) {
+                Swal.fire({
+                    title: "Error!",
+                    text: error.message,
+                    icon: "error",
+                    timer: 4000
                 });
             }
         }

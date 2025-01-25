@@ -1,6 +1,7 @@
 import prisma from "@/app/libs/db";
 import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
+import { getWinnerPosTxt } from "@/app/libs/helpers/helperFunctions";
 
 interface WinUsrFrm {
     winner_id: string,
@@ -14,26 +15,6 @@ interface Respo {
     success: boolean,
     message: string,
     winners?: WinUsrFrm[]
-}
-
-const getWinnerPosTxt = (winType: number) => {
-    let txt = '';
-    switch (winType) {
-        case 1:
-            txt = 'st'
-            break;
-        case 2:
-            txt = 'nd'
-            break;
-        case 3:
-            txt = 'rd'
-            break;
-        default:
-            txt = ''
-            break;
-    }
-
-    return txt;
 }
 
 const getUserDetails = async (user_id: string, onlyName: boolean) => {
@@ -56,7 +37,7 @@ export async function GET() {
         message: ''
     }
 
-    let sts: number = 400;
+    let sts: number = 200;
 
     try {
 

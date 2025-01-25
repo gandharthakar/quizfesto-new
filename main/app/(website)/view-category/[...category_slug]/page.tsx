@@ -12,8 +12,8 @@ import { GFG } from "@/app/libs/helpers/helperFunctions";
 
 function Page() {
 
-    const params = useParams<{ category_slug: string }>();
-    const cat_slug = params.category_slug;
+    const params = useParams<{ category_slug: string[] }>();
+    const cat_slug = params.category_slug[0];
 
     const dataPerPage = 6;
     const [srchInp, setSrchInp] = useState<string>("");
@@ -34,8 +34,9 @@ function Page() {
     }
 
     const handleSearchInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-        setSrchInp("");
-        // setSrchInp(e.target.value);
+        const value = (e.target as HTMLInputElement).value;
+        setSrchInp(value);
+        // setSrchInp("");
         if (e.key === "Backspace") {
             setCurrentPage(1);
             setQuizList(GFG(quizData, currentPage, dataPerPage));
@@ -101,21 +102,41 @@ function Page() {
 
     const getQuizes = async () => {
         const baseURI = window.location.origin;
-        const resp = await fetch(`${baseURI}/api/site/get-quizes/bulk-list/category-wise`, {
-            method: "POST",
-            body: JSON.stringify({ category_slug: cat_slug }),
-            cache: 'no-store',
-            next: { revalidate: 60 }
-        });
-        const body = await resp.json();
-        if (body.success) {
-            setIsLoading(false);
-            setQuizList(GFG(body.quizes, currentPage, dataPerPage));
-            setQuizData(body.quizes);
-            setTotalPages(Math.ceil(body.quizes.length / dataPerPage));
-            setCatName(body.category.category_title);
-        } else {
-            setIsLoading(false);
+        try {
+            const resp = await fetch(`${baseURI}/api/site/get-quizes/bulk-list/category-wise?category_slug=${cat_slug}`, {
+                method: "GET",
+            });
+            if (!resp.ok) {
+                setIsLoading(false);
+            }
+            const body = await resp.json();
+            if (body.success) {
+                console.log(body);
+                setIsLoading(false);
+                setQuizList(GFG(body.quizes, currentPage, dataPerPage));
+                setQuizData(body.quizes);
+                setTotalPages(Math.ceil(body.quizes.length / dataPerPage));
+                setCatName(body.category.category_title);
+            } else {
+                Swal.fire({
+                    title: "Error!",
+                    text: body.message,
+                    icon: "error",
+                    timer: 3000
+                });
+                if (body.category.category_title) {
+                    setCatName(body.category.category_title);
+                }
+                setIsLoading(false);
+            }
+            //eslint-disable-next-line
+        } catch (error: any) {
+            Swal.fire({
+                title: "Error!",
+                text: error.message,
+                icon: "error",
+                timer: 4000
+            });
         }
     }
 
@@ -164,7 +185,7 @@ function Page() {
                 </div>
             </section>
 
-            <section className="transition-all delay-75 py-[50px] px-[15px] bg-zinc-200 dark:bg-zinc-800">
+            <section className="transition-all delay-75 py-[50px] px-[15px] bg-zinc-200 dark:bg-zinc-800 min-h-screen">
                 <div className="site-container">
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-[20px]">
                         {

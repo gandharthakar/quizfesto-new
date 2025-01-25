@@ -78,3 +78,27 @@ export const convertBase64 = (file: File): Promise<string> => {
         }
     })
 }
+
+export const getWinnerPosTxt = (winType: number) => {
+    let txt = '';
+    switch (winType) {
+        case 1:
+            txt = 'st'
+            break;
+        case 2:
+            txt = 'nd'
+            break;
+        case 3:
+            txt = 'rd'
+            break;
+        default:
+            txt = ''
+            break;
+    }
+
+    return txt;
+}
+
+export const convertDigitIn = (str: string) => {
+    return str.split('-').reverse().join('-');
+}

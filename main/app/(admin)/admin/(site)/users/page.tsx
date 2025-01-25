@@ -15,6 +15,8 @@ import { GrPowerReset } from "react-icons/gr";
 import { AdminUserDataType } from "@/app/types/components/admin/componentsTypes";
 import { GFG } from "@/app/libs/helpers/helperFunctions";
 import TokenChecker from "@/app/libs/tokenChecker";
+import { getCookie } from "cookies-next/client";
+import { adminAuthUserCookieName } from "@/app/constant/datafaker";
 
 function Page() {
 
@@ -146,11 +148,71 @@ function Page() {
         if (selectedItems.length > 0) {
             const conf = confirm("Are you sure want to reset participation data for selected users ?");
             if (conf) {
+                setIsLoading(true);
+                setIsMenuOpen(false);
                 const baseURI = window.location.origin;
-                const resp = await fetch(`${baseURI}/api/admin/users/participation-data/delete-selected`, {
+                const token = getCookie(adminAuthUserCookieName);
+                try {
+                    const resp = await fetch(`${baseURI}/api/admin/users/participation-data/delete-selected`, {
+                        method: "DELETE",
+                        body: JSON.stringify({ token, user_id_list: selectedItems }),
+                    });
+                    if (!resp.ok) {
+                        setIsLoading(false);
+                    }
+                    const body = await resp.json();
+                    if (body.success) {
+                        Swal.fire({
+                            title: "Success!",
+                            text: body.message,
+                            icon: "success",
+                            timer: 3000
+                        });
+                        setIsLoading(false);
+                    } else {
+                        Swal.fire({
+                            title: "Error!",
+                            text: body.message,
+                            icon: "error",
+                            timer: 3000
+                        });
+                        setIsLoading(false);
+                    }
+                    //eslint-disable-next-line
+                } catch (error: any) {
+                    Swal.fire({
+                        title: "Error!",
+                        text: error.message,
+                        icon: "error",
+                        timer: 4000
+                    });
+                }
+            }
+        } else {
+            Swal.fire({
+                title: "Error!",
+                text: "Please Select Users First!",
+                icon: "error",
+                timer: 3000
+            });
+            setIsLoading(false);
+        }
+    }
+
+    const handleRDAllBulkLogic = async () => {
+        const conf = confirm("Are you sure want to reset participation data for all users ?");
+        if (conf) {
+            setIsLoading(true);
+            setIsMenuOpen(false);
+            const baseURI = window.location.origin;
+            const token = getCookie(adminAuthUserCookieName);
+            try {
+                const resp = await fetch(`${baseURI}/api/admin/users/participation-data/delete-all?token=${token}`, {
                     method: "DELETE",
-                    body: JSON.stringify({ user_id_list: selectedItems }),
                 });
+                if (!resp.ok) {
+                    setIsLoading(false);
+                }
                 const body = await resp.json();
                 if (body.success) {
                     Swal.fire({
@@ -159,12 +221,73 @@ function Page() {
                         icon: "success",
                         timer: 3000
                     });
+                    setIsLoading(false);
                 } else {
                     Swal.fire({
                         title: "Error!",
                         text: body.message,
                         icon: "error",
                         timer: 3000
+                    });
+                    setIsLoading(false);
+                }
+                //eslint-disable-next-line
+            } catch (error: any) {
+                Swal.fire({
+                    title: "Error!",
+                    text: error.message,
+                    icon: "error",
+                    timer: 4000
+                });
+            }
+        }
+    }
+
+    const handleDeleteSelectedBulkLogic = async () => {
+        if (selectedItems.length > 0) {
+            const conf = confirm("Are you sure want to delete selected users ?");
+            if (conf) {
+                setIsLoading(true);
+                setIsMenuOpen(false);
+                const baseURI = window.location.origin;
+                const token = getCookie(adminAuthUserCookieName);
+                try {
+                    const resp = await fetch(`${baseURI}/api/admin/users/bulk-actions/delete-selected`, {
+                        method: "DELETE",
+                        body: JSON.stringify({ token, user_id_list: selectedItems })
+                    });
+                    if (!resp.ok) {
+                        setIsLoading(false);
+                    }
+                    const body = await resp.json();
+                    if (body.success) {
+                        Swal.fire({
+                            title: "Success!",
+                            text: body.message,
+                            icon: "success",
+                            timer: 2000
+                        });
+                        const set = setTimeout(() => {
+                            window.location.reload();
+                            setIsLoading(false);
+                            clearTimeout(set);
+                        }, 2000);
+                    } else {
+                        Swal.fire({
+                            title: "Error!",
+                            text: body.message,
+                            icon: "error",
+                            timer: 3000
+                        });
+                        setIsLoading(false);
+                    }
+                    //eslint-disable-next-line
+                } catch (error: any) {
+                    Swal.fire({
+                        title: "Error!",
+                        text: error.message,
+                        icon: "error",
+                        timer: 4000
                     });
                 }
             }
@@ -176,45 +299,22 @@ function Page() {
                 timer: 3000
             });
         }
-        setIsMenuOpen(false);
     }
 
-    const handleRDAllBulkLogic = async () => {
-        const conf = confirm("Are you sure want to reset participation data for all users ?");
+    const handleDeleteAllBulkLogic = async () => {
+        const conf = confirm("Are you sure want to delete all users ?");
         if (conf) {
+            setIsLoading(true);
+            setIsMenuOpen(false);
             const baseURI = window.location.origin;
-            const resp = await fetch(`${baseURI}/api/admin/users/participation-data/delete-all`, {
-                method: "DELETE",
-            });
-            const body = await resp.json();
-            if (body.success) {
-                Swal.fire({
-                    title: "Success!",
-                    text: body.message,
-                    icon: "success",
-                    timer: 3000
-                });
-            } else {
-                Swal.fire({
-                    title: "Error!",
-                    text: body.message,
-                    icon: "error",
-                    timer: 3000
-                });
-            }
-        }
-        setIsMenuOpen(false);
-    }
-
-    const handleDeleteSelectedBulkLogic = async () => {
-        if (selectedItems.length > 0) {
-            const conf = confirm("Are you sure want to delete selected users ?");
-            if (conf) {
-                const baseURI = window.location.origin;
-                const resp = await fetch(`${baseURI}/api/admin/users/bulk-actions/delete-selected`, {
+            const token = getCookie(adminAuthUserCookieName);
+            try {
+                const resp = await fetch(`${baseURI}/api/admin/users/bulk-actions/delete-all?token=${token}`, {
                     method: "DELETE",
-                    body: JSON.stringify({ user_id_list: selectedItems })
                 });
+                if (!resp.ok) {
+                    setIsLoading(false);
+                }
                 const body = await resp.json();
                 if (body.success) {
                     Swal.fire({
@@ -225,50 +325,28 @@ function Page() {
                     });
                     const set = setTimeout(() => {
                         window.location.reload();
+                        setIsLoading(false);
                         clearTimeout(set);
                     }, 2000);
+                } else {
+                    Swal.fire({
+                        title: "Error!",
+                        text: body.message,
+                        icon: "error",
+                        timer: 2000
+                    });
+                    setIsLoading(false);
                 }
-            }
-        } else {
-            Swal.fire({
-                title: "Error!",
-                text: "Please Select Users First!",
-                icon: "error",
-                timer: 3000
-            });
-        }
-        setIsMenuOpen(false);
-    }
-
-    const handleDeleteAllBulkLogic = async () => {
-        const conf = confirm("Are you sure want to delete all users ?");
-        if (conf) {
-            const baseURI = window.location.origin;
-            const resp = await fetch(`${baseURI}/api/admin/users/bulk-actions/delete-all`, {
-                method: "DELETE",
-            });
-            const body = await resp.json();
-            if (body.success) {
-                Swal.fire({
-                    title: "Success!",
-                    text: body.message,
-                    icon: "success",
-                    timer: 2000
-                });
-                const set = setTimeout(() => {
-                    window.location.reload();
-                    clearTimeout(set);
-                }, 2000);
-            } else {
+                //eslint-disable-next-line
+            } catch (error: any) {
                 Swal.fire({
                     title: "Error!",
-                    text: body.message,
+                    text: error.message,
                     icon: "error",
-                    timer: 2000
+                    timer: 4000
                 });
             }
         }
-        setIsMenuOpen(false);
     }
 
     // useEffect(() => {
@@ -299,8 +377,9 @@ function Page() {
 
     const getUserData = async () => {
         const baseURI = window.location.origin;
+        const token = getCookie(adminAuthUserCookieName);
         try {
-            const resp = await fetch(`${baseURI}/api/admin/users/bulk-actions/read-all`, {
+            const resp = await fetch(`${baseURI}/api/admin/users/bulk-actions/read-all?token=${token}`, {
                 method: "GET",
             });
             if (!resp.ok) {
@@ -315,8 +394,14 @@ function Page() {
             } else {
                 setIsLoading(false);
             }
-        } catch (error) {
-            console.log(error);
+            //eslint-disable-next-line
+        } catch (error: any) {
+            Swal.fire({
+                title: "Error!",
+                text: error.message,
+                icon: "error",
+                timer: 4000
+            });
         }
     }
 

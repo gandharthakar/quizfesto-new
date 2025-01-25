@@ -12,6 +12,8 @@ import { convertBase64, validatePhone } from "@/app/libs/helpers/helperFunctions
 import { UserDataPayloadType } from "@/app/types/pages/admin/adminPageCommonTypes";
 import { AdminCreateUserFormVS, AdminCreateUserValidationSchema } from "@/app/libs/zod/schemas/adminValidationSchemas";
 import TokenChecker from "@/app/libs/tokenChecker";
+import { getCookie } from "cookies-next/client";
+import { adminAuthUserCookieName } from "@/app/constant/datafaker";
 
 function Page() {
 
@@ -92,31 +94,44 @@ function Page() {
     const submitData = async (data: UserDataPayloadType) => {
         setIsLoading(true);
         const baseURI = window.location.origin;
-        const resp = await fetch(`${baseURI}/api/admin/users/crud/create`, {
-            method: "POST",
-            body: JSON.stringify(data),
-        });
-        const body = await resp.json();
-        if (body.success) {
-            Swal.fire({
-                title: "Success!",
-                text: body.message,
-                icon: "success",
-                timer: 3000
+        try {
+            const resp = await fetch(`${baseURI}/api/admin/users/crud/create`, {
+                method: "POST",
+                body: JSON.stringify(data),
             });
-            setIsLoading(false);
-            removeButtonClick();
-            setPhone('');
-            setGender("");
-            reset();
-        } else {
+            if (!resp.ok) {
+                setIsLoading(false);
+            }
+            const body = await resp.json();
+            if (body.success) {
+                Swal.fire({
+                    title: "Success!",
+                    text: body.message,
+                    icon: "success",
+                    timer: 3000
+                });
+                setIsLoading(false);
+                removeButtonClick();
+                setPhone('');
+                setGender("");
+                reset();
+            } else {
+                Swal.fire({
+                    title: "Error!",
+                    text: body.message,
+                    icon: "error",
+                    timer: 3000
+                });
+                setIsLoading(false);
+            }
+            //eslint-disable-next-line
+        } catch (error: any) {
             Swal.fire({
                 title: "Error!",
-                text: body.message,
+                text: error.message,
                 icon: "error",
-                timer: 3000
+                timer: 4000
             });
-            setIsLoading(false);
         }
     }
 
@@ -158,7 +173,9 @@ function Page() {
             }
         }
 
+        const token = getCookie(adminAuthUserCookieName);
         const prepData: UserDataPayloadType = {
+            token: token as string,
             user_full_name: formdata.full_name,
             user_email: formdata.email,
             user_password: formdata.password,

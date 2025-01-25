@@ -3,6 +3,7 @@
 import Image from "next/image";
 import parse from 'html-react-parser';
 import { useEffect, useState } from "react";
+import Swal from "sweetalert2";
 
 export default function QuizPrizes() {
 
@@ -62,8 +63,14 @@ export default function QuizPrizes() {
                     }
                 }
             }
-        } catch (error) {
-            console.log(error);
+            //eslint-disable-next-line
+        } catch (error: any) {
+            Swal.fire({
+                title: "Error!",
+                text: error.message,
+                icon: "error",
+                timer: 4000
+            });
         }
     }
 

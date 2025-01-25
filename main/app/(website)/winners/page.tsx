@@ -52,8 +52,14 @@ export default function Page() {
                 });
                 setIsLoading(false);
             }
-        } catch (error) {
-            console.log(error);
+            //eslint-disable-next-line
+        } catch (error: any) {
+            Swal.fire({
+                title: "Error!",
+                text: error.message,
+                icon: "error",
+                timer: 4000
+            });
         }
     }
 

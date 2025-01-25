@@ -1,5 +1,8 @@
 import prisma from "@/app/libs/db";
 import { NextResponse } from "next/server";
+import { convertDigitIn } from "@/app/libs/helpers/helperFunctions";
+import { type NextRequest } from 'next/server';
+import jwt from "jsonwebtoken";
 
 // interface QF_Winning_Record {
 //     user_id: string,
@@ -120,10 +123,6 @@ const getWinner = (data: any[], minScore: number, maxScore: number, onlyMaxScore
     }
 }
 
-const convertDigitIn = (str: string) => {
-    return str.split('-').reverse().join('-');
-}
-
 //eslint-disable-next-line
 const prepScoreRecord = async (winData: any[], winType: number, WinTypeDscr: string) => {
     let obj = {};
@@ -167,91 +166,173 @@ const prepScoreRecord = async (winData: any[], winType: number, WinTypeDscr: str
     return obj;
 }
 
-export async function GET() {
+export async function GET(req: NextRequest) {
     let resp: Respo = {
         success: false,
-        message: '',
-        winners: []
+        message: ''
     }
 
-    let sts: number = 400;
+    let sts: number = 200;
+    let isTrueAdminUser: boolean = false;
 
     try {
-        const f1 = (await prisma.qF_Winning_Prizes.findFirst({
-            where: {
-                prize_type: 1
-            }
-        }))?.winning_score_limit
-        const f2 = (await prisma.qF_Winning_Prizes.findFirst({
-            where: {
-                prize_type: 2
-            }
-        }))?.winning_score_limit
-        const f3 = (await prisma.qF_Winning_Prizes.findFirst({
-            where: {
-                prize_type: 3
-            }
-        }))?.winning_score_limit
-        const data = await prisma.qF_Aggrigate_Scores.findMany();
-        if (data.length > 0) {
-            const propData = data.map((item) => {
-                return {
-                    user_id: item.user_id ?? "",
-                    aggregate_score: item.aggregate_score,
-                    record_date: item.record_date,
-                    record_time: item.record_time
+
+        const searchParams = req.nextUrl.searchParams;
+        const token = searchParams.get('token');
+
+        if (token) {
+            const res = jwt.verify(token as string, process.env.JWT_SECRET ?? "") as { is_admin_user: string };
+
+            if (res) {
+
+                const user_id = res.is_admin_user;
+
+                const fu__in__usrtblmdl = await prisma.qF_User.findFirst({
+                    where: {
+                        AND: [
+                            {
+                                user_id
+                            },
+                            {
+                                role: "Admin"
+                            }
+                        ]
+                    }
+                });
+                const fu__in__admntblmdl = await prisma.qF_Admin_User.findFirst({
+                    where: {
+                        admin_user_id: user_id,
+                    }
+                });
+
+                if (fu__in__usrtblmdl) {
+                    isTrueAdminUser = true;
+                } else {
+                    if (fu__in__admntblmdl) {
+                        isTrueAdminUser = true;
+                    } else {
+                        isTrueAdminUser = false;
+                    }
                 }
-            });
 
-            const first_winner = getWinner(propData, 0, (f1 ? f1 : 20000), true);
-            const second_winner = getWinner(propData, (f2 ? f2 : 15000), (f1 ? f1 : 20000), false);
-            const third_winner = getWinner(propData, (f3 ? f3 : 15000), (f2 ? f2 : 15000), false);
+                if (isTrueAdminUser) {
+                    const f1 = (await prisma.qF_Winning_Prizes.findFirst({
+                        where: {
+                            prize_type: 1
+                        }
+                    }))?.winning_score_limit
+                    const f2 = (await prisma.qF_Winning_Prizes.findFirst({
+                        where: {
+                            prize_type: 2
+                        }
+                    }))?.winning_score_limit
+                    const f3 = (await prisma.qF_Winning_Prizes.findFirst({
+                        where: {
+                            prize_type: 3
+                        }
+                    }))?.winning_score_limit
+                    const data = await prisma.qF_Aggrigate_Scores.findMany();
+                    if (data.length > 0) {
+                        const propData = data.map((item) => {
+                            return {
+                                user_id: item.user_id ?? "",
+                                aggregate_score: item.aggregate_score,
+                                record_date: item.record_date,
+                                record_time: item.record_time
+                            }
+                        });
 
-            let winner_1 = {};
+                        const first_winner = getWinner(propData, (f2 ? f2 : 20000), (f1 ? f1 : 25000), false);
+                        const second_winner = getWinner(propData, (f3 ? f3 : 15000), (f2 ? f2 : 20000), false);
+                        const third_winner = getWinner(propData, 0, (f3 ? f3 : 15000), false);
 
-            let winner_2 = {};
+                        let winner_1 = {};
 
-            let winner_3 = {};
+                        let winner_2 = {};
 
-            //eslint-disable-next-line
-            let arr: any = [];
+                        let winner_3 = {};
 
-            if (first_winner.length > 0) {
-                winner_1 = await prepScoreRecord(first_winner, 1, 'st');
-                arr.push(winner_1);
-            }
+                        //eslint-disable-next-line
+                        let arr: any = [];
 
-            if (second_winner.length > 0) {
-                winner_2 = await prepScoreRecord(second_winner, 2, 'nd');
-                arr.push(winner_2);
-            }
+                        if (first_winner.length > 0) {
+                            winner_1 = await prepScoreRecord(first_winner, 1, 'st');
+                            arr.push(winner_1);
+                        }
 
-            if (third_winner.length > 0) {
-                winner_3 = await prepScoreRecord(third_winner, 3, 'rd');
-                arr.push(winner_3);
-            }
+                        if (second_winner.length > 0) {
+                            winner_2 = await prepScoreRecord(second_winner, 2, 'nd');
+                            arr.push(winner_2);
+                        }
 
-            sts = 200;
-            resp = {
-                success: true,
-                message: "Records Found!",
-                winners: arr
+                        if (third_winner.length > 0) {
+                            winner_3 = await prepScoreRecord(third_winner, 3, 'rd');
+                            arr.push(winner_3);
+                        }
+
+                        sts = 200;
+                        resp = {
+                            success: true,
+                            message: "Records Found!",
+                            winners: arr
+                        }
+                    } else {
+                        sts = 200;
+                        resp = {
+                            success: false,
+                            message: "No Records Found!"
+                        }
+                    }
+                } else {
+                    sts = 200;
+                    resp = {
+                        success: false,
+                        message: "User Not Found."
+                    }
+                }
             }
         } else {
-            sts = 200;
+            sts = 400;
             resp = {
                 success: false,
-                message: "No Records Found!"
+                message: "Missing Required Field."
             }
         }
 
         return NextResponse.json(resp, { status: sts });
         //eslint-disable-next-line
     } catch (error: any) {
-        sts = 500;
-        resp = {
-            success: false,
-            message: error.message
+        // sts = 500;
+        // resp = {
+        //     success: false,
+        //     message: error.message
+        // }
+        if (error.message == "jwt expired") {
+            resp = {
+                success: false,
+                message: "Your session is expired, Please login again."
+            }
+        } else if (error.message == "jwt malformed" || error.message == "jwt must be a string") {
+            resp = {
+                success: false,
+                message: "Wrong information provided."
+            }
+        } else if (error.message == "invalid signature" || error.message == "invalid token") {
+            resp = {
+                success: false,
+                message: "Invalid information provided."
+            }
+        } else if (error.message == "jwt must be provided") {
+            sts = 400;
+            resp = {
+                success: false,
+                message: "Missing required fields."
+            }
+        } else {
+            resp = {
+                success: false,
+                message: error.message
+            }
         }
         return NextResponse.json(resp, { status: sts });
     }

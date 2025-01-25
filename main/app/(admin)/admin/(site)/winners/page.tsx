@@ -5,6 +5,8 @@ import TokenChecker from "@/app/libs/tokenChecker";
 import { WinnerUserFormType } from "@/app/types/components/admin/componentsTypes";
 import { useEffect, useState } from "react";
 import Swal from "sweetalert2";
+import { getCookie } from "cookies-next/client";
+import { adminAuthUserCookieName } from "@/app/constant/datafaker";
 
 function Page() {
 
@@ -15,22 +17,9 @@ function Page() {
         setIsLoading(true);
         setWinnersData([]);
         const baseURI = window.location.origin;
-        const resp = await fetch(`${baseURI}/api/admin/winners/crud/find`, {
-            method: "GET",
-        });
-        const body = await resp.json();
-        if (body.success) {
-            setIsLoading(false);
-            setWinnersData(body.winners);
-        } else {
-            setIsLoading(false);
-        }
-    }
-
-    const readWinners = async () => {
-        const baseURI = window.location.origin;
+        const token = getCookie(adminAuthUserCookieName);
         try {
-            const resp = await fetch(`${baseURI}/api/admin/winners/bulk-actions/read-all`, {
+            const resp = await fetch(`${baseURI}/api/admin/winners/crud/find?token=${token}`, {
                 method: "GET",
             });
             if (!resp.ok) {
@@ -43,36 +32,83 @@ function Page() {
             } else {
                 setIsLoading(false);
             }
-        } catch (error) {
-            console.log(error);
+            //eslint-disable-next-line
+        } catch (error: any) {
+            Swal.fire({
+                title: "Error!",
+                text: error.message,
+                icon: "error",
+                timer: 4000
+            });
+        }
+    }
+
+    const readWinners = async () => {
+        const baseURI = window.location.origin;
+        const token = getCookie(adminAuthUserCookieName);
+        try {
+            const resp = await fetch(`${baseURI}/api/admin/winners/bulk-actions/read-all?token=${token}`, {
+                method: "GET",
+            });
+            if (!resp.ok) {
+                setIsLoading(false);
+            }
+            const body = await resp.json();
+            if (body.success) {
+                setIsLoading(false);
+                setWinnersData(body.winners);
+            } else {
+                setIsLoading(false);
+            }
+            //eslint-disable-next-line
+        } catch (error: any) {
+            Swal.fire({
+                title: "Error!",
+                text: error.message,
+                icon: "error",
+                timer: 4000
+            });
         }
     }
 
     const deleteWinners = async () => {
         const conf = confirm("Are you sure want to remove all winners ?");
+
         if (conf) {
             const baseURI = window.location.origin;
-            const resp = await fetch(`${baseURI}/api/admin/winners/bulk-actions/remove-all`, {
-                method: "DELETE"
-            });
-            const body = await resp.json();
-            if (body.success) {
-                Swal.fire({
-                    title: "Success!",
-                    text: body.message,
-                    icon: "success",
-                    timer: 3000
+            const token = getCookie(adminAuthUserCookieName);
+            try {
+                const resp = await fetch(`${baseURI}/api/admin/winners/bulk-actions/remove-all?token=${token}`, {
+                    method: "DELETE"
                 });
-                const set = setTimeout(() => {
-                    window.location.reload();
-                    clearTimeout(set);
-                }, 3000);
-            } else {
+
+                const body = await resp.json();
+                if (body.success) {
+                    Swal.fire({
+                        title: "Success!",
+                        text: body.message,
+                        icon: "success",
+                        timer: 3000
+                    });
+                    const set = setTimeout(() => {
+                        window.location.reload();
+                        clearTimeout(set);
+                    }, 3000);
+                } else {
+                    Swal.fire({
+                        title: "Error!",
+                        text: body.message,
+                        icon: "error",
+                        timer: 3000
+                    });
+                }
+                //eslint-disable-next-line
+            } catch (error: any) {
                 Swal.fire({
                     title: "Error!",
-                    text: body.message,
+                    text: error.message,
                     icon: "error",
-                    timer: 3000
+                    timer: 4000
                 });
             }
         }

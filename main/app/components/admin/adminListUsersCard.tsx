@@ -8,6 +8,8 @@ import { RiDeleteBin6Line } from "react-icons/ri";
 import { MdOutlineModeEdit } from "react-icons/md";
 import Swal from "sweetalert2";
 import { AdminUsersListCardType } from "@/app/types/components/admin/componentsTypes";
+import { getCookie } from "cookies-next/client";
+import { adminAuthUserCookieName } from "@/app/constant/datafaker";
 
 function AdminListUsersCard(props: AdminUsersListCardType) {
 
@@ -23,38 +25,56 @@ function AdminListUsersCard(props: AdminUsersListCardType) {
 
     const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
     const menuRef = useRef<HTMLDivElement>(null);
+    const [isLoading, setIsLoading] = useState<boolean>(false);
 
     const handleClick = () => {
         setIsMenuOpen(false);
     }
 
     const handleDeleteUser = async () => {
-        setIsMenuOpen(false);
         const conf = confirm("Are you sure want to delete this user ?");
         if (conf) {
+            setIsLoading(true);
+            setIsMenuOpen(false);
             const baseURI = window.location.origin;
-            const resp = await fetch(`${baseURI}/api/admin/users/crud/delete`, {
-                method: "DELETE",
-                body: JSON.stringify({ user_id })
-            });
-            const body = await resp.json();
-            if (body.success) {
-                Swal.fire({
-                    title: "Success!",
-                    text: body.message,
-                    icon: "success",
-                    timer: 2000
+            const token = getCookie(adminAuthUserCookieName);
+            try {
+                const resp = await fetch(`${baseURI}/api/admin/users/crud/delete`, {
+                    method: "DELETE",
+                    body: JSON.stringify({ token, uid: user_id })
                 });
-                const set = setTimeout(() => {
-                    window.location.reload();
-                    clearTimeout(set);
-                }, 2000);
-            } else {
+                if (!resp.ok) {
+                    setIsLoading(false);
+                }
+                const body = await resp.json();
+                if (body.success) {
+                    Swal.fire({
+                        title: "Success!",
+                        text: body.message,
+                        icon: "success",
+                        timer: 2000
+                    });
+                    const set = setTimeout(() => {
+                        window.location.reload();
+                        setIsLoading(false);
+                        clearTimeout(set);
+                    }, 2000);
+                } else {
+                    Swal.fire({
+                        title: "Error!",
+                        text: body.message,
+                        icon: "error",
+                        timer: 2000
+                    });
+                    setIsLoading(false);
+                }
+                //eslint-disable-next-line
+            } catch (error: any) {
                 Swal.fire({
                     title: "Error!",
-                    text: body.message,
+                    text: error.message,
                     icon: "error",
-                    timer: 2000
+                    timer: 4000
                 });
             }
         }
@@ -76,7 +96,17 @@ function AdminListUsersCard(props: AdminUsersListCardType) {
 
     return (
         <>
-            <div className="transition-all delay-75 border-[2px] border-solid p-[15px] border-zinc-300 bg-white hover:border-zinc-600 dark:bg-zinc-800 dark:border-zinc-600 dark:hover:border-zinc-400">
+            <div className="transition-all delay-75 relative border-[2px] border-solid p-[15px] border-zinc-300 bg-white hover:border-zinc-600 dark:bg-zinc-800 dark:border-zinc-600 dark:hover:border-zinc-400">
+                {
+                    isLoading &&
+                    (
+                        <>
+                            <div className={`transition-all delay-75 absolute left-0 top-0 z-[10] bg-[rgba(255,255,255,0.90)] w-full h-full dark:bg-[rgba(9,9,11,0.95)] justify-center items-center flex`}>
+                                <div className="spinner size-5"></div>
+                            </div>
+                        </>
+                    )
+                }
                 <div className="flex gap-x-[15px] items-start">
                     <div className="alqc-chrb">
                         <input

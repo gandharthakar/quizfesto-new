@@ -1,5 +1,6 @@
 import prisma from "@/app/libs/db";
 import { NextResponse } from "next/server";
+import { getWinnerPosTxt } from "@/app/libs/helpers/helperFunctions";
 
 interface Check_Winner {
     winner_type: number,
@@ -11,26 +12,6 @@ interface Respo {
     success: boolean,
     message: string,
     winner?: Check_Winner
-}
-
-const getWinnerPosTxt = (winType: number) => {
-    let txt = '';
-    switch (winType) {
-        case 1:
-            txt = 'st'
-            break;
-        case 2:
-            txt = 'nd'
-            break;
-        case 3:
-            txt = 'rd'
-            break;
-        default:
-            txt = ''
-            break;
-    }
-
-    return txt;
 }
 
 export async function POST(req: Request) {

@@ -1,5 +1,6 @@
 import prisma from "@/app/libs/db";
 import { NextResponse } from "next/server";
+import { type NextRequest } from 'next/server';
 
 interface QF_Cats_Pub {
     category_id: string,
@@ -39,18 +40,18 @@ const getCats = async (ids: string[]) => {
     return cats;
 }
 
-export async function POST(req: Request) {
+export async function GET(req: NextRequest) {
     let resp: Respo = {
         success: false,
         message: '',
     }
 
-    let sts: number = 400;
+    let sts: number = 200;
 
     try {
 
-        const body = await req.json();
-        const { category_slug } = body;
+        const searchParams = req.nextUrl.searchParams;
+        const category_slug = searchParams.get('category_slug');
 
         if (category_slug) {
 
@@ -113,6 +114,11 @@ export async function POST(req: Request) {
                 resp = {
                     success: false,
                     message: "Quiz Not Found!",
+                    category: {
+                        category_id: cat_id?.category_id ?? "",
+                        category_title: cat_id?.category_title ?? "",
+                        category_slug: cat_id?.category_slug ?? ""
+                    }
                 }
             }
         } else {

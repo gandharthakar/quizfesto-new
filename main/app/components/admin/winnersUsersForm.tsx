@@ -4,6 +4,8 @@ import Image from "next/image";
 import { useState } from "react";
 import Swal from "sweetalert2";
 import { WinnerUserFormType } from "@/app/types/components/admin/componentsTypes";
+import { getCookie } from "cookies-next/client";
+import { adminAuthUserCookieName } from "@/app/constant/datafaker";
 
 function WinnersUsersForm(props: WinnerUserFormType) {
 
@@ -42,28 +44,39 @@ function WinnersUsersForm(props: WinnerUserFormType) {
         const conf = confirm("Are you sure want to remove this winner ?");
         if (conf) {
             const baseURI = window.location.origin;
-            const resp = await fetch(`${baseURI}/api/admin/winners/crud/remove`, {
-                method: "DELETE",
-                body: JSON.stringify({ winner_type }),
-            });
-            const body = await resp.json();
-            if (body.success) {
-                Swal.fire({
-                    title: "Success!",
-                    text: body.message,
-                    icon: "success",
-                    timer: 3000
+            const token = getCookie(adminAuthUserCookieName);
+            try {
+                const resp = await fetch(`${baseURI}/api/admin/winners/crud/remove`, {
+                    method: "DELETE",
+                    body: JSON.stringify({ token, winner_type }),
                 });
-                const set = setTimeout(() => {
-                    window.location.reload();
-                    clearTimeout(set);
-                }, 3000);
-            } else {
+                const body = await resp.json();
+                if (body.success) {
+                    Swal.fire({
+                        title: "Success!",
+                        text: body.message,
+                        icon: "success",
+                        timer: 3000
+                    });
+                    const set = setTimeout(() => {
+                        window.location.reload();
+                        clearTimeout(set);
+                    }, 3000);
+                } else {
+                    Swal.fire({
+                        title: "Error!",
+                        text: body.message,
+                        icon: "error",
+                        timer: 3000
+                    });
+                }
+                //eslint-disable-next-line
+            } catch (error: any) {
                 Swal.fire({
                     title: "Error!",
-                    text: body.message,
+                    text: error.message,
                     icon: "error",
-                    timer: 3000
+                    timer: 4000
                 });
             }
         }
@@ -90,27 +103,41 @@ function WinnersUsersForm(props: WinnerUserFormType) {
         if (isValidForm) {
             setIsLoading(true);
             const baseURI = window.location.origin;
-            const resp = await fetch(`${baseURI}/api/admin/winners/crud/update`, {
-                method: "POST",
-                body: JSON.stringify({ winner_type, winner_description: input }),
-            });
-            const body = await resp.json();
-            if (body.success) {
-                Swal.fire({
-                    title: "Success!",
-                    text: body.message,
-                    icon: "success",
-                    timer: 3000
+            const token = getCookie(adminAuthUserCookieName);
+            try {
+                const resp = await fetch(`${baseURI}/api/admin/winners/crud/update`, {
+                    method: "POST",
+                    body: JSON.stringify({ token, winner_type, winner_description: input }),
                 });
-                setIsLoading(false);
-            } else {
+                if (!resp.ok) {
+                    setIsLoading(false);
+                }
+                const body = await resp.json();
+                if (body.success) {
+                    Swal.fire({
+                        title: "Success!",
+                        text: body.message,
+                        icon: "success",
+                        timer: 3000
+                    });
+                    setIsLoading(false);
+                } else {
+                    Swal.fire({
+                        title: "Error!",
+                        text: body.message,
+                        icon: "error",
+                        timer: 3000
+                    });
+                    setIsLoading(false);
+                }
+                //eslint-disable-next-line
+            } catch (error: any) {
                 Swal.fire({
                     title: "Error!",
-                    text: body.message,
+                    text: error.message,
                     icon: "error",
-                    timer: 3000
+                    timer: 4000
                 });
-                setIsLoading(false);
             }
         }
     }

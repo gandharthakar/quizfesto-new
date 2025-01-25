@@ -1,5 +1,6 @@
 import prisma from "@/app/libs/db";
 import { NextResponse } from "next/server";
+import { convertDigitIn, getWinnerPosTxt } from "@/app/libs/helpers/helperFunctions";
 
 interface WinUsrFrm {
     winner_id: string,
@@ -13,30 +14,6 @@ interface Respo {
     success: boolean,
     message: string,
     winner?: WinUsrFrm
-}
-
-const getWinnerPosTxt = (winType: number) => {
-    let txt = '';
-    switch (winType) {
-        case 1:
-            txt = 'st'
-            break;
-        case 2:
-            txt = 'nd'
-            break;
-        case 3:
-            txt = 'rd'
-            break;
-        default:
-            txt = ''
-            break;
-    }
-
-    return txt;
-}
-
-const convertDigitIn = (str: string) => {
-    return str.split('-').reverse().join('-');
 }
 
 export async function POST(req: Request) {

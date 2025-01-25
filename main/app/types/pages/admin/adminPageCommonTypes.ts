@@ -1,5 +1,6 @@
 export type UserDataPayloadType = {
-    user_id?: string,
+    token: string,
+    uid?: string,
     user_full_name: string,
     user_email: string,
     user_password: string,

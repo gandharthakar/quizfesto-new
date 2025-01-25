@@ -7,6 +7,8 @@ import { RiCloseLargeFill } from "react-icons/ri";
 import Swal from "sweetalert2";
 import { WinnerPrizeFormType } from "@/app/types/components/admin/componentsTypes";
 import { convertBase64 } from "@/app/libs/helpers/helperFunctions";
+import { getCookie } from "cookies-next/client";
+import { adminAuthUserCookieName } from "@/app/constant/datafaker";
 
 function WinnerPrizeForm(props: WinnerPrizeFormType) {
 
@@ -75,23 +77,45 @@ function WinnerPrizeForm(props: WinnerPrizeFormType) {
         if (conf) {
             setIsLoading(true);
             const baseURI = window.location.origin;
-            const resp = await fetch(`${baseURI}/api/admin/prizes/delete`, {
-                method: "POST",
-                body: JSON.stringify({ prize_type: prize_type_text })
-            });
-            const body = await resp.json();
-            if (body.success) {
-                setIsLoading(false);
-                Swal.fire({
-                    title: "Success!",
-                    text: body.message,
-                    icon: "success",
-                    timer: 1500
+            const token = getCookie(adminAuthUserCookieName);
+            try {
+                const resp = await fetch(`${baseURI}/api/admin/prizes/delete`, {
+                    method: "DELETE",
+                    body: JSON.stringify({ token, prize_type: prize_type_text })
                 });
-                const s1 = setTimeout(() => {
-                    window.location.reload();
-                    clearTimeout(s1);
-                }, 1500);
+                if (!resp.ok) {
+                    setIsLoading(false);
+                }
+                const body = await resp.json();
+                if (body.success) {
+                    Swal.fire({
+                        title: "Success!",
+                        text: body.message,
+                        icon: "success",
+                        timer: 1500
+                    });
+                    const s1 = setTimeout(() => {
+                        window.location.reload();
+                        clearTimeout(s1);
+                    }, 1500);
+                    setIsLoading(false);
+                } else {
+                    Swal.fire({
+                        title: "Error!",
+                        text: body.message,
+                        icon: "error",
+                        timer: 3000
+                    });
+                    setIsLoading(false);
+                }
+                //eslint-disable-next-line
+            } catch (error: any) {
+                Swal.fire({
+                    title: "Error!",
+                    text: error.message,
+                    icon: "error",
+                    timer: 4000
+                });
             }
         }
     }
@@ -188,7 +212,9 @@ function WinnerPrizeForm(props: WinnerPrizeFormType) {
         }
 
         if (validPrizeCoverPhoto && descr && validSL) {
+            const token = getCookie(adminAuthUserCookieName);
             const data = {
+                token,
                 prize_type: prize_type_text,
                 prize_photo: imageFile,
                 prize_description: descr,
@@ -196,30 +222,43 @@ function WinnerPrizeForm(props: WinnerPrizeFormType) {
             }
             setIsLoading(true);
             const baseURI = window.location.origin;
-            const resp = await fetch(`${baseURI}/api/admin/prizes/create-update`, {
-                method: "POST",
-                body: JSON.stringify(data)
-            });
-            const body = await resp.json();
-            if (body.success) {
-                setIsLoading(false);
-                Swal.fire({
-                    title: "Success!",
-                    text: body.message,
-                    icon: "success",
-                    timer: 1500
+            try {
+                const resp = await fetch(`${baseURI}/api/admin/prizes/create-update`, {
+                    method: "POST",
+                    body: JSON.stringify(data)
                 });
-                // let s1 = setTimeout(() => {
-                //     window.location.reload();
-                //     clearTimeout(s1);
-                // }, 1500);
-            } else {
-                setIsLoading(false);
+                if (!resp.ok) {
+                    setIsLoading(false);
+                }
+                const body = await resp.json();
+                if (body.success) {
+                    setIsLoading(false);
+                    Swal.fire({
+                        title: "Success!",
+                        text: body.message,
+                        icon: "success",
+                        timer: 1500
+                    });
+                    // let s1 = setTimeout(() => {
+                    //     window.location.reload();
+                    //     clearTimeout(s1);
+                    // }, 1500);
+                } else {
+                    setIsLoading(false);
+                    Swal.fire({
+                        title: "Error!",
+                        text: body.message,
+                        icon: "error",
+                        timer: 10000
+                    });
+                }
+                //eslint-disable-next-line
+            } catch (error: any) {
                 Swal.fire({
                     title: "Error!",
-                    text: body.message,
+                    text: error.message,
                     icon: "error",
-                    timer: 10000
+                    timer: 4000
                 });
             }
         }
@@ -228,10 +267,10 @@ function WinnerPrizeForm(props: WinnerPrizeFormType) {
     const getPrize = async () => {
         setIsLoading(true);
         const baseURI = window.location.origin;
+        const token = getCookie(adminAuthUserCookieName);
         try {
-            const resp = await fetch(`${baseURI}/api/admin/prizes/read`, {
-                method: "POST",
-                body: JSON.stringify({ prize_type: prize_type_text }),
+            const resp = await fetch(`${baseURI}/api/admin/prizes/read?token=${token}&prize_type=${prize_type_text}`, {
+                method: "GET",
             });
             if (!resp.ok) {
                 setIsLoading(false);
@@ -260,8 +299,14 @@ function WinnerPrizeForm(props: WinnerPrizeFormType) {
             } else {
                 setIsLoading(false);
             }
-        } catch (error) {
-            console.log(error);
+            //eslint-disable-next-line
+        } catch (error: any) {
+            Swal.fire({
+                title: "Error!",
+                text: error.message,
+                icon: "error",
+                timer: 4000
+            });
         }
     }
 

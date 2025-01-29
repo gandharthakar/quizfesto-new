@@ -9,6 +9,9 @@ import { GFG } from "@/app/libs/helpers/helperFunctions";
 import { MyParticipationCardDataType } from "@/app/types/pages/website/user-area/userAreaPageTypes";
 import TokenChecker from "@/app/libs/tokenChecker";
 import AuthChecker from "@/app/libs/authChecker";
+import { siteAuthUserCookieName } from "@/app/constant/datafaker";
+import { getCookie } from "cookies-next/client";
+import Swal from "sweetalert2";
 
 export default function Page() {
 
@@ -29,18 +32,37 @@ export default function Page() {
 
     const getParticipationData = async () => {
         const baseURI = window.location.origin;
-        const resp = await fetch(`${baseURI}/api/site/auth-user/get-my-participation`, {
-            method: "POST",
-            body: JSON.stringify({ user_id }),
-        });
-        const body = await resp.json();
-        if (body.success) {
-            setIsLoading(false);
-            setMpData(body.participation_data);
-            setTotalPages(Math.ceil(body.participation_data.length / dataPerPage));
-            setMpListData(GFG(body.participation_data, currentPage, dataPerPage));
-        } else {
-            setIsLoading(false);
+        const token = getCookie(siteAuthUserCookieName);
+        try {
+            const resp = await fetch(`${baseURI}/api/site/auth-user/get-my-participation?token=${token}`, {
+                method: "GET",
+            });
+            if (!resp.ok) {
+                setIsLoading(false);
+            }
+            const body = await resp.json();
+            if (body.success) {
+                setIsLoading(false);
+                setMpData(body.participation_data);
+                setTotalPages(Math.ceil(body.participation_data.length / dataPerPage));
+                setMpListData(GFG(body.participation_data, currentPage, dataPerPage));
+            } else {
+                Swal.fire({
+                    title: "Error!",
+                    text: body.message,
+                    icon: "error",
+                    timer: 4000
+                });
+                setIsLoading(false);
+            }
+            //eslint-disable-next-line
+        } catch (error: any) {
+            Swal.fire({
+                title: "Error!",
+                text: error.message,
+                icon: "error",
+                timer: 4000
+            });
         }
     }
 
@@ -53,6 +75,7 @@ export default function Page() {
         <>
             <AuthChecker />
             <TokenChecker is_admin={false} />
+            <input type="hidden" value={user_id} />
             <section className="py-[25px]">
                 <div>
                     {

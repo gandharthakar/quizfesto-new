@@ -6,12 +6,12 @@ import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, SubmitHandler } from "react-hook-form";
 import Swal from "sweetalert2";
-import { RootState } from "@/app/libs/redux-service/store";
-import { useSelector } from "react-redux";
 import { useParams, useRouter } from "next/navigation";
 import { userPasswordSettingsFormVS, userPasswordSettingsValidationSchema } from "@/app/libs/zod/schemas/userAreaValidationSchemas";
 import TokenChecker from "@/app/libs/tokenChecker";
 import AuthChecker from "@/app/libs/authChecker";
+import { siteAuthUserCookieName } from "@/app/constant/datafaker";
+import { getCookie } from "cookies-next/client";
 
 export default function Page() {
 
@@ -21,7 +21,6 @@ export default function Page() {
 
     const [showPassword, setShowPassword] = useState<boolean>(false);
     const [showConfPassword, setShowConfPassword] = useState<boolean>(false);
-    const AuthUser = useSelector((state: RootState) => state.auth_user_id.auth_user_id);
     const [isLoading, setIsLoading] = useState<boolean>(false);
 
     const { register, handleSubmit, formState: { errors } } = useForm<userPasswordSettingsFormVS>({
@@ -31,29 +30,43 @@ export default function Page() {
     const handleFormSubmit: SubmitHandler<userPasswordSettingsFormVS> = async (formdata) => {
         setIsLoading(true);
         const baseURI = window.location.origin;
-        const resp = await fetch(`${baseURI}/api/site/auth-user/update-single-user/password`, {
-            method: 'POST',
-            body: JSON.stringify({ user_id: AuthUser, user_password: formdata.password, confirm_password: formdata.confirm_password })
-        });
-        const body = await resp.json();
-        if (body.success) {
-            Swal.fire({
-                title: "Success!",
-                text: body.message,
-                icon: "success",
-                timer: 4000
+        const token = getCookie(siteAuthUserCookieName);
+        try {
+            const resp = await fetch(`${baseURI}/api/site/auth-user/update-single-user/password`, {
+                method: 'POST',
+                body: JSON.stringify({ token, user_password: formdata.password, confirm_password: formdata.confirm_password })
             });
-            //this will reload the page without doing SSR
-            router.refresh();
-            setIsLoading(false);
-        } else {
+            if (!resp.ok) {
+                setIsLoading(false);
+            }
+            const body = await resp.json();
+            if (body.success) {
+                Swal.fire({
+                    title: "Success!",
+                    text: body.message,
+                    icon: "success",
+                    timer: 4000
+                });
+                //this will reload the page without doing SSR
+                router.refresh();
+                setIsLoading(false);
+            } else {
+                Swal.fire({
+                    title: "Error!",
+                    text: body.message,
+                    icon: "error",
+                    timer: 4000
+                });
+                setIsLoading(false);
+            }
+            //eslint-disable-next-line
+        } catch (error: any) {
             Swal.fire({
                 title: "Error!",
-                text: body.message,
+                text: error.message,
                 icon: "error",
                 timer: 4000
             });
-            setIsLoading(false);
         }
     }
 

@@ -13,6 +13,8 @@ import Swal from "sweetalert2";
 import { CheckWinnerType, UserStatsType } from "@/app/types/pages/website/user-area/userAreaPageTypes";
 import TokenChecker from "@/app/libs/tokenChecker";
 import AuthChecker from "@/app/libs/authChecker";
+import { siteAuthUserCookieName } from "@/app/constant/datafaker";
+import { getCookie } from "cookies-next/client";
 
 export default function Page() {
 
@@ -30,54 +32,95 @@ export default function Page() {
 
     const getUserStats = async () => {
         const baseURI = window.location.origin;
-        const resp = await fetch(`${baseURI}/api/site/auth-user/get-user-stats`, {
-            method: "POST",
-            body: JSON.stringify({ user_id }),
-        });
-        const body = await resp.json();
-        if (body.success) {
-            setUserStats(body.user_stats);
-            setIsLoading(false);
-        } else {
+        const token = getCookie(siteAuthUserCookieName);
+        try {
+            const resp = await fetch(`${baseURI}/api/site/auth-user/get-user-stats?token=${token}`, {
+                method: "GET",
+            });
+            if (!resp.ok) {
+                setIsLoading(false);
+            }
+            const body = await resp.json();
+            if (body.success) {
+                setUserStats(body.user_stats);
+                setIsLoading(false);
+            } else {
+                Swal.fire({
+                    title: "Error!",
+                    text: body.message,
+                    icon: "error",
+                    timer: 4000
+                });
+                setIsLoading(false);
+            }
+            //eslint-disable-next-line
+        } catch (error: any) {
             Swal.fire({
                 title: "Error!",
-                text: body.message,
+                text: error.message,
                 icon: "error",
                 timer: 4000
             });
-            setIsLoading(false);
         }
     }
 
     const checkIfWinner = async () => {
         const baseURI = window.location.origin;
-        const resp = await fetch(`${baseURI}/api/site/auth-user/check-winner-status`, {
-            method: "POST",
-            body: JSON.stringify({ user_id }),
-        });
-        const body = await resp.json();
-        if (body.success) {
-            setCheckWinner(body.winner);
+        const token = getCookie(siteAuthUserCookieName);
+        try {
+            const resp = await fetch(`${baseURI}/api/site/auth-user/check-winner-status?token=${token}`, {
+                method: "GET",
+            });
+            const body = await resp.json();
+            if (body.success) {
+                setCheckWinner(body.winner);
+            }
+            // } else {
+            //     Swal.fire({
+            //         title: "Error!",
+            //         text: body.message,
+            //         icon: "error",
+            //         timer: 4000
+            //     });
+            // }
+            //eslint-disable-next-line
+        } catch (error: any) {
+            Swal.fire({
+                title: "Error!",
+                text: error.message,
+                icon: "error",
+                timer: 4000
+            });
         }
     }
 
     const checkIfBlock = async () => {
         const baseURI = window.location.origin;
-        const resp = await fetch(`${baseURI}/api/site/auth-user/check-block-status`, {
-            method: "POST",
-            body: JSON.stringify({ user_id }),
-        });
-        const body = await resp.json();
-        if (body.success) {
-            if (body.user_block_status == "true") {
-                setIsAdminBlockedYou(true);
+        const token = getCookie(siteAuthUserCookieName);
+        try {
+            const resp = await fetch(`${baseURI}/api/site/auth-user/check-block-status?token=${token}`, {
+                method: "GET",
+            });
+            const body = await resp.json();
+            if (body.success) {
+                if (body.user_block_status == "true") {
+                    setIsAdminBlockedYou(true);
+                } else {
+                    setIsAdminBlockedYou(false);
+                }
             } else {
-                setIsAdminBlockedYou(false);
+                Swal.fire({
+                    title: "Error!",
+                    text: body.message,
+                    icon: "error",
+                    timer: 4000
+                });
             }
-        } else {
+            //eslint-disable-next-line
+        } catch (error: any) {
             Swal.fire({
                 title: "Error!",
-                text: body.message,
+                text: error.message,
                 icon: "error",
                 timer: 4000
             });
@@ -88,7 +131,6 @@ export default function Page() {
         getUserStats();
         checkIfWinner();
         checkIfBlock();
-        //eslint-disable-next-line
     }, []);
 
     return (

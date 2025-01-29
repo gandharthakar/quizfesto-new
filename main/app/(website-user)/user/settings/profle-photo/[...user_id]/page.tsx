@@ -9,6 +9,8 @@ import Swal from "sweetalert2";
 import { convertBase64 } from "@/app/libs/helpers/helperFunctions";
 import TokenChecker from "@/app/libs/tokenChecker";
 import AuthChecker from "@/app/libs/authChecker";
+import { siteAuthUserCookieName } from "@/app/constant/datafaker";
+import { getCookie } from "cookies-next/client";
 
 export default function Page() {
 
@@ -67,48 +69,83 @@ export default function Page() {
     const removeImageButtonClick = async () => {
         setIsLoadRmv(true);
         const baseURI = window.location.origin;
-        const resp = await fetch(`${baseURI}/api/site/auth-user/update-single-user/profile-photo`, {
-            method: 'POST',
-            body: JSON.stringify({ user_id, user_photo: '' })
-        });
-        const body = await resp.json();
-        if (body.success) {
+        const token = getCookie(siteAuthUserCookieName);
+        try {
+            const resp = await fetch(`${baseURI}/api/site/auth-user/update-single-user/profile-photo`, {
+                method: 'POST',
+                body: JSON.stringify({ token, user_photo: '' })
+            });
+            if (!resp.ok) {
+                setIsLoading(false);
+            }
+            const body = await resp.json();
+            if (body.success) {
+                Swal.fire({
+                    title: "Success!",
+                    text: body.message,
+                    icon: "success",
+                    timer: 4000
+                });
+                router.refresh();
+                setUserImage("");
+                setAlreadyHaveImage(false);
+                setIsLoadRmv(false);
+            } else {
+                Swal.fire({
+                    title: "Error!",
+                    text: body.message,
+                    icon: "error",
+                    timer: 4000
+                });
+                setIsLoading(false);
+            }
+            //eslint-disable-next-line
+        } catch (error: any) {
             Swal.fire({
-                title: "Success!",
-                text: body.message,
-                icon: "success",
+                title: "Error!",
+                text: error.message,
+                icon: "error",
                 timer: 4000
             });
-            router.refresh();
-            setUserImage("");
-            setAlreadyHaveImage(false);
-            setIsLoadRmv(false);
         }
     }
 
     const getUser = async () => {
         const baseURI = window.location.origin;
-        const resp = await fetch(`${baseURI}/api/site/auth-user/get-single-user`, {
-            method: 'POST',
-            body: JSON.stringify({ user_id }),
-        });
-        const body = await resp.json();
-        if (body.success) {
-            setUserImage(body.user.user_photo);
-            if (body.user.user_photo == '') {
-                setAlreadyHaveImage(false);
-            } else {
-                setAlreadyHaveImage(true);
+        const token = getCookie(siteAuthUserCookieName);
+        try {
+            const resp = await fetch(`${baseURI}/api/site/auth-user/get-single-user?token=${token}`, {
+                method: 'GET',
+            });
+            if (!resp.ok) {
+                setIsLoading(false);
             }
-            setIsLoading(false);
-        } else {
+            const body = await resp.json();
+            if (body.success) {
+                setUserImage(body.user.user_photo);
+                if (body.user.user_photo == '') {
+                    setAlreadyHaveImage(false);
+                } else {
+                    setAlreadyHaveImage(true);
+                }
+                setIsLoading(false);
+            } else {
+                Swal.fire({
+                    title: "Error!",
+                    text: body.message,
+                    icon: "error",
+                    timer: 4000
+                });
+                setIsLoading(false);
+            }
+            //eslint-disable-next-line
+        } catch (error: any) {
             Swal.fire({
                 title: "Error!",
-                text: body.message,
+                text: error.message,
                 icon: "error",
                 timer: 4000
             });
-            setIsLoading(false);
         }
     }
 
@@ -142,44 +179,58 @@ export default function Page() {
         if (isValidImage) {
             setIsLoading(true);
             const baseURI = window.location.origin;
-            const resp = await fetch(`${baseURI}/api/site/auth-user/update-single-user/profile-photo`, {
-                method: 'POST',
-                body: JSON.stringify({ user_id, user_photo: imageFile })
-            });
-            const body = await resp.json();
-            if (body.success) {
-                Swal.fire({
-                    title: "Success!",
-                    text: body.message,
-                    icon: "success",
-                    timer: 4000
+            const token = getCookie(siteAuthUserCookieName);
+            try {
+                const resp = await fetch(`${baseURI}/api/site/auth-user/update-single-user/profile-photo`, {
+                    method: 'POST',
+                    body: JSON.stringify({ token, user_photo: imageFile })
                 });
-                //this will reload the page without doing SSR
-                router.refresh();
-                setUserImage(imageFile);
-                setIsLoading(false);
-                setAlreadyHaveImage(true);
-            } else {
+                if (!resp.ok) {
+                    setIsLoading(false);
+                }
+                const body = await resp.json();
+                if (body.success) {
+                    Swal.fire({
+                        title: "Success!",
+                        text: body.message,
+                        icon: "success",
+                        timer: 4000
+                    });
+                    //this will reload the page without doing SSR
+                    router.refresh();
+                    setUserImage(imageFile);
+                    setIsLoading(false);
+                    setAlreadyHaveImage(true);
+                } else {
+                    Swal.fire({
+                        title: "Error!",
+                        text: body.message,
+                        icon: "error",
+                        timer: 4000
+                    });
+                    setIsLoading(false);
+                }
+                //eslint-disable-next-line
+            } catch (error: any) {
                 Swal.fire({
                     title: "Error!",
-                    text: body.message,
+                    text: error.message,
                     icon: "error",
                     timer: 4000
                 });
-                setIsLoading(false);
             }
         }
     }
 
     useEffect(() => {
         getUser();
-        //eslint-disable-next-line
     }, []);
 
     return (
         <>
             <AuthChecker />
             <TokenChecker is_admin={false} />
+            <input type="hidden" value={user_id} />
             <div className="pt-[25px] lg:pt-0">
                 <div className="transition-all delay-75 bg-white border-[2px] border-solid border-zinc-300 px-[20px] py-[20px] md:px-[40px] md:py-[30px] lg:max-w-[800px] dark:bg-zinc-950 dark:border-zinc-700">
                     {

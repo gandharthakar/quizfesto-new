@@ -12,6 +12,9 @@ import { AiOutlineTrophy } from "react-icons/ai";
 import { usePathname, useParams } from "next/navigation";
 import { close_user_area_menu } from "@/app/libs/redux-service/slices/user-area/userAreaMenuToggleSlice";
 import { useEffect, useState } from "react";
+import { getCookie } from "cookies-next/client";
+import { siteAuthUserCookieName } from "@/app/constant/datafaker";
+import Swal from "sweetalert2";
 
 export default function UserAreaNavBar() {
 
@@ -28,21 +31,37 @@ export default function UserAreaNavBar() {
 
     const getUser = async () => {
         const baseURI = window.location.origin;
-        const resp = await fetch(`${baseURI}/api/site/auth-user/get-single-user`, {
-            method: 'POST',
-            body: JSON.stringify({ user_id }),
-        });
-        const body = await resp.json();
-        if (body.success) {
-            setNameLetter(body.user.user_full_name.charAt(0));
-            setProfilePict(body.user.user_photo);
-            setUserName(body.user.user_full_name);
+        const token = getCookie(siteAuthUserCookieName);
+        try {
+            const resp = await fetch(`${baseURI}/api/site/auth-user/get-single-user?token=${token}`, {
+                method: 'GET',
+            });
+            const body = await resp.json();
+            if (body.success) {
+                setNameLetter(body.user.user_full_name.charAt(0));
+                setProfilePict(body.user.user_photo);
+                setUserName(body.user.user_full_name);
+            } else {
+                Swal.fire({
+                    title: "Error!",
+                    text: body.message,
+                    icon: "error",
+                    timer: 4000
+                });
+            }
+            //eslint-disable-next-line
+        } catch (error: any) {
+            Swal.fire({
+                title: "Error!",
+                text: error.message,
+                icon: "error",
+                timer: 4000
+            });
         }
     }
 
     useEffect(() => {
         getUser();
-        //eslint-disable-next-line
     }, []);
 
     return (

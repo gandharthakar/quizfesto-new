@@ -30,7 +30,7 @@ export async function POST(req: Request) {
             if (fuser) {
                 const isMatch = await compare(password, fuser.user_password);
                 if (isMatch) {
-                    const token = jwt.sign({ is_auth_user: fuser.user_id }, process.env.JWT_SECRET ?? "", { expiresIn: '30d' });
+                    const token = jwt.sign({ is_auth_user: fuser.user_id }, process.env.JWT_SECRET ?? "", { expiresIn: '1h' });
                     sts = 200;
                     resp = {
                         success: true,

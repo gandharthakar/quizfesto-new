@@ -9,8 +9,8 @@ import { useEffect, useRef, useState } from "react";
 import { CgProfile } from "react-icons/cg";
 import { IoSettingsOutline } from "react-icons/io5";
 import { getCookie } from "cookies-next/client";
-import { jwtDecode } from "jwt-decode";
-import { JWTDec } from "@/app/types/commonTypes";
+import { siteAuthUserCookieName } from "@/app/constant/datafaker";
+import Swal from "sweetalert2";
 
 export default function HeaderProfileMenu() {
 
@@ -21,19 +21,33 @@ export default function HeaderProfileMenu() {
     const menuRef = useRef<HTMLDivElement>(null);
 
     const getUser = async () => {
-        const gau = getCookie('is_auth_user');
-        if (gau) {
-            const user_id: JWTDec = jwtDecode(gau);
-            const baseURI = window.location.origin;
-            const resp = await fetch(`${baseURI}/api/site/auth-user/get-single-user`, {
-                method: 'POST',
-                body: JSON.stringify({ user_id: user_id.is_auth_user }),
+
+        const baseURI = window.location.origin;
+        const token = getCookie(siteAuthUserCookieName);
+        try {
+            const resp = await fetch(`${baseURI}/api/site/auth-user/get-single-user?token=${token}`, {
+                method: 'GET',
             });
             const body = await resp.json();
             if (body.success) {
                 setNameLetter(body.user.user_full_name.charAt(0));
                 setProfilePict(body.user.user_photo);
+            } else {
+                Swal.fire({
+                    title: "Error!",
+                    text: body.message,
+                    icon: "error",
+                    timer: 4000
+                });
             }
+            //eslint-disable-next-line
+        } catch (error: any) {
+            Swal.fire({
+                title: "Error!",
+                text: error.message,
+                icon: "error",
+                timer: 4000
+            });
         }
     }
 

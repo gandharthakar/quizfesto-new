@@ -8,6 +8,8 @@ import { useParams, useRouter } from "next/navigation";
 import { userGeneralSettingsFormVS, userGeneralSettingsValidationSchema } from "@/app/libs/zod/schemas/userAreaValidationSchemas";
 import TokenChecker from "@/app/libs/tokenChecker";
 import AuthChecker from "@/app/libs/authChecker";
+import { siteAuthUserCookieName } from "@/app/constant/datafaker";
+import { getCookie } from "cookies-next/client";
 
 export default function Page() {
 
@@ -25,54 +27,81 @@ export default function Page() {
     const handleFormSubmit: SubmitHandler<userGeneralSettingsFormVS> = async (formdata) => {
         setIsLoading(true);
         const baseURI = window.location.origin;
-        const resp = await fetch(`${baseURI}/api/site/auth-user/update-single-user/general`, {
-            method: 'POST',
-            body: JSON.stringify({ user_id, user_full_name: formdata.full_name, user_email: formdata.email, user_gender: gender })
-        });
-        const body = await resp.json();
-        if (body.success) {
-            Swal.fire({
-                title: "Success!",
-                text: body.message,
-                icon: "success",
-                timer: 4000
+        const token = getCookie(siteAuthUserCookieName);
+        try {
+            const resp = await fetch(`${baseURI}/api/site/auth-user/update-single-user/general`, {
+                method: 'POST',
+                body: JSON.stringify({ token, user_full_name: formdata.full_name, user_email: formdata.email, user_gender: gender })
             });
-            //this will reload the page without doing SSR
-            router.refresh();
-            setIsLoading(false);
-        } else {
+            if (!resp.ok) {
+                setIsLoading(false);
+            }
+            const body = await resp.json();
+            if (body.success) {
+                Swal.fire({
+                    title: "Success!",
+                    text: body.message,
+                    icon: "success",
+                    timer: 4000
+                });
+                //this will reload the page without doing SSR
+                router.refresh();
+                setIsLoading(false);
+            } else {
+                Swal.fire({
+                    title: "Error!",
+                    text: body.message,
+                    icon: "error",
+                    timer: 4000
+                });
+                setIsLoading(false);
+            }
+            //eslint-disable-next-line
+        } catch (error: any) {
             Swal.fire({
                 title: "Error!",
-                text: body.message,
+                text: error.message,
                 icon: "error",
                 timer: 4000
             });
-            setIsLoading(false);
         }
     }
 
     const getUser = async () => {
         const baseURI = window.location.origin;
-        const resp = await fetch(`${baseURI}/api/site/auth-user/get-single-user`, {
-            method: 'POST',
-            body: JSON.stringify({ user_id }),
-        });
-        const body = await resp.json();
-        if (body.success) {
-            setValue("full_name", body.user.user_full_name);
-            setValue("email", body.user.user_email);
-            if (body.user.user_gender !== null) {
-                setGender(body.user.user_gender);
+        const token = getCookie(siteAuthUserCookieName);
+        try {
+            const resp = await fetch(`${baseURI}/api/site/auth-user/get-single-user?token=${token}`, {
+                method: 'GET',
+            });
+            if (!resp.ok) {
+                setIsLoading(false);
             }
-            setIsLoading(false);
-        } else {
+            const body = await resp.json();
+            if (body.success) {
+                setValue("full_name", body.user.user_full_name);
+                setValue("email", body.user.user_email);
+                if (body.user.user_gender !== null) {
+                    setGender(body.user.user_gender);
+                }
+                setIsLoading(false);
+            } else {
+                Swal.fire({
+                    title: "Error!",
+                    text: body.message,
+                    icon: "error",
+                    timer: 4000
+                });
+                setIsLoading(false);
+            }
+            //eslint-disable-next-line
+        } catch (error: any) {
             Swal.fire({
                 title: "Error!",
-                text: body.message,
+                text: error.message,
                 icon: "error",
                 timer: 4000
             });
-            setIsLoading(false);
         }
     }
 
@@ -85,6 +114,7 @@ export default function Page() {
         <>
             <AuthChecker />
             <TokenChecker is_admin={false} />
+            <input type="hidden" value={user_id} />
             <div className="pt-[25px] lg:pt-0">
                 <div className="transition-all delay-75 bg-white border-[2px] border-solid border-zinc-300 px-[20px] py-[20px] md:px-[40px] md:py-[30px] lg:max-w-[800px] dark:bg-zinc-950 dark:border-zinc-700">
                     <form onSubmit={handleSubmit(handleFormSubmit)}>

@@ -1,10 +1,14 @@
 import prisma from "@/app/libs/db";
 import { NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
+import { sanitize } from "@/app/libs/sanitize";
+import { zodIssuesMyType } from "@/app/types/commonTypes";
+import { AdminPhoneSettingsValidationSchema } from "@/app/libs/zod/schemas/adminValidationSchemas";
 
 interface ShtResp {
     success: boolean,
-    message: string
+    message: string,
+    errors?: zodIssuesMyType[]
 }
 
 export async function POST(req: Request) {
@@ -21,78 +25,96 @@ export async function POST(req: Request) {
     try {
 
         const body = await req.json();
-        const { token, user_phone } = body;
+
+        const token = sanitize(body.token);
+        const user_phone = sanitize(body.user_phone);
+
+        // const { token, user_phone } = body;
 
         if (token && user_phone) {
-            const res = jwt.verify(token as string, process.env.JWT_SECRET ?? "") as { is_admin_user: string };
+            const valResult = AdminPhoneSettingsValidationSchema.safeParse({
+                phone_number: user_phone
+            });
+            if (valResult.success) {
+                const res = jwt.verify(token as string, process.env.JWT_SECRET ?? "") as { is_admin_user: string };
 
-            if (res) {
+                if (res) {
 
-                const user_id = res.is_admin_user;
+                    const user_id = res.is_admin_user;
 
-                const fu__in__usrtblmdl = await prisma.qF_User.findFirst({
-                    where: {
-                        AND: [
-                            {
-                                user_id
-                            },
-                            {
-                                role: "Admin"
-                            }
-                        ]
-                    }
-                });
-                const fu__in__admntblmdl = await prisma.qF_Admin_User.findFirst({
-                    where: {
-                        admin_user_id: user_id,
-                    }
-                });
-
-                if (fu__in__usrtblmdl) {
-                    isTrueAdminUser = true;
-                } else {
-                    if (fu__in__admntblmdl) {
-                        isTrueAdminUser = true;
-                    } else {
-                        isTrueAdminUser = false;
-                    }
-                }
-
-                if (isTrueAdminUser) {
+                    const fu__in__usrtblmdl = await prisma.qF_User.findFirst({
+                        where: {
+                            AND: [
+                                {
+                                    user_id
+                                },
+                                {
+                                    role: "Admin"
+                                }
+                            ]
+                        }
+                    });
+                    const fu__in__admntblmdl = await prisma.qF_Admin_User.findFirst({
+                        where: {
+                            admin_user_id: user_id,
+                        }
+                    });
 
                     if (fu__in__usrtblmdl) {
-                        await prisma.qF_User.update({
-                            where: {
-                                user_id
-                            },
-                            data: {
-                                user_phone
-                            }
-                        });
+                        isTrueAdminUser = true;
                     } else {
                         if (fu__in__admntblmdl) {
-                            await prisma.qF_Admin_User.update({
-                                where: {
-                                    admin_user_id: user_id
-                                },
-                                data: {
-                                    admin_user_phone: user_phone
-                                }
-                            });
+                            isTrueAdminUser = true;
+                        } else {
+                            isTrueAdminUser = false;
                         }
                     }
 
-                    resp = {
-                        success: true,
-                        message: 'Phone Number Updated.',
+                    if (isTrueAdminUser) {
+
+                        if (fu__in__usrtblmdl) {
+                            await prisma.qF_User.update({
+                                where: {
+                                    user_id
+                                },
+                                data: {
+                                    user_phone
+                                }
+                            });
+                        } else {
+                            if (fu__in__admntblmdl) {
+                                await prisma.qF_Admin_User.update({
+                                    where: {
+                                        admin_user_id: user_id
+                                    },
+                                    data: {
+                                        admin_user_phone: user_phone
+                                    }
+                                });
+                            }
+                        }
+
+                        resp = {
+                            success: true,
+                            message: 'Phone Number Updated.',
+                        }
+                        sts = 200;
+                    } else {
+                        resp = {
+                            success: false,
+                            message: 'User Not Found.',
+                        }
+                        sts = 200;
                     }
-                    sts = 200;
-                } else {
-                    resp = {
-                        success: false,
-                        message: 'User Not Found.',
-                    }
-                    sts = 200;
+                }
+            } else {
+                sts = 200;
+                resp = {
+                    success: false,
+                    message: "Inputs validation errors",
+                    errors: valResult.error.issues.map((err) => {
+                        return { message: err.message, field: String(err.path[0]) }
+                    })
                 }
             }
         } else {

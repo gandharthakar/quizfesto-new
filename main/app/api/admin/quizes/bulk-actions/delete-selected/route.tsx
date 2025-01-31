@@ -2,6 +2,7 @@ import prisma from "@/app/libs/db";
 import { NextResponse } from "next/server";
 import { type NextRequest } from 'next/server';
 import jwt from "jsonwebtoken";
+import { sanitize } from "@/app/libs/sanitize";
 
 interface Respo {
     success: boolean,
@@ -20,7 +21,12 @@ export async function DELETE(req: NextRequest) {
     try {
 
         const body = await req.json();
-        const { token, quiz_id_list } = body;
+
+        const token = sanitize(body.token);
+        const s1 = sanitize(JSON.stringify(body.quiz_id_list));
+        const quiz_id_list = JSON.parse(s1);
+
+        // const { token, quiz_id_list } = body;
 
         if (token && quiz_id_list) {
             const res = jwt.verify(token as string, process.env.JWT_SECRET ?? "") as { is_admin_user: string };

@@ -2,10 +2,14 @@ import prisma from "@/app/libs/db";
 import { hash } from "bcrypt";
 import { NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
+import { sanitize } from "@/app/libs/sanitize";
+import { zodIssuesMyType } from "@/app/types/commonTypes";
+import { userPasswordSettingsValidationSchema } from "@/app/libs/zod/schemas/userAreaValidationSchemas";
 
 interface ShtResp {
     success: boolean,
-    message: string
+    message: string,
+    errors?: zodIssuesMyType[]
 }
 
 export async function POST(req: Request) {
@@ -19,50 +23,71 @@ export async function POST(req: Request) {
     try {
 
         const body = await req.json();
-        const { token, user_password, confirm_password } = body;
+
+        const token = sanitize(body.token);
+        const user_password = sanitize(body.user_password);
+        const confirm_password = sanitize(body.confirm_password);
+
+        // const { token, user_password, confirm_password } = body;
 
         if (token && user_password && confirm_password) {
 
-            const res = jwt.verify(token as string, process.env.JWT_SECRET ?? "") as { is_auth_user: string };
+            const valResult = userPasswordSettingsValidationSchema.safeParse({
+                password: user_password,
+                confirm_password: confirm_password
+            });
 
-            if (res) {
+            if (valResult.success) {
+                const res = jwt.verify(token as string, process.env.JWT_SECRET ?? "") as { is_auth_user: string };
 
-                const user_id = res.is_auth_user;
+                if (res) {
 
-                const user = await prisma.qF_User.findFirst({
-                    where: {
-                        user_id
-                    }
-                });
-                if (user !== null) {
-                    if (user_password === confirm_password) {
-                        const hashPassword = await hash(user_password, 10);
-                        await prisma.qF_User.update({
-                            where: {
-                                user_id
-                            },
-                            data: {
-                                user_password: hashPassword,
-                            }
-                        });
-                        resp = {
-                            success: true,
-                            message: 'Password Updated.',
+                    const user_id = res.is_auth_user;
+
+                    const user = await prisma.qF_User.findFirst({
+                        where: {
+                            user_id
                         }
-                        sts = 200;
+                    });
+                    if (user !== null) {
+                        if (user_password === confirm_password) {
+                            const hashPassword = await hash(user_password, 10);
+                            await prisma.qF_User.update({
+                                where: {
+                                    user_id
+                                },
+                                data: {
+                                    user_password: hashPassword,
+                                }
+                            });
+                            resp = {
+                                success: true,
+                                message: 'Password Updated.',
+                            }
+                            sts = 200;
+                        } else {
+                            resp = {
+                                success: false,
+                                message: "Password & Confirm Password Doesn't Match."
+                            }
+                            sts = 200;
+                        }
                     } else {
                         resp = {
                             success: false,
-                            message: "Password & Confirm Password Doesn't Match."
+                            message: 'User not found with this user id.',
                         }
                         sts = 200;
                     }
-                } else {
-                    resp = {
-                        success: false,
-                        message: 'User not found with this user id.',
-                    }
-                    sts = 200;
+                }
+            } else {
+                sts = 200;
+                resp = {
+                    success: false,
+                    message: "Inputs validation errors",
+                    errors: valResult.error.issues.map((err) => {
+                        return { message: err.message, field: String(err.path[0]) }
+                    })
                 }
             }
         } else {

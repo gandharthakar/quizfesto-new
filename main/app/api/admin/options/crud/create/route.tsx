@@ -1,6 +1,7 @@
 import prisma from "@/app/libs/db";
 import { NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
+import { sanitize } from "@/app/libs/sanitize";
 
 interface Respo {
     success: boolean,
@@ -19,7 +20,14 @@ export async function POST(req: Request) {
     try {
 
         const body = await req.json();
-        const { token, question_id, options, correct_option } = body;
+
+        const token = sanitize(body.token);
+        const question_id = sanitize(body.question_id);
+        const s1 = sanitize(JSON.stringify(body.options));
+        const options = JSON.parse(s1);
+        const correct_option = sanitize(body.correct_option);
+
+        // const { token, question_id, options, correct_option } = body;
 
         if (token && question_id && options && correct_option) {
             const res = jwt.verify(token as string, process.env.JWT_SECRET ?? "") as { is_admin_user: string };
@@ -57,17 +65,30 @@ export async function POST(req: Request) {
                 }
 
                 if (isTrueAdminUser) {
-                    await prisma.qF_Option.create({
-                        data: {
+                    const alreadyOptionsExist = await prisma.qF_Option.findFirst({
+                        where: {
                             questionid: question_id,
-                            options,
-                            correct_option,
                         }
                     });
-                    sts = 201;
-                    resp = {
-                        success: true,
-                        message: "Options Created Successfully!"
+                    if (alreadyOptionsExist == null) {
+                        await prisma.qF_Option.create({
+                            data: {
+                                questionid: question_id,
+                                options,
+                                correct_option,
+                            }
+                        });
+                        sts = 201;
+                        resp = {
+                            success: true,
+                            message: "Options Created Successfully!"
+                        }
+                    } else {
+                        sts = 201;
+                        resp = {
+                            success: false,
+                            message: "Options already exist with this question ID."
+                        }
                     }
                 } else {
                     sts = 200;

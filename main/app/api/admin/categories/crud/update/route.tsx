@@ -2,6 +2,7 @@ import prisma from "@/app/libs/db";
 import { NextResponse } from "next/server";
 import { Prisma } from '@prisma/client';
 import jwt from "jsonwebtoken";
+import { sanitize } from "@/app/libs/sanitize";
 
 interface Respo {
     success: boolean,
@@ -20,7 +21,13 @@ export async function POST(req: Request) {
     try {
 
         const body = await req.json();
-        const { token, category_id, category_title, category_slug } = body;
+
+        const token = sanitize(body.token);
+        const category_id = sanitize(body.category_id);
+        const category_title = sanitize(body.category_title);
+        const category_slug = sanitize(body.category_slug);
+
+        // const { token, category_id, category_title, category_slug } = body;
         if (token && category_id && category_title && category_slug) {
 
             const res = jwt.verify(token as string, process.env.JWT_SECRET ?? "") as { is_admin_user: string };

@@ -1,6 +1,7 @@
 import prisma from "@/app/libs/db";
 import { NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
+import { sanitize } from "@/app/libs/sanitize";
 
 interface Respo {
     success: boolean,
@@ -19,7 +20,13 @@ export async function POST(req: Request) {
     try {
 
         const body = await req.json();
-        const { token, winner_type, winner_description } = body;
+
+        const token = sanitize(body.token);
+        const s1 = sanitize(JSON.stringify(body.winner_type));
+        const winner_type = JSON.parse(s1);
+        const winner_description = sanitize(body.winner_description);
+
+        // const { token, winner_type, winner_description } = body;
 
         if (token && winner_type && winner_description) {
 

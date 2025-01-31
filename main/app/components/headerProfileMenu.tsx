@@ -3,22 +3,25 @@
 import Link from "next/link";
 import { FaRegUser } from "react-icons/fa";
 import Image from "next/image";
-import { RootState } from "@/app/libs/redux-service/store";
-import { useSelector } from "react-redux";
+// import { RootState } from "@/app/libs/redux-service/store";
+// import { useSelector } from "react-redux";
 import { useEffect, useRef, useState } from "react";
 import { CgProfile } from "react-icons/cg";
 import { IoSettingsOutline } from "react-icons/io5";
 import { getCookie } from "cookies-next/client";
 import { siteAuthUserCookieName } from "@/app/constant/datafaker";
 import Swal from "sweetalert2";
+import { JWTDec } from "../types/commonTypes";
+import { jwtDecode } from "jwt-decode";
 
 export default function HeaderProfileMenu() {
 
-    const AuthUser = useSelector((state: RootState) => state.auth_user_id.auth_user_id);
+    // const AuthUser = useSelector((state: RootState) => state.auth_user_id.auth_user_id);
     const [nameLetter, setNameLetter] = useState<string>('');
     const [profilePict, setProfilePict] = useState<string>("");
     const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
     const menuRef = useRef<HTMLDivElement>(null);
+    const [authUser, setAuthUser] = useState<string>('');
 
     const getUser = async () => {
 
@@ -32,13 +35,17 @@ export default function HeaderProfileMenu() {
             if (body.success) {
                 setNameLetter(body.user.user_full_name.charAt(0));
                 setProfilePict(body.user.user_photo);
+                let user_id: JWTDec = {
+                    is_auth_user: '',
+                    exp: 0,
+                    iat: 0
+                };
+                if (token) {
+                    user_id = jwtDecode(token);
+                    setAuthUser(user_id.is_auth_user);
+                }
             } else {
-                Swal.fire({
-                    title: "Error!",
-                    text: body.message,
-                    icon: "error",
-                    timer: 4000
-                });
+                setAuthUser('');
             }
             //eslint-disable-next-line
         } catch (error: any) {
@@ -71,7 +78,7 @@ export default function HeaderProfileMenu() {
     return (
         <>
             {
-                AuthUser ?
+                authUser ?
                     (
                         <div ref={menuRef} className="relative">
                             {/* <Link href={`/user/${AuthUser}`} title="profile" className="transition-all delay-75 relative bg-white border border-solid border-zinc-800 w-[40px] h-[40px] text-[20px] rounded-full flex items-center justify-center font-noto_sans font-bold text-zinc-800">
@@ -90,7 +97,7 @@ export default function HeaderProfileMenu() {
                             <ul className={`absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none dark:bg-zinc-950 dark:ring-zinc-800 ${isMenuOpen ? 'block' : 'hidden'}`}>
                                 <li className="w-full">
                                     <Link
-                                        href={`/user/${AuthUser}`}
+                                        href={`/user/${authUser}`}
                                         title="My Profile"
                                         className="transition-all delay-75 block w-full py-[10px] px-[15px] font-ubuntu text-[16px] text-zinc-900 hover:bg-zinc-100 dark:text-zinc-200 dark:hover:bg-zinc-800"
                                         onClick={() => setIsMenuOpen(false)}
@@ -105,7 +112,7 @@ export default function HeaderProfileMenu() {
                                 </li>
                                 <li className="w-full">
                                     <Link
-                                        href={`/user/settings/${AuthUser}`}
+                                        href={`/user/settings/${authUser}`}
                                         title="Settings"
                                         className="transition-all delay-75 block w-full py-[10px] px-[15px] font-ubuntu text-[16px] text-zinc-900 hover:bg-zinc-100 dark:text-zinc-200 dark:hover:bg-zinc-800"
                                         onClick={() => setIsMenuOpen(false)}

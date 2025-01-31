@@ -2,6 +2,7 @@ import prisma from "@/app/libs/db";
 import { NextResponse } from "next/server";
 import { type NextRequest } from 'next/server';
 import jwt from "jsonwebtoken";
+import { sanitize } from "@/app/libs/sanitize";
 
 interface Cats {
     value: string,
@@ -62,8 +63,8 @@ export async function GET(req: NextRequest) {
     try {
 
         const searchParams = req.nextUrl.searchParams;
-        const token = searchParams.get('token');
-        const quiz_id = searchParams.get('quiz_id');
+        const token = sanitize(searchParams.get('token'));
+        const quiz_id = sanitize(searchParams.get('quiz_id'));
         const res = jwt.verify(token as string, process.env.JWT_SECRET ?? "") as { is_admin_user: string };
         if (token && quiz_id) {
 

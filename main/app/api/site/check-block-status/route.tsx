@@ -1,5 +1,6 @@
 import prisma from "@/app/libs/db";
 import { NextResponse } from "next/server";
+import { sanitize } from "@/app/libs/sanitize";
 
 interface Respo {
     success: boolean,
@@ -13,12 +14,15 @@ export async function POST(req: Request) {
         message: ''
     }
 
-    let sts: number = 400;
+    let sts: number = 200;
 
     try {
 
         const body = await req.json();
-        const { user_id } = body;
+
+        const user_id = sanitize(body.user_id);
+
+        // const { user_id } = body;
 
         if (user_id) {
             const existingUser = await prisma.qF_User.findFirst({

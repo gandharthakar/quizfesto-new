@@ -2,6 +2,7 @@ import prisma from "@/app/libs/db";
 import { NextResponse } from "next/server";
 import { type NextRequest } from 'next/server';
 import jwt from "jsonwebtoken";
+import { sanitize } from "@/app/libs/sanitize";
 
 interface QF_Opt {
     option_id: string,
@@ -28,8 +29,8 @@ export async function GET(req: NextRequest) {
     try {
 
         const searchParams = req.nextUrl.searchParams;
-        const token = searchParams.get('token');
-        const option_id = searchParams.get('option_id');
+        const token = sanitize(searchParams.get('token'));
+        const option_id = sanitize(searchParams.get('option_id'));
 
         if (token && option_id) {
             const res = jwt.verify(token as string, process.env.JWT_SECRET ?? "") as { is_admin_user: string };

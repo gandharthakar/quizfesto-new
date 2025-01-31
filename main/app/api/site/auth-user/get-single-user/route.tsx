@@ -2,6 +2,7 @@ import prisma from "@/app/libs/db";
 import { NextResponse } from "next/server";
 import { type NextRequest } from 'next/server';
 import jwt from "jsonwebtoken";
+import { sanitize } from "@/app/libs/sanitize";
 
 interface QF_User {
     user_id: string,
@@ -29,7 +30,7 @@ export async function GET(req: NextRequest) {
     try {
 
         const searchParams = req.nextUrl.searchParams;
-        const token = searchParams.get('token');
+        const token = sanitize(searchParams.get('token'));
 
         if (token) {
 

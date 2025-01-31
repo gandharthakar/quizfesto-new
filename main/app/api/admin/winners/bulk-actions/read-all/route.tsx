@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { convertDigitIn, getWinnerPosTxt } from "@/app/libs/helpers/helperFunctions";
 import { type NextRequest } from 'next/server';
 import jwt from "jsonwebtoken";
+import { sanitize } from "@/app/libs/sanitize";
 
 interface WinUsrFrm {
     winner_id: string,
@@ -46,7 +47,7 @@ export async function GET(req: NextRequest) {
     try {
 
         const searchParams = req.nextUrl.searchParams;
-        const token = searchParams.get('token');
+        const token = sanitize(searchParams.get('token'));
 
         if (token) {
 

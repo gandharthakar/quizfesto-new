@@ -2,6 +2,7 @@ import prisma from "@/app/libs/db";
 import { NextResponse } from "next/server";
 import { type NextRequest } from 'next/server';
 import jwt from "jsonwebtoken";
+import { sanitize } from "@/app/libs/sanitize";
 
 interface Respo {
     success: boolean,
@@ -24,8 +25,8 @@ export async function GET(req: NextRequest) {
     try {
 
         const searchParams = req.nextUrl.searchParams;
-        const token = searchParams.get('token');
-        const pze_type = searchParams.get('prize_type');
+        const token = sanitize(searchParams.get('token'));
+        const pze_type = sanitize(searchParams.get('prize_type'));
 
         if (token && pze_type) {
 

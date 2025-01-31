@@ -1,6 +1,7 @@
 import prisma from "@/app/libs/db";
 import { NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
+import { sanitize } from "@/app/libs/sanitize";
 
 interface Respo {
     success: boolean,
@@ -19,7 +20,12 @@ export async function DELETE(req: Request) {
     try {
 
         const body = await req.json();
-        const { token, prize_type } = body;
+
+        const token = sanitize(body.token);
+        const s1 = sanitize(JSON.stringify(body.prize_type));
+        const prize_type = Number(JSON.parse(s1));
+
+        // const { token, prize_type } = body;
 
         if (token && prize_type) {
 

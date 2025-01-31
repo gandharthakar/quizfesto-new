@@ -31,7 +31,7 @@ export async function GET() {
         home_cats: []
     }
 
-    let sts: number = 400;
+    let sts: number = 200;
 
     try {
 

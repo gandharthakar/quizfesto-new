@@ -1,6 +1,7 @@
 import prisma from "@/app/libs/db";
 import { NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
+import { sanitize } from "@/app/libs/sanitize";
 
 interface Respo {
     success: boolean,
@@ -19,7 +20,15 @@ export async function POST(req: Request) {
     try {
 
         const body = await req.json();
-        const { token, option_id, question_id, options, correct_option } = body;
+
+        const token = sanitize(body.token);
+        const option_id = sanitize(body.option_id);
+        const question_id = sanitize(body.question_id);
+        const s1 = sanitize(JSON.stringify(body.options));
+        const options = JSON.parse(s1);
+        const correct_option = sanitize(body.correct_option);
+
+        // const { token, option_id, question_id, options, correct_option } = body;
 
         if (token && option_id && question_id && options && correct_option) {
 
@@ -60,7 +69,8 @@ export async function POST(req: Request) {
                 if (isTrueAdminUser) {
                     const existingOptions = await prisma.qF_Option.findFirst({
                         where: {
-                            option_id
+                            option_id,
+                            questionid: question_id
                         }
                     });
 

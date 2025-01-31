@@ -188,3 +188,31 @@ export const AdminPhoneSettingsValidationSchema = z.object({
 });
 
 export type AdminPhoneSettingsFormVS = z.infer<typeof AdminPhoneSettingsValidationSchema>;
+
+export const AdminCreateUserValidationSchema_sp1 = z.object({
+    full_name: z.string({
+        required_error: "Please enter Full Name",
+        invalid_type_error: "Full Name must be in string format."
+    }).min(1, { message: "Full name must be contains at least 1 characters." }),
+
+    email: z.string({
+        required_error: "Please enter email address.",
+        invalid_type_error: "Email must be in string format."
+    }).email({
+        message: "Please enter valid email address."
+    }).min(1),
+
+    role: z.string({
+        required_error: "Please select a role."
+    }).min(1, { message: "Please select a role." }),
+});
+
+export const AdminCreateUserValidationSchema_sp2 = z.object({
+    password: z.string({
+        invalid_type_error: "Password must be in string format."
+    }).min(8).max(16),
+
+    confirmPassword: z.string({
+        invalid_type_error: "Confirm password must be in string format."
+    }).min(8).max(16)
+});

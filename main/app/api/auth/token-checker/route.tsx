@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
+import { sanitize } from "@/app/libs/sanitize";
 
 interface Resp {
     success: boolean,
@@ -17,7 +18,8 @@ export async function POST(req: Request) {
     try {
 
         const body = await req.json();
-        const { token } = body;
+        const token = sanitize(body.token);
+        // const { token } = body;
         if (token) {
             const res = await jwt.verify(token, process.env.JWT_SECRET ?? "");
             if (res) {

@@ -14,3 +14,8 @@ export type CommonAPIResponse = {
     success: boolean,
     message: string
 }
+
+export type zodIssuesMyType = {
+    message: string,
+    field: string
+}

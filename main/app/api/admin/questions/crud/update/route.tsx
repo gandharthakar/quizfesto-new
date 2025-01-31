@@ -1,10 +1,14 @@
 import prisma from "@/app/libs/db";
 import { NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
+import { sanitize } from "@/app/libs/sanitize";
+import { AdminQuestionsValidationSchema } from "@/app/libs/zod/schemas/adminValidationSchemas";
+import { zodIssuesMyType } from "@/app/types/commonTypes";
 
 interface Respo {
     success: boolean,
-    message: string
+    message: string,
+    errors?: zodIssuesMyType[]
 }
 
 export async function POST(req: Request) {
@@ -19,80 +23,103 @@ export async function POST(req: Request) {
     try {
 
         const body = await req.json();
-        const { token, question_id, quiz_id, question_title, question_marks } = body;
+
+        const token = sanitize(body.token);
+        const question_id = sanitize(body.question_id);
+        const quiz_id = sanitize(body.quiz_id);
+        const question_title = sanitize(body.question_title);
+        const s1 = sanitize(JSON.stringify(body.question_marks));
+        const question_marks = Number(JSON.parse(s1));
+
+        // const { token, question_id, quiz_id, question_title, question_marks } = body;
 
         if (token && question_id && quiz_id && question_title && question_marks) {
+            const valResult = AdminQuestionsValidationSchema.safeParse({
+                quiz_id,
+                question_text: question_title,
+                question_marks
+            });
+            if (valResult.success) {
+                const res = jwt.verify(token as string, process.env.JWT_SECRET ?? "") as { is_admin_user: string };
 
-            const res = jwt.verify(token as string, process.env.JWT_SECRET ?? "") as { is_admin_user: string };
+                if (res) {
 
-            if (res) {
+                    const user_id = res.is_admin_user;
 
-                const user_id = res.is_admin_user;
-
-                const fu__in__usrtblmdl = await prisma.qF_User.findFirst({
-                    where: {
-                        AND: [
-                            {
-                                user_id
-                            },
-                            {
-                                role: "Admin"
-                            }
-                        ]
-                    }
-                });
-                const fu__in__admntblmdl = await prisma.qF_Admin_User.findFirst({
-                    where: {
-                        admin_user_id: user_id,
-                    }
-                });
-
-                if (fu__in__usrtblmdl) {
-                    isTrueAdminUser = true;
-                } else {
-                    if (fu__in__admntblmdl) {
-                        isTrueAdminUser = true;
-                    } else {
-                        isTrueAdminUser = false;
-                    }
-                }
-
-                if (isTrueAdminUser) {
-                    const existingQuestion = await prisma.qF_Question.findFirst({
+                    const fu__in__usrtblmdl = await prisma.qF_User.findFirst({
                         where: {
-                            question_id
+                            AND: [
+                                {
+                                    user_id
+                                },
+                                {
+                                    role: "Admin"
+                                }
+                            ]
+                        }
+                    });
+                    const fu__in__admntblmdl = await prisma.qF_Admin_User.findFirst({
+                        where: {
+                            admin_user_id: user_id,
                         }
                     });
 
-                    if (existingQuestion !== null) {
-                        await prisma.qF_Question.update({
+                    if (fu__in__usrtblmdl) {
+                        isTrueAdminUser = true;
+                    } else {
+                        if (fu__in__admntblmdl) {
+                            isTrueAdminUser = true;
+                        } else {
+                            isTrueAdminUser = false;
+                        }
+                    }
+
+                    if (isTrueAdminUser) {
+                        const existingQuestion = await prisma.qF_Question.findFirst({
                             where: {
                                 question_id
-                            },
-                            data: {
-                                quizid: quiz_id,
-                                question_title,
-                                question_marks
                             }
                         });
-                        sts = 200;
-                        resp = {
-                            success: true,
-                            message: "Question Updated Successfully!"
+
+                        if (existingQuestion !== null) {
+                            await prisma.qF_Question.update({
+                                where: {
+                                    question_id
+                                },
+                                data: {
+                                    quizid: quiz_id,
+                                    question_title,
+                                    question_marks: question_marks
+                                }
+                            });
+                            sts = 200;
+                            resp = {
+                                success: true,
+                                message: "Question Updated Successfully!"
+                            }
+                        } else {
+                            sts = 200;
+                            resp = {
+                                success: false,
+                                message: "Question Not Found!",
+                            }
                         }
                     } else {
-                        sts = 200;
                         resp = {
                             success: false,
-                            message: "Question Not Found!",
+                            message: 'User Not Found.',
                         }
+                        sts = 200;
                     }
-                } else {
-                    resp = {
-                        success: false,
-                        message: 'User Not Found.',
-                    }
-                    sts = 200;
+                }
+            } else {
+                sts = 200;
+                resp = {
+                    success: false,
+                    message: "Inputs validation errors",
+                    errors: valResult.error.issues.map((err) => {
+                        return { message: err.message, field: String(err.path[0]) }
+                    })
                 }
             }
         } else {

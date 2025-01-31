@@ -1,6 +1,7 @@
 import prisma from "@/app/libs/db";
 import { NextResponse } from "next/server";
 // import { dump_quiz_data } from "@/app/constant/datafaker";
+import { sanitize } from "@/app/libs/sanitize";
 
 interface Respo {
     success: boolean,
@@ -75,12 +76,17 @@ export async function POST(req: Request) {
         quiz_total_score: 0
     }
 
-    let sts: number = 400;
+    let sts: number = 200;
 
     try {
 
         const body = await req.json();
-        const { attempted_data, quiz_id } = body;
+
+        const s1 = sanitize(JSON.stringify(body.attempted_data));
+        const attempted_data = JSON.parse(s1);
+        const quiz_id = sanitize(body.quiz_id);
+
+        // const { attempted_data, quiz_id } = body;
 
         if (attempted_data.length > 0 && quiz_id) {
 

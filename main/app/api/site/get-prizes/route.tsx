@@ -13,7 +13,7 @@ export async function GET() {
         message: ''
     }
 
-    let sts: number = 400;
+    let sts: number = 200;
 
     try {
         const data = await prisma.qF_Winning_Prizes.findMany();

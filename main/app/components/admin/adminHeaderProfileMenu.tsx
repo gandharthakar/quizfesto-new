@@ -10,13 +10,14 @@ import { useRouter } from "next/navigation";
 import { jwtDecode } from "jwt-decode";
 import { JWTDecAdmin } from "@/app/types/commonTypes";
 import { adminAuthUserCookieName } from "@/app/constant/datafaker";
-import Swal from "sweetalert2";
-// import Swal from "sweetalert2";
+import { useGetAdminUserInfo } from "@/app/libs/tanstack-query/admin/queries/adminQueries";
+import { QF_TQ_UEF_CatchErrorCB } from "@/app/libs/helpers/helperFunctions";
 
 function AdminHeaderProfileMenu() {
 
     const defaultImage = "https://placehold.co/1000x1000/png";
 
+    const token = getCookie(adminAuthUserCookieName);
     const router = useRouter();
     const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
     const menuRef = useRef<HTMLDivElement>(null);
@@ -34,28 +35,7 @@ function AdminHeaderProfileMenu() {
         router.push("/admin/login");
     }
 
-    const getUser = async () => {
-        const baseURI = window.location.origin;
-        const token = getCookie(adminAuthUserCookieName);
-        try {
-            const resp = await fetch(`${baseURI}/api/admin/auth-user/get-user?token=${token}`, {
-                method: 'GET',
-            });
-            const body = await resp.json();
-            if (body.success) {
-                setProfilePhoto(body.user_photo);
-                setUserName(body.user_full_name.charAt(0));
-            }
-            //eslint-disable-next-line
-        } catch (error: any) {
-            Swal.fire({
-                title: "Error!",
-                text: error.message,
-                icon: "error",
-                timer: 4000
-            });
-        }
-    }
+    const { data, isSuccess, isError, error } = useGetAdminUserInfo(token ?? "");
 
     useEffect(() => {
 
@@ -81,11 +61,14 @@ function AdminHeaderProfileMenu() {
             setAuid(admin_id.is_admin_user);
         }
 
-        if (auid !== '') {
-            getUser();
+        if (isSuccess) {
+            setProfilePhoto(data.user_photo);
+            setUserName(data.user_full_name.charAt(0));
         }
 
-    }, [auid]);
+        QF_TQ_UEF_CatchErrorCB(isError, error);
+
+    }, [data, isSuccess, isError, error]);
 
     return (
         <>

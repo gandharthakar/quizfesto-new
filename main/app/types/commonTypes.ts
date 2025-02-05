@@ -10,12 +10,23 @@ export type JWTDecAdmin = {
     iat: number
 }
 
+export type zodIssuesMyType = {
+    message: string,
+    field: string
+}
+
 export type CommonAPIResponse = {
     success: boolean,
     message: string
 }
 
-export type zodIssuesMyType = {
-    message: string,
-    field: string
+export type CommonAPIResponseWithZodError = {
+    errors?: zodIssuesMyType[]
+} & CommonAPIResponse
+
+export type TQ_CBtype = {
+    onSuccessCB?: (resp?: (CommonAPIResponse | CommonAPIResponseWithZodError | undefined), cb?: () => void) => void,
+    errorCB?: (resp?: (CommonAPIResponse | CommonAPIResponseWithZodError | undefined), cb?: () => void) => void,
+    onErrorCB?: (resp?: (CommonAPIResponse | CommonAPIResponseWithZodError | undefined), cb?: () => void) => void,
+    token?: string
 }

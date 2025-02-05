@@ -3,21 +3,11 @@ import { NextResponse } from "next/server";
 import { type NextRequest } from 'next/server';
 import jwt from "jsonwebtoken";
 import { sanitize } from "@/app/libs/sanitize";
-
-interface Respo {
-    user_full_name: string,
-    user_email: string,
-    user_gender: string,
-    success?: boolean
-}
-
-interface ShtResp {
-    success: boolean,
-    message: string
-}
+import { CommonAPIResponse } from "@/app/types/commonTypes";
+import { QF_AGenSetGetDataType } from "@/app/types/libs/tanstack-query/admin/adminSettingsType";
 
 export async function GET(req: NextRequest) {
-    let resp_main: Respo = {
+    let resp_main: QF_AGenSetGetDataType = {
         user_full_name: '',
         user_email: '',
         user_gender: '',
@@ -26,7 +16,7 @@ export async function GET(req: NextRequest) {
 
     let sts: number = 200;
 
-    let short_resp: ShtResp = {
+    let short_resp: CommonAPIResponse = {
         success: false,
         message: '',
     }

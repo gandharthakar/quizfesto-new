@@ -3,19 +3,20 @@
 import Image from "next/image";
 import AdminSettingsNav from "@/app/components/admin/adminSettingsNav";
 import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
-import Swal from "sweetalert2";
+import { useParams } from "next/navigation";
 import { FaCloudUploadAlt, FaRegTrashAlt } from "react-icons/fa";
-import { convertBase64 } from "@/app/libs/helpers/helperFunctions";
+import { callbackErrT1S2_ST1, callbackOnErrT1S2_ST1, callbackOnSucT1S2_ST1, convertBase64, QF_TQ_UEF_CatchErrorCB } from "@/app/libs/helpers/helperFunctions";
 import TokenChecker from "@/app/libs/tokenChecker";
 import { getCookie } from "cookies-next/client";
 import { adminAuthUserCookieName } from "@/app/constant/datafaker";
+import { useGetAdminProfilePhoto } from "@/app/libs/tanstack-query/admin/queries/adminQueries";
+import { useRemoveAdminProfilePhoto, useSetAdminProfilePhoto } from "@/app/libs/tanstack-query/admin/mutations/adminSettingsMutations";
 
 const Page = () => {
 
     const defaultImage = "https://placehold.co/1000x1000/png";
 
-    const router = useRouter();
+    const token = getCookie(adminAuthUserCookieName);
     const param = useParams<{ userid: string[] }>();
     const user_id = param.userid[0];
 
@@ -25,7 +26,7 @@ const Page = () => {
     const [imageFileSize, setImageFileSize] = useState<boolean>(false);
     const [imageDimensions, setImageDimensions] = useState<boolean>(false);
     const [errorInput, setErrorInput] = useState<string>('');
-    const [isLoading, setIsLoading] = useState<boolean>(true);
+    // const [isLoading, setIsLoading] = useState<boolean>(true);
     const [alreadyHaveImage, setAlreadyHaveImage] = useState<boolean>(false);
     const [userImage, setUserImage] = useState<string>("");
     const [isLoadRmv, setIsLoadRmv] = useState<boolean>(false);
@@ -65,89 +66,38 @@ const Page = () => {
         setImageFile(base64);
     }
 
-    const removeImageButtonClick = async () => {
-        setIsLoadRmv(true);
-        const baseURI = window.location.origin;
-        const token = getCookie(adminAuthUserCookieName);
-        try {
-            const resp = await fetch(`${baseURI}/api/admin/auth-user/settings/photo/remove`, {
-                method: 'DELETE',
-                body: JSON.stringify({ token })
-            });
-            if (!resp.ok) {
-                setIsLoading(false);
-            }
-            const body = await resp.json();
-            if (body.success) {
-                Swal.fire({
-                    title: "Success!",
-                    text: body.message,
-                    icon: "success",
-                    timer: 4000
-                });
-                router.refresh();
-                setUserImage("");
-                setAlreadyHaveImage(false);
-                setIsLoadRmv(false);
-            } else {
-                Swal.fire({
-                    title: "Error!",
-                    text: body.message,
-                    icon: "error",
-                    timer: 4000
-                });
-            }
-            //eslint-disable-next-line
-        } catch (error: any) {
-            Swal.fire({
-                title: "Error!",
-                text: error.message,
-                icon: "error",
-                timer: 4000
-            });
-            setIsLoading(false);
-        }
+    const rmvSucFun = () => {
+        setUserImage("");
+        setAlreadyHaveImage(false);
+        setIsLoadRmv(false);
     }
 
-    const getUser = async () => {
-        const baseURI = window.location.origin;
-        const token = getCookie(adminAuthUserCookieName);
-        try {
-            const resp = await fetch(`${baseURI}/api/admin/auth-user/settings/photo/get?token=${token}`, {
-                method: 'GET',
-            });
-            if (!resp.ok) {
-                setIsLoading(false);
-            }
-            const body = await resp.json();
-            if (body.success) {
-                if (body.user_photo == '' || body.user_photo == null) {
-                    setAlreadyHaveImage(false);
-                } else {
-                    setAlreadyHaveImage(true);
-                    setUserImage(body.user_photo);
-                }
-                setIsLoading(false);
-            } else {
-                Swal.fire({
-                    title: "Error!",
-                    text: body.message,
-                    icon: "error",
-                    timer: 4000
-                });
-                setIsLoading(false);
-            }
-            //eslint-disable-next-line
-        } catch (error: any) {
-            Swal.fire({
-                title: "Error!",
-                text: error.message,
-                icon: "error",
-                timer: 4000
-            });
-            setIsLoading(false);
-        }
+    const updSucFun = () => {
+        setUserImage(imageFile);
+        setAlreadyHaveImage(true);
+        setIsLoadRmv(false);
     }
+
+    const rmvProfPht = useRemoveAdminProfilePhoto({
+        onSuccessCB: (resp) => callbackOnSucT1S2_ST1(resp, rmvSucFun),
+        errorCB: (resp) => callbackErrT1S2_ST1(resp),
+        onErrorCB: (resp) => callbackOnErrT1S2_ST1(resp),
+        token
+    });
+
+    const removeImageButtonClick = async () => {
+        const tokenDel = getCookie(adminAuthUserCookieName);
+        rmvProfPht.mutate({
+            token: tokenDel ?? ""
+        });
+    }
+
+    const updProfPht = useSetAdminProfilePhoto({
+        onSuccessCB: (resp) => callbackOnSucT1S2_ST1(resp, updSucFun),
+        errorCB: (resp) => callbackErrT1S2_ST1(resp),
+        onErrorCB: (resp) => callbackOnErrT1S2_ST1(resp),
+        token
+    });
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -177,55 +127,28 @@ const Page = () => {
         }
 
         if (isValidImage) {
-            setIsLoading(true);
-            const baseURI = window.location.origin;
-            const token = getCookie(adminAuthUserCookieName);
-            try {
-                const resp = await fetch(`${baseURI}/api/admin/auth-user/settings/photo/set`, {
-                    method: 'POST',
-                    body: JSON.stringify({ token, user_photo: imageFile })
-                });
-                if (!resp.ok) {
-                    setIsLoading(false);
-                }
-                const body = await resp.json();
-                if (body.success) {
-                    Swal.fire({
-                        title: "Success!",
-                        text: body.message,
-                        icon: "success",
-                        timer: 4000
-                    });
-                    //this will reload the page without doing SSR
-                    router.refresh();
-                    setUserImage(imageFile);
-                    setIsLoading(false);
-                    setAlreadyHaveImage(true);
-                } else {
-                    Swal.fire({
-                        title: "Error!",
-                        text: body.message,
-                        icon: "error",
-                        timer: 4000
-                    });
-                    setIsLoading(false);
-                }
-                //eslint-disable-next-line
-            } catch (error: any) {
-                Swal.fire({
-                    title: "Error!",
-                    text: error.message,
-                    icon: "error",
-                    timer: 4000
-                });
-                setIsLoading(false);
-            }
+            const tokenSub = getCookie(adminAuthUserCookieName);
+            updProfPht.mutate({
+                token: tokenSub ?? "",
+                user_photo: imageFile
+            });
         }
     }
 
+    const { data, isError, error, isSuccess, isLoading } = useGetAdminProfilePhoto(token ?? "");
+
     useEffect(() => {
-        getUser();
-    }, []);
+        if (isSuccess) {
+            if (data.user_photo == '' || data.user_photo == null) {
+                setAlreadyHaveImage(false);
+            } else {
+                setAlreadyHaveImage(true);
+                setUserImage(data.user_photo);
+            }
+        }
+
+        QF_TQ_UEF_CatchErrorCB(isError, error);
+    }, [data, isSuccess, isError, error]);
 
     return (
         <>
@@ -247,7 +170,7 @@ const Page = () => {
                                         </div>
                                         <div className="text-center">
                                             {
-                                                isLoadRmv ?
+                                                (isLoadRmv || rmvProfPht.isPending) ?
                                                     (<div className="transition-all delay-75 font-noto_sans text-[14px] md:text-[16px] text-zinc-800 dark:text-zinc-200 font-semibold">Loading...</div>)
                                                     :
                                                     (
@@ -346,7 +269,7 @@ const Page = () => {
 
                                             <div className="text-right pt-[25px]">
                                                 {
-                                                    isLoading ?
+                                                    (isLoading || updProfPht.isPending) ?
                                                         (<div className="transition-all delay-75 font-noto_sans text-[14px] md:text-[16px] text-zinc-800 dark:text-zinc-200 font-semibold">Loading...</div>)
                                                         :
                                                         (

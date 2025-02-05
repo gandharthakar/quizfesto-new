@@ -2,14 +2,10 @@ import prisma from "@/app/libs/db";
 import { NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
 import { sanitize } from "@/app/libs/sanitize";
-
-interface Respo {
-    success: boolean,
-    message: string
-}
+import { CommonAPIResponse } from "@/app/types/commonTypes";
 
 export async function DELETE(req: Request) {
-    let resp: Respo = {
+    let resp: CommonAPIResponse = {
         success: false,
         message: ''
     }
@@ -22,9 +18,10 @@ export async function DELETE(req: Request) {
 
         const body = await req.json();
 
-        const token = sanitize(body.token);
+        // const token = sanitize(body.token);
 
         // const { token } = body;
+        const token = sanitize(body.token);
 
         if (token) {
 

@@ -3,99 +3,52 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, SubmitHandler } from "react-hook-form";
 import AdminSettingsNav from "@/app/components/admin/adminSettingsNav";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useParams } from "next/navigation";
-import Swal from "sweetalert2";
 import { AdminPhoneSettingsFormVS, AdminPhoneSettingsValidationSchema } from "@/app/libs/zod/schemas/adminValidationSchemas";
 import TokenChecker from "@/app/libs/tokenChecker";
 import { getCookie } from "cookies-next/client";
 import { adminAuthUserCookieName } from "@/app/constant/datafaker";
+import { useGetAdminPhoneSettings } from "@/app/libs/tanstack-query/admin/queries/adminQueries";
+import { callbackErrT1S2_ST1, callbackOnErrT1S2_ST1, callbackOnSucT1S2_ST1, QF_TQ_UEF_CatchErrorCB } from "@/app/libs/helpers/helperFunctions";
+import { useSetAdminPhoneSettings } from "@/app/libs/tanstack-query/admin/mutations/adminSettingsMutations";
 
 function Page() {
 
+    const token = getCookie(adminAuthUserCookieName);
     const param = useParams<{ userid: string[] }>();
     const user_id = param.userid[0];
-    const [isLoading, setIsLoading] = useState<boolean>(true);
+    // const [isLoading, setIsLoading] = useState<boolean>(true);
 
     const { register, handleSubmit, setValue, formState: { errors } } = useForm<AdminPhoneSettingsFormVS>({
         resolver: zodResolver(AdminPhoneSettingsValidationSchema),
     });
 
+    const updPhnSet = useSetAdminPhoneSettings({
+        onSuccessCB: (resp) => callbackOnSucT1S2_ST1(resp),
+        errorCB: (resp) => callbackErrT1S2_ST1(resp),
+        onErrorCB: (resp) => callbackOnErrT1S2_ST1(resp),
+        token
+    });
+
     const handleFormSubmit: SubmitHandler<AdminPhoneSettingsFormVS> = async (formdata) => {
-        setIsLoading(true);
-        const baseURI = window.location.origin;
-        const token = getCookie(adminAuthUserCookieName);
-        try {
-            const resp = await fetch(`${baseURI}/api/admin/auth-user/settings/phone/set`, {
-                method: 'POST',
-                body: JSON.stringify({ token, user_phone: formdata.phone_number })
-            });
-            const body = await resp.json();
-            if (body.success) {
-                Swal.fire({
-                    title: "Success!",
-                    text: body.message,
-                    icon: "success",
-                    timer: 4000
-                });
-                //this will reload the page without doing SSR
-                // router.refresh();
-                setIsLoading(false);
-            } else {
-                Swal.fire({
-                    title: "Error!",
-                    text: body.message,
-                    icon: "error",
-                    timer: 4000
-                });
-                setIsLoading(false);
-            }
-            //eslint-disable-next-line
-        } catch (error: any) {
-            Swal.fire({
-                title: "Error!",
-                text: error.message,
-                icon: "error",
-                timer: 4000
-            });
-            setIsLoading(false);
-        }
+        const tokenSub = getCookie(adminAuthUserCookieName);
+        updPhnSet.mutate({
+            token: tokenSub ?? "",
+            user_phone: formdata.phone_number
+        });
     }
 
-    const getUser = async () => {
-        setIsLoading(true);
-        const baseURI = window.location.origin;
-        const token = getCookie(adminAuthUserCookieName);
-        try {
-            const resp = await fetch(`${baseURI}/api/admin/auth-user/settings/phone/get?token=${token}`, {
-                method: 'GET',
-            });
-            if (!resp.ok) {
-                setIsLoading(false);
-            }
-            const body = await resp.json();
-            if (body.success) {
-                setValue("phone_number", body.user_phone);
-                setIsLoading(false);
-            } else {
-                setIsLoading(false);
-            }
-            //eslint-disable-next-line
-        } catch (error: any) {
-            Swal.fire({
-                title: "Error!",
-                text: error.message,
-                icon: "error",
-                timer: 4000
-            });
-            setIsLoading(false);
-        }
-    }
+    const { data, isError, error, isSuccess, isLoading } = useGetAdminPhoneSettings(token ?? "");
 
     useEffect(() => {
-        getUser();
+        if (isSuccess) {
+            setValue("phone_number", data.user_phone);
+        }
+
+        QF_TQ_UEF_CatchErrorCB(isError, error);
         //eslint-disable-next-line
-    }, []);
+    }, [data, isSuccess, isError, error]);
 
     return (
         <>
@@ -121,7 +74,7 @@ function Page() {
                         </div>
                         <div className="text-right">
                             {
-                                isLoading ?
+                                (isLoading || updPhnSet.isPending) ?
                                     (<div className="transition-all delay-75 font-noto_sans text-[14px] md:text-[16px] text-zinc-800 dark:text-zinc-200 font-semibold">Loading...</div>)
                                     :
                                     (

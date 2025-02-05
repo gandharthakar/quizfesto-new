@@ -9,12 +9,14 @@ import { GoTrophy } from "react-icons/go";
 import { useEffect, useState } from "react";
 import { AdminStatsDataCardType } from "@/app/types/components/admin/componentsTypes";
 import TokenChecker from "@/app/libs/tokenChecker";
-import Swal from "sweetalert2";
 import { getCookie } from "cookies-next/client";
 import { adminAuthUserCookieName } from "@/app/constant/datafaker";
+import { QF_TQ_UEF_CatchErrorCB } from "@/app/libs/helpers/helperFunctions";
+import { useGetAdminStats } from "@/app/libs/tanstack-query/admin/queries/adminQueries";
 
 function Page() {
 
+    const token = getCookie(adminAuthUserCookieName);
     const [stats, setStats] = useState<AdminStatsDataCardType>({
         total_quizes: 0,
         total_questions: 0,
@@ -23,38 +25,16 @@ function Page() {
         total_users: 0,
         total_winners: 0
     });
-    const [isLoading, setIsLoading] = useState<boolean>(true);
+    // const [isLoading, setIsLoading] = useState<boolean>(true);
 
-    const getStats = async () => {
-        const baseURI = window.location.origin;
-        const token = getCookie(adminAuthUserCookieName);
-        try {
-            const resp = await fetch(`${baseURI}/api/admin/stats?token=${token}`, {
-                method: "GET"
-            });
-            if (!resp.ok) {
-                setIsLoading(false);
-            }
-            const body = await resp.json();
-            if (body.success) {
-                setStats(body.stats);
-                setIsLoading(false);
-            }
-            //eslint-disable-next-line
-        } catch (error: any) {
-            Swal.fire({
-                title: "Error!",
-                text: error.message,
-                icon: "error",
-                timer: 4000
-            });
-            setIsLoading(false);
-        }
-    }
+    const { data, isError, error, isSuccess, isLoading } = useGetAdminStats(token ?? "");
 
     useEffect(() => {
-        getStats();
-    }, []);
+        if (isSuccess) {
+            if (data.stats) setStats(data.stats);
+        }
+        QF_TQ_UEF_CatchErrorCB(isError, error);
+    }, [data, isSuccess, isError, error]);
 
     return (
         <>

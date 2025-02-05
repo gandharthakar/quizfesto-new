@@ -1,3 +1,6 @@
+import { CommonAPIResponse, CommonAPIResponseWithZodError } from "@/app/types/commonTypes";
+import Swal from "sweetalert2";
+
 //eslint-disable-next-line
 export const GFG = (array: any, currPage: number, pageSize: number) => {
     const startIndex = (currPage - 1) * pageSize;
@@ -101,4 +104,287 @@ export const getWinnerPosTxt = (winType: number) => {
 
 export const convertDigitIn = (str: string) => {
     return str.split('-').reverse().join('-');
+}
+
+export const TQ_DefaultConfig = {
+    refetchOnWindowFocus: false,
+    staleTime: 60 * (60 * 1000), // 1 Hour
+    gcTime: 60 * (60 * 1000), // 1 Hour
+    throwOnError: true,
+}
+
+//  ---- 
+
+export const callbackOnSucT1S1 = (resp: (CommonAPIResponse | undefined), cb?: () => void) => {
+    if (resp) {
+        if (resp.success) {
+            Swal.fire({
+                title: "Success!",
+                text: resp.message,
+                icon: "success",
+                timer: 4000
+            });
+            if (cb) {
+                cb();
+            }
+        }
+    }
+}
+
+
+export const callbackOnSucT1S1_ST1 = (resp: (CommonAPIResponse | undefined), cb?: () => void) => {
+    if (resp) {
+        if (resp.success) {
+            const st = setTimeout(() => {
+                if (cb) {
+                    cb();
+                }
+                clearTimeout(st);
+            }, 4000);
+            Swal.fire({
+                title: "Success!",
+                text: resp.message,
+                icon: "success",
+                timer: 4000
+            }).then(result => {
+                if (result.isConfirmed) {
+                    if (cb) {
+                        cb();
+                    }
+                    clearTimeout(st);
+                }
+            });
+        }
+    }
+}
+
+export const callbackOnSucT1S2 = (resp: (CommonAPIResponseWithZodError | undefined), cb?: () => void) => {
+    if (resp) {
+        if (resp.success) {
+            Swal.fire({
+                title: "Success!",
+                text: resp.message,
+                icon: "success",
+                timer: 4000
+            });
+            if (cb) {
+                cb();
+            }
+        }
+    }
+}
+
+export const callbackOnSucT1S2_ST1 = (resp: (CommonAPIResponseWithZodError | undefined), cb?: () => void) => {
+    if (resp) {
+        if (resp.success) {
+            const st = setTimeout(() => {
+                if (cb) {
+                    cb();
+                }
+                clearTimeout(st);
+            }, 4000);
+            Swal.fire({
+                title: "Success!",
+                text: resp.message,
+                icon: "success",
+                timer: 4000
+            }).then(result => {
+                if (result.isConfirmed) {
+                    if (cb) {
+                        cb();
+                    }
+                    clearTimeout(st);
+                }
+            });
+        }
+    }
+}
+
+//  ---- 
+
+export const callbackOnErrT1S1 = (resp: (CommonAPIResponse | undefined), cb?: () => void) => {
+    if (resp) {
+        if (!resp.success) {
+            Swal.fire({
+                title: "Error!",
+                text: resp.message,
+                icon: "error",
+                timer: 4000
+            });
+            if (cb) {
+                cb();
+            }
+        }
+    }
+}
+
+export const callbackOnErrT1S1_ST1 = (resp: (CommonAPIResponse | undefined), cb?: () => void) => {
+    if (resp) {
+        if (!resp.success) {
+            const st = setTimeout(() => {
+                if (cb) {
+                    cb();
+                }
+                clearTimeout(st);
+            }, 4000);
+            Swal.fire({
+                title: "Error!",
+                text: resp.message,
+                icon: "error",
+                timer: 4000
+            }).then(result => {
+                if (result.isConfirmed) {
+                    if (cb) {
+                        cb();
+                    }
+                    clearTimeout(st);
+                }
+            });
+        }
+    }
+}
+
+export const callbackOnErrT1S2 = (resp: (CommonAPIResponseWithZodError | undefined), cb?: () => void) => {
+    if (resp) {
+        if (!resp.success) {
+            Swal.fire({
+                title: "Error!",
+                text: resp.message,
+                icon: "error",
+                timer: 4000
+            });
+            if (cb) {
+                cb();
+            }
+        }
+    }
+}
+
+export const callbackOnErrT1S2_ST1 = (resp: (CommonAPIResponseWithZodError | undefined), cb?: () => void) => {
+    if (resp) {
+        if (!resp.success) {
+            const st = setTimeout(() => {
+                if (cb) {
+                    cb();
+                }
+                clearTimeout(st);
+            }, 4000);
+            Swal.fire({
+                title: "Error!",
+                text: resp.message,
+                icon: "error",
+                timer: 4000
+            }).then(result => {
+                if (result.isConfirmed) {
+                    if (cb) {
+                        cb();
+                    }
+                    clearTimeout(st);
+                }
+            });
+        }
+    }
+}
+
+//  ---- 
+
+export const callbackErrT1S1 = (resp: (CommonAPIResponse | undefined), cb?: () => void) => {
+    if (resp) {
+        if (!resp.success) {
+            Swal.fire({
+                title: "Error!",
+                text: resp.message,
+                icon: "error",
+                timer: 4000
+            });
+            if (cb) {
+                cb();
+            }
+        }
+    }
+}
+
+export const callbackErrT1S1_ST1 = (resp: (CommonAPIResponse | undefined), cb?: () => void) => {
+    if (resp) {
+        if (!resp.success) {
+            const st = setTimeout(() => {
+                if (cb) {
+                    cb();
+                }
+                clearTimeout(st);
+            }, 4000);
+            Swal.fire({
+                title: "Error!",
+                text: resp.message,
+                icon: "error",
+                timer: 4000
+            }).then(result => {
+                if (result.isConfirmed) {
+                    if (cb) {
+                        cb();
+                    }
+                    clearTimeout(st);
+                }
+            });
+        }
+    }
+}
+
+export const callbackErrT1S2 = (resp: (CommonAPIResponseWithZodError | undefined), cb?: () => void) => {
+    if (resp) {
+        if (!resp.success) {
+            Swal.fire({
+                title: "Error!",
+                text: resp.message,
+                icon: "error",
+                timer: 4000
+            });
+            if (cb) {
+                cb();
+            }
+        }
+    }
+}
+
+export const callbackErrT1S2_ST1 = (resp: (CommonAPIResponseWithZodError | undefined), cb?: () => void) => {
+    if (resp) {
+        if (!resp.success) {
+            const st = setTimeout(() => {
+                if (cb) {
+                    cb();
+                }
+                clearTimeout(st);
+            }, 4000);
+            Swal.fire({
+                title: "Error!",
+                text: resp.message,
+                icon: "error",
+                timer: 4000
+            }).then(result => {
+                if (result.isConfirmed) {
+                    if (cb) {
+                        cb();
+                    }
+                    clearTimeout(st);
+                }
+            });
+        }
+    }
+}
+
+//  ---- 
+
+//eslint-disable-next-line
+export const QF_TQ_UEF_CatchErrorCB = (isError: boolean, error: any) => {
+    // Catch errors.
+    if (isError) {
+        if (error) {
+            Swal.fire({
+                title: "Error!",
+                text: error.message,
+                icon: "error",
+                timer: 4000
+            });
+        }
+    }
 }

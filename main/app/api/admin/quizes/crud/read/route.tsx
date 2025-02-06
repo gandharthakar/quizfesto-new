@@ -3,33 +3,9 @@ import { NextResponse } from "next/server";
 import { type NextRequest } from 'next/server';
 import jwt from "jsonwebtoken";
 import { sanitize } from "@/app/libs/sanitize";
-
-interface Cats {
-    value: string,
-    label: string
-}
-
-interface qF_Quiz {
-    quiz_id: string,
-    quiz_title: string,
-    quiz_summary: string,
-    quiz_display_time: string,
-    quiz_estimated_time: string,
-    quiz_total_question: number,
-    quiz_total_marks: number,
-    quiz_status: string,
-    quiz_about_text: string,
-    quiz_terms: string[],
-    quiz_cover_photo: string,
-    quiz_categories: Cats[],
-    negative_marking_score: number
-}
-
-interface Respo {
-    success: boolean,
-    message: string,
-    quiz?: qF_Quiz
-}
+import { CommonAPIResponseWithZodError } from "@/app/types/commonTypes";
+import { QF_AGetQuizDataType } from "@/app/types/libs/tanstack-query/admin/adminQuizTypes";
+import { RTSPkgSelectType } from "@/app/types/components/admin/componentsTypes";
 
 const getCatsLabel = async (id_list: string[]) => {
     const data = await prisma.qF_Quiz_Category.findMany({
@@ -40,7 +16,7 @@ const getCatsLabel = async (id_list: string[]) => {
         }
     });
 
-    const cts: Cats[] = [];
+    const cts: RTSPkgSelectType[] = [];
 
     for (let i = 0; i < data.length; i++) {
         const obj = {
@@ -53,7 +29,7 @@ const getCatsLabel = async (id_list: string[]) => {
 }
 
 export async function GET(req: NextRequest) {
-    let resp: Respo = {
+    let resp: (CommonAPIResponseWithZodError & { quiz?: QF_AGetQuizDataType }) = {
         success: false,
         message: '',
     }

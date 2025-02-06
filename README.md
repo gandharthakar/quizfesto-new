@@ -30,6 +30,10 @@ Here is the link --> <a href="https://quizfesto-platform.vercel.app/" title="Cli
     &nbsp;
     <img src="https://lh3.googleusercontent.com/u/0/d/1t2okqlo3pXd4UReOtgPA_fftz7sFEs8A=w1920-h653-iv1" width="80px" height="80px" alt="NextAuth JS" />
     &nbsp;
+    <img src="https://lh3.googleusercontent.com/u/0/d/1rbgc32lID9dkG7LXk014YI_a_Gy2joSK=w1920-h537-iv1" width="80px" height="80px" alt="Axios" />
+    &nbsp;
+    <img src="https://lh3.googleusercontent.com/u/0/d/1zl75JX-tMdWX9zEzscpluPFGEKteOFCB=w1920-h537-iv1" width="80px" height="80px" alt="TanStack Query" />
+    &nbsp;
     <img src="https://lh3.googleusercontent.com/u/0/d/1_3g-5dTv39C3rZgZE6Bjs981u2IJvqbk=w1920-h653-iv1" width="80px" height="80px" alt="JWT" />
     &nbsp;
     <img src="https://lh3.googleusercontent.com/u/0/d/1WcEZ57YEdaZ9IzgnneLRa1CcJW9FO2od=w1920-h653-iv1" width="80px" height="80px" alt="Node Mailer" />

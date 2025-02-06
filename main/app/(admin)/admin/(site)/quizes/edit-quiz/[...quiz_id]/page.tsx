@@ -12,14 +12,17 @@ import Swal from 'sweetalert2';
 import { useParams } from "next/navigation";
 import AdminBreadcrumbs from "@/app/components/admin/adminBreadcrumbs";
 import { RTSPkgSelectType } from "@/app/types/components/admin/componentsTypes";
-import { convertBase64 } from "@/app/libs/helpers/helperFunctions";
+import { callbackErrT1S2_ST1, callbackOnErrT1S2_ST1, callbackOnSucT1S2_ST1, convertBase64, QF_TQ_UEF_CatchErrorCB } from "@/app/libs/helpers/helperFunctions";
 import { AdminQuizesFormVS, AdminQuizesValidationSchema } from "@/app/libs/zod/schemas/adminValidationSchemas";
 import TokenChecker from "@/app/libs/tokenChecker";
 import { getCookie } from "cookies-next/client";
 import { adminAuthUserCookieName } from "@/app/constant/datafaker";
+import { useReadSingleQuiz } from "@/app/libs/tanstack-query/admin/queries/adminQueries";
+import { useUpdateSingleQuiz } from "@/app/libs/tanstack-query/admin/mutations/adminQuizMutations";
 
 function Page() {
 
+    const token = getCookie(adminAuthUserCookieName);
     const defaultImage = "https://placehold.co/1000x700/png";
     const params = useParams<{ quiz_id: string[] }>();
     const quiz_id = params.quiz_id[0];
@@ -39,7 +42,7 @@ function Page() {
     const [filSize, setFileSize] = useState<boolean>(false);
     const [fileDimensions, setFileDimensions] = useState<boolean>(false);
     const [options, setOptions] = useState<RTSPkgSelectType[]>();
-    const [isLoading, setIsLoading] = useState<boolean>(true);
+    // const [isLoading, setIsLoading] = useState<boolean>(true);
     const [negMarks, setNegMarks] = useState<string>('');
     const [negMErr, setNegMErr] = useState<string>('');
 
@@ -124,6 +127,13 @@ function Page() {
         setFileDimensions(false);
     }
 
+    const updSiglQuiz = useUpdateSingleQuiz({
+        token,
+        errorCB: (resp) => callbackErrT1S2_ST1(resp),
+        onErrorCB: (resp) => callbackOnErrT1S2_ST1(resp),
+        onSuccessCB: (resp) => callbackOnSucT1S2_ST1(resp)
+    });
+
     const handleFormSubmit: SubmitHandler<AdminQuizesFormVS> = async (formdata) => {
 
         // Get file extention.
@@ -178,9 +188,9 @@ function Page() {
             }
         }
 
-        const token = getCookie(adminAuthUserCookieName);
+        const tokenSub = getCookie(adminAuthUserCookieName);
         const prepData = {
-            token,
+            token: tokenSub ?? "",
             quiz_id,
             quiz_title: formdata.quiz_main_title,
             quiz_summary: formdata.quiz_summ,
@@ -195,43 +205,7 @@ function Page() {
             quiz_terms: terms,
             negative_marking_score: Number(negMarks)
         }
-        setIsLoading(true);
-        const baseURI = window.location.origin;
-        try {
-            const resp = await fetch(`${baseURI}/api/admin/quizes/crud/update`, {
-                method: "POST",
-                body: JSON.stringify(prepData),
-            });
-            if (!resp.ok) {
-                setIsLoading(false);
-            }
-            const body = await resp.json();
-            if (body.success) {
-                Swal.fire({
-                    title: "Success!",
-                    text: body.message,
-                    icon: "success",
-                    timer: 3000
-                });
-                setIsLoading(false);
-            } else {
-                Swal.fire({
-                    title: "Error!",
-                    text: body.message,
-                    icon: "error",
-                    timer: 3000
-                });
-                setIsLoading(false);
-            }
-            //eslint-disable-next-line
-        } catch (error: any) {
-            Swal.fire({
-                title: "Error!",
-                text: error.message,
-                icon: "error",
-                timer: 4000
-            });
-        }
+        updSiglQuiz.mutate(prepData);
     }
 
     const getCats = async () => {
@@ -273,38 +247,35 @@ function Page() {
         }
     }
 
-    const getQuiz = async () => {
-        const baseURI = window.location.origin;
-        const token = getCookie(adminAuthUserCookieName);
-        try {
-            const resp = await fetch(`${baseURI}/api/admin/quizes/crud/read?token=${token}&quiz_id=${quiz_id}`, {
-                method: "GET",
-            });
-            if (!resp.ok) {
-                setIsLoading(false);
-            }
-            const body = await resp.json();
-            if (body.success) {
+    const { data, isError, error, isSuccess, isLoading } = useReadSingleQuiz({
+        token: token ?? "",
+        quiz_id
+    });
 
-                setValue("quiz_main_title", body.quiz.quiz_title);
-                setValue("quiz_summ", body.quiz.quiz_summary);
-                setValue("quiz_disp_time", body.quiz.quiz_display_time);
-                setValue("quiz_est_time", body.quiz.quiz_estimated_time);
-                setValue("quiz_total_ques", body.quiz.quiz_total_question);
-                setValue("quiz_total_marks", body.quiz.quiz_total_marks);
-                setValue("quiz_sts", body.quiz.quiz_status);
-                setNegMarks(body.quiz.negative_marking_score);
+    useEffect(() => {
+        getCats();
 
-                if (body.quiz.quiz_about_text) {
-                    setQuizAboutContent(body.quiz.quiz_about_text);
+        if (isSuccess) {
+            if (data.quiz) {
+                setValue("quiz_main_title", data.quiz.quiz_title);
+                setValue("quiz_summ", data.quiz.quiz_summary);
+                setValue("quiz_disp_time", data.quiz.quiz_display_time);
+                setValue("quiz_est_time", data.quiz.quiz_estimated_time);
+                setValue("quiz_total_ques", data.quiz.quiz_total_question);
+                setValue("quiz_total_marks", data.quiz.quiz_total_marks);
+                setValue("quiz_sts", data.quiz.quiz_status);
+                setNegMarks(data.quiz.negative_marking_score.toString());
+
+                if (data.quiz.quiz_about_text) {
+                    setQuizAboutContent(data.quiz.quiz_about_text);
                 }
 
-                if (body.quiz.quiz_categories.length > 0) {
-                    setQuizCats(body.quiz.quiz_categories);
+                if (data.quiz.quiz_categories.length > 0) {
+                    setQuizCats(data.quiz.quiz_categories);
                 }
 
-                if (body.quiz.quiz_terms.length > 0) {
-                    const terms = body.quiz.quiz_terms.map((itm: quizTrms) => {
+                if (data.quiz.quiz_terms.length > 0) {
+                    const terms = data.quiz.quiz_terms.map((itm) => {
                         return {
                             quiz_terms: itm
                         }
@@ -312,43 +283,21 @@ function Page() {
                     setQuizTerms(terms);
                 }
 
-                if (body.quiz.quiz_cover_photo) {
+                if (data.quiz.quiz_cover_photo) {
                     setAlreadyHaveFeImg(true);
-                    setImgPrevOld(body.quiz.quiz_cover_photo);
-                    setFileInput(body.quiz.quiz_cover_photo);
-                    setImgPrevFresh(body.quiz.quiz_cover_photo);
+                    setImgPrevOld(data.quiz.quiz_cover_photo);
+                    setFileInput(data.quiz.quiz_cover_photo);
+                    setImgPrevFresh(data.quiz.quiz_cover_photo);
                     setFileExt('jpg');
                     setFileSize(true);
                     setFileDimensions(true);
                 }
-
-                setIsLoading(false);
-            } else {
-                Swal.fire({
-                    title: "Error!",
-                    text: body.message,
-                    icon: "error",
-                    timer: 3000
-                });
-                setIsLoading(false);
             }
-            //eslint-disable-next-line
-        } catch (error: any) {
-            Swal.fire({
-                title: "Error!",
-                text: error.message,
-                icon: "error",
-                timer: 4000
-            });
-            setIsLoading(false);
         }
-    }
 
-    useEffect(() => {
-        getCats();
-        getQuiz();
+        QF_TQ_UEF_CatchErrorCB(isError, error);
         //eslint-disable-next-line
-    }, []);
+    }, [data, isSuccess, isError, error]);
 
     const breadcrumbsMenu = [
         {
@@ -660,7 +609,7 @@ function Page() {
                                 </div>
                                 <div className="text-right">
                                     {
-                                        isLoading ?
+                                        (isLoading || updSiglQuiz.isPending) ?
                                             (<div className="spinner size-1"></div>)
                                             :
                                             (

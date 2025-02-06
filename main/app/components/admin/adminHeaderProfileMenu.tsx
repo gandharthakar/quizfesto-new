@@ -62,8 +62,8 @@ function AdminHeaderProfileMenu() {
         }
 
         if (isSuccess) {
-            setProfilePhoto(data.user_photo);
-            setUserName(data.user_full_name.charAt(0));
+            if (data.user_photo) setProfilePhoto(data.user_photo);
+            if (data.user_full_name) setUserName(data.user_full_name.charAt(0));
         }
 
         QF_TQ_UEF_CatchErrorCB(isError, error);

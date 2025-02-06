@@ -3,22 +3,11 @@ import { NextResponse } from "next/server";
 import { type NextRequest } from 'next/server';
 import jwt from "jsonwebtoken";
 import { sanitize } from "@/app/libs/sanitize";
-
-interface qF_Quiz {
-    quiz_id: string,
-    quiz_title: string,
-    quiz_status: string,
-    total_questions: number,
-}
-
-interface Respo {
-    success: boolean,
-    message: string,
-    quizes?: qF_Quiz[]
-}
+import { CommonAPIResponse } from "@/app/types/commonTypes";
+import { QF_ARAQuizesDataType } from "@/app/types/libs/tanstack-query/admin/adminQuizTypes";
 
 export async function GET(req: NextRequest) {
-    let resp: Respo = {
+    let resp: (CommonAPIResponse & { quizes?: QF_ARAQuizesDataType[] }) = {
         success: false,
         message: '',
     }
@@ -73,7 +62,7 @@ export async function GET(req: NextRequest) {
                     sts = 200;
                     resp = {
                         success: true,
-                        message: "Quizes Deleted Successfully!",
+                        message: "Quizes found",
                         quizes: data.map((item) => {
                             return {
                                 quiz_id: item.quiz_id,

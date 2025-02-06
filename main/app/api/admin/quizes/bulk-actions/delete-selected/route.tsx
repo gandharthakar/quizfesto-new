@@ -3,14 +3,10 @@ import { NextResponse } from "next/server";
 import { type NextRequest } from 'next/server';
 import jwt from "jsonwebtoken";
 import { sanitize } from "@/app/libs/sanitize";
-
-interface Respo {
-    success: boolean,
-    message: string
-}
+import { CommonAPIResponse } from "@/app/types/commonTypes";
 
 export async function DELETE(req: NextRequest) {
-    let resp: Respo = {
+    let resp: CommonAPIResponse = {
         success: false,
         message: ''
     }

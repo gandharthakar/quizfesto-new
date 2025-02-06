@@ -11,14 +11,16 @@ import { RiDeleteBin6Line } from "react-icons/ri";
 import Swal from 'sweetalert2';
 import AdminBreadcrumbs from "@/app/components/admin/adminBreadcrumbs";
 import { RTSPkgSelectType } from "@/app/types/components/admin/componentsTypes";
-import { convertBase64 } from "@/app/libs/helpers/helperFunctions";
+import { callbackErrT1S2_ST1, callbackOnErrT1S2_ST1, callbackOnSucT1S2_ST1, convertBase64 } from "@/app/libs/helpers/helperFunctions";
 import { AdminQuizesFormVS, AdminQuizesValidationSchema } from "@/app/libs/zod/schemas/adminValidationSchemas";
 import TokenChecker from "@/app/libs/tokenChecker";
 import { getCookie } from "cookies-next/client";
 import { adminAuthUserCookieName } from "@/app/constant/datafaker";
+import { useCreateNewQuiz } from "@/app/libs/tanstack-query/admin/mutations/adminQuizMutations";
 
 function Page() {
 
+    const token = getCookie(adminAuthUserCookieName);
     const defaultImage = "https://placehold.co/1000x700/png";
     const [quizCats, setQuizCats] = useState<RTSPkgSelectType[]>([]);
     // const [alreadyHaveFeImg, setAlreadyHaveFeImg] = useState<boolean>(false);
@@ -37,7 +39,7 @@ function Page() {
     const [filSize, setFileSize] = useState<boolean>(false);
     const [fileDimensions, setFileDimensions] = useState<boolean>(false);
     const [options, setOptions] = useState<RTSPkgSelectType[]>();
-    const [isLoading, setIsLoading] = useState<boolean>(false);
+    // const [isLoading, setIsLoading] = useState<boolean>(false);
     const [negMarks, setNegMarks] = useState<string>('');
     const [negMErr, setNegMErr] = useState<string>('');
 
@@ -121,6 +123,23 @@ function Page() {
         setFileDimensions(false);
     }
 
+    const sucFoSub = () => {
+        clearFileInput();
+        setQuizTerms([{ quiz_terms: '' }]);
+        setQuizAboutContent("");
+        setQuizCats([]);
+        setNegMarks("");
+        setNegMErr("");
+        reset();
+    }
+
+    const creNewQuiz = useCreateNewQuiz({
+        token,
+        onErrorCB: (resp) => callbackOnErrT1S2_ST1(resp),
+        errorCB: (resp) => callbackErrT1S2_ST1(resp),
+        onSuccessCB: (resp) => callbackOnSucT1S2_ST1(resp, sucFoSub)
+    });
+
     const handleFormSubmit: SubmitHandler<AdminQuizesFormVS> = async (formdata) => {
 
         // Get file extention.
@@ -175,9 +194,9 @@ function Page() {
             }
         }
 
-        const token = getCookie(adminAuthUserCookieName);
+        const tokenSub = getCookie(adminAuthUserCookieName);
         const prepData = {
-            token,
+            token: tokenSub ?? "",
             quiz_title: formdata.quiz_main_title,
             quiz_summary: formdata.quiz_summ,
             quiz_categories: quizCats && quizCats.length > 0 ? quizCats.map(item => item.value) : [],
@@ -191,50 +210,7 @@ function Page() {
             quiz_terms: terms,
             negative_marking_score: Number(negMarks)
         }
-        setIsLoading(true);
-        const baseURI = window.location.origin;
-        try {
-            const resp = await fetch(`${baseURI}/api/admin/quizes/crud/create`, {
-                method: "POST",
-                body: JSON.stringify(prepData),
-            });
-            if (!resp.ok) {
-                setIsLoading(false);
-            }
-            const body = await resp.json();
-            if (body.success) {
-                Swal.fire({
-                    title: "Success!",
-                    text: body.message,
-                    icon: "success",
-                    timer: 3000
-                });
-                clearFileInput();
-                setIsLoading(false);
-                setQuizTerms([{ quiz_terms: '' }]);
-                setQuizAboutContent("");
-                setQuizCats([]);
-                setNegMarks("");
-                setNegMErr("");
-                reset();
-            } else {
-                Swal.fire({
-                    title: "Error!",
-                    text: body.message,
-                    icon: "error",
-                    timer: 3000
-                });
-                setIsLoading(false);
-            }
-            //eslint-disable-next-line
-        } catch (error: any) {
-            Swal.fire({
-                title: "Error!",
-                text: error.message,
-                icon: "error",
-                timer: 4000
-            });
-        }
+        creNewQuiz.mutate(prepData);
     }
 
     const getCats = async () => {
@@ -590,7 +566,7 @@ function Page() {
                                 </div>
                                 <div className="text-right">
                                     {
-                                        isLoading ?
+                                        creNewQuiz.isPending ?
                                             (<div className="spinner size-1"></div>)
                                             :
                                             (

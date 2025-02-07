@@ -2,11 +2,7 @@ import prisma from "@/app/libs/db";
 import { NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
 import { sanitize } from "@/app/libs/sanitize";
-
-interface Respo {
-    success: boolean,
-    message: string
-}
+import { CommonAPIResponse } from "@/app/types/commonTypes";
 
 const findCommonItems = (arr1: string[], arr2: string[]) => {
     return arr1.filter(item => arr2.includes(item));
@@ -42,7 +38,7 @@ const removeCategoryFromQuizes = async (categoryId: string) => {
 }
 
 export async function DELETE(req: Request) {
-    let resp: Respo = {
+    let resp: CommonAPIResponse = {
         success: false,
         message: ''
     }

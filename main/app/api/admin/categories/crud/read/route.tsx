@@ -3,21 +3,11 @@ import { NextResponse } from "next/server";
 import { type NextRequest } from 'next/server';
 import jwt from "jsonwebtoken";
 import { sanitize } from "@/app/libs/sanitize";
-
-interface Cats {
-    category_id: string,
-    category_title: string,
-    category_slug: string
-}
-
-interface Respo {
-    success: boolean,
-    message: string,
-    cat_data?: Cats
-}
+import { CategoriesType } from "@/app/types/components/website/componentsTypes";
+import { CommonAPIResponse } from "@/app/types/commonTypes";
 
 export async function GET(req: NextRequest) {
-    let resp: Respo = {
+    let resp: (CommonAPIResponse & { cat_data?: CategoriesType }) = {
         success: false,
         message: '',
     }

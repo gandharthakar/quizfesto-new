@@ -2,21 +2,23 @@
 
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import Swal from "sweetalert2";
 import AdminBreadcrumbs from "@/app/components/admin/adminBreadcrumbs";
-import { convertToSlug } from "@/app/libs/helpers/helperFunctions";
+import { callbackErrT1S1_ST1, callbackOnErrT1S1_ST1, callbackOnSucT1S1_ST1, convertToSlug, QF_TQ_UEF_CatchErrorCB } from "@/app/libs/helpers/helperFunctions";
 import TokenChecker from "@/app/libs/tokenChecker";
 import { getCookie } from "cookies-next/client";
 import { adminAuthUserCookieName } from "@/app/constant/datafaker";
+import { useUpdateSingleCategory } from "@/app/libs/tanstack-query/admin/mutations/adminCategoriesMutations";
+import { useReadSingleCategory } from "@/app/libs/tanstack-query/admin/queries/adminQueries";
 
 function Page() {
 
+    const token = getCookie(adminAuthUserCookieName);
     const parms = useParams<{ category_id: string[] }>();
     const cat_id = parms.category_id[0];
     const [catTitle, setCatTitle] = useState<string>("");
     const [catSlug, setCatSlug] = useState<string>("");
     const [catError, setCatError] = useState<string>("");
-    const [isLoading, setIsLoading] = useState<boolean>(true);
+    // const [isLoading, setIsLoading] = useState<boolean>(true);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value;
@@ -34,6 +36,14 @@ function Page() {
         setCatSlug(convertToSlug(value));
     }
 
+    const updSinCat = useUpdateSingleCategory({
+        token,
+        category_id: cat_id,
+        errorCB: (resp) => callbackErrT1S1_ST1(resp),
+        onErrorCB: (resp) => callbackOnErrT1S1_ST1(resp),
+        onSuccessCB: (resp) => callbackOnSucT1S1_ST1(resp)
+    });
+
     const handleFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         if (catTitle == "") {
@@ -45,94 +55,32 @@ function Page() {
             }
         } else {
             setCatError("");
-            setIsLoading(true);
-            const token = getCookie(adminAuthUserCookieName);
+            const tokenSub = getCookie(adminAuthUserCookieName);
             const prepData = {
-                token,
+                token: tokenSub ?? "",
                 category_id: cat_id,
                 category_title: catTitle,
                 category_slug: catSlug
             }
-            const baseURI = window.location.origin;
-            try {
-                const resp = await fetch(`${baseURI}/api/admin/categories/crud/update`, {
-                    method: "POST",
-                    body: JSON.stringify(prepData)
-                });
-                if (!resp.ok) {
-                    setIsLoading(false);
-                }
-                const body = await resp.json();
-                if (body.success) {
-                    Swal.fire({
-                        title: "Success!",
-                        text: body.message,
-                        icon: "success",
-                        timer: 3000
-                    });
-                    setIsLoading(false);
-                } else {
-                    Swal.fire({
-                        title: "Error!",
-                        text: body.message,
-                        icon: "error",
-                        timer: 3000
-                    });
-                    setIsLoading(false);
-                }
-                //eslint-disable-next-line
-            } catch (error: any) {
-                Swal.fire({
-                    title: "Error!",
-                    text: error.message,
-                    icon: "error",
-                    timer: 4000
-                });
-            }
+            updSinCat.mutate(prepData);
         }
     }
 
-    const getCategoryDetails = async () => {
-        const baseURI = window.location.origin;
-        const token = getCookie(adminAuthUserCookieName);
-        try {
-            const resp = await fetch(`${baseURI}/api/admin/categories/crud/read?token=${token}&category_id=${cat_id}`, {
-                method: "GET",
-            });
-            if (!resp.ok) {
-                setIsLoading(false);
-            }
-            const body = await resp.json();
-            if (body.success) {
-                setCatTitle(body.cat_data.category_title);
-                setCatSlug(body.cat_data.category_slug);
-                setIsLoading(false);
-            } else {
-                Swal.fire({
-                    title: "Error!",
-                    text: body.message,
-                    icon: "error",
-                    timer: 2000
-                });
-                setIsLoading(false);
-            }
-            //eslint-disable-next-line
-        } catch (error: any) {
-            Swal.fire({
-                title: "Error!",
-                text: error.message,
-                icon: "error",
-                timer: 4000
-            });
-        }
-    }
+    const { data, isError, error, isSuccess, isLoading } = useReadSingleCategory({
+        token: token ?? "",
+        category_id: cat_id
+    });
 
     useEffect(() => {
-        // setCatTitle("Category 1");
-        // setCatSlug(convertToSlug("Category 1"));
-        getCategoryDetails();
-        //eslint-disable-next-line
-    }, []);
+        if (isSuccess) {
+            if (data.cat_data) {
+                setCatTitle(data.cat_data.category_title);
+                setCatSlug(data.cat_data.category_slug);
+            }
+        }
+
+        QF_TQ_UEF_CatchErrorCB(isError, error);
+    }, [data, isSuccess, isError, error]);
 
     const breadcrumbsMenu = [
         {
@@ -176,6 +124,7 @@ function Page() {
                                         id="cq-catttl"
                                         className="ws-input-pwd-m1-v1"
                                         autoComplete="off"
+                                        placeholder="eg. GST"
                                         value={catTitle}
                                         onChange={handleInputChange}
                                     />
@@ -195,6 +144,7 @@ function Page() {
                                         id="cq-catslug"
                                         className="ws-input-pwd-m1-v1"
                                         autoComplete="off"
+                                        placeholder="eg. gst"
                                         readOnly={true}
                                         value={catSlug}
                                     />
@@ -202,7 +152,7 @@ function Page() {
 
                                 <div className="text-right">
                                     {
-                                        isLoading ?
+                                        (isLoading || updSinCat.isPending) ?
                                             (<div className="spinner size-1"></div>)
                                             :
                                             (

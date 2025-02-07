@@ -11,12 +11,13 @@ import { RiDeleteBin6Line } from "react-icons/ri";
 import Swal from 'sweetalert2';
 import AdminBreadcrumbs from "@/app/components/admin/adminBreadcrumbs";
 import { RTSPkgSelectType } from "@/app/types/components/admin/componentsTypes";
-import { callbackErrT1S2_ST1, callbackOnErrT1S2_ST1, callbackOnSucT1S2_ST1, convertBase64 } from "@/app/libs/helpers/helperFunctions";
+import { callbackErrT1S2_ST1, callbackOnErrT1S2_ST1, callbackOnSucT1S2_ST1, convertBase64, QF_TQ_UEF_CatchErrorCB } from "@/app/libs/helpers/helperFunctions";
 import { AdminQuizesFormVS, AdminQuizesValidationSchema } from "@/app/libs/zod/schemas/adminValidationSchemas";
 import TokenChecker from "@/app/libs/tokenChecker";
 import { getCookie } from "cookies-next/client";
 import { adminAuthUserCookieName } from "@/app/constant/datafaker";
 import { useCreateNewQuiz } from "@/app/libs/tanstack-query/admin/mutations/adminQuizMutations";
+import { useReadAllAdminCategories } from "@/app/libs/tanstack-query/admin/queries/adminQueries";
 
 function Page() {
 
@@ -213,16 +214,12 @@ function Page() {
         creNewQuiz.mutate(prepData);
     }
 
-    const getCats = async () => {
-        const baseURI = window.location.origin;
-        const token = getCookie(adminAuthUserCookieName);
-        try {
-            const resp = await fetch(`${baseURI}/api/admin/categories/bulk-actions/read-all?token=${token}`, {
-                method: "GET"
-            });
-            const body = await resp.json();
-            if (body.success) {
-                const cts = body.cat_data;
+    const { data, isError, error, isSuccess } = useReadAllAdminCategories(token ?? "");
+
+    useEffect(() => {
+        if (isSuccess) {
+            if (data.cat_data && data.cat_data.length) {
+                const cts = data.cat_data;
                 //eslint-disable-next-line
                 let opts: RTSPkgSelectType[] = [];
                 for (let i = 0; i < cts.length; i++) {
@@ -233,28 +230,11 @@ function Page() {
                     opts.push(obj);
                 }
                 setOptions(opts);
-            } else {
-                Swal.fire({
-                    title: "Error!",
-                    text: body.message,
-                    icon: "error",
-                    timer: 4000
-                });
             }
-            //eslint-disable-next-line
-        } catch (error: any) {
-            Swal.fire({
-                title: "Error!",
-                text: error.message,
-                icon: "error",
-                timer: 4000
-            });
         }
-    }
 
-    useEffect(() => {
-        getCats();
-    }, []);
+        QF_TQ_UEF_CatchErrorCB(isError, error);
+    }, [data, isSuccess, isError, error, setOptions]);
 
     const breadcrumbsMenu = [
         {
@@ -298,6 +278,7 @@ function Page() {
                                         id="cq-qttl"
                                         className="ws-input-pwd-m1-v1"
                                         autoComplete="off"
+                                        placeholder="eg. Quiz on GST"
                                         {...register("quiz_main_title")}
                                     />
                                     {errors.quiz_main_title && (<div className="ws-input-error mt-[2px]">{errors.quiz_main_title.message}</div>)}
@@ -314,6 +295,7 @@ function Page() {
                                         id="cq-qsumm"
                                         className="ws-input-pwd-m1-v1"
                                         autoComplete="off"
+                                        placeholder="eg. Lorem ipsum dolor, sit amet consectetur adipisicing elit. Sed, cumque."
                                         {...register("quiz_summ")}
                                     />
                                     {errors.quiz_summ && (<div className="ws-input-error mt-[2px]">{errors.quiz_summ.message}</div>)}
@@ -332,6 +314,7 @@ function Page() {
                                                 id="cq-qdisptm"
                                                 className="ws-input-pwd-m1-v1"
                                                 autoComplete="off"
+                                                placeholder="eg. 5 Mins"
                                                 {...register("quiz_disp_time")}
                                             />
                                             {errors.quiz_disp_time && (<div className="ws-input-error mt-[2px]">{errors.quiz_disp_time.message}</div>)}
@@ -348,6 +331,7 @@ function Page() {
                                                 id="cq-qesttm"
                                                 className="ws-input-pwd-m1-v1"
                                                 autoComplete="off"
+                                                placeholder="eg. 00:05:00"
                                                 {...register("quiz_est_time")}
                                             />
                                             {errors.quiz_est_time && (<div className="ws-input-error mt-[2px]">{errors.quiz_est_time.message}</div>)}
@@ -364,6 +348,7 @@ function Page() {
                                                 id="cq-qtotqs"
                                                 className="ws-input-pwd-m1-v1"
                                                 autoComplete="off"
+                                                placeholder="eg. 5"
                                                 {...register("quiz_total_ques", { valueAsNumber: true })}
                                             />
                                             {errors.quiz_total_ques && (<div className="ws-input-error mt-[2px]">{errors.quiz_total_ques.message}</div>)}
@@ -380,6 +365,7 @@ function Page() {
                                                 id="cq-qttlmrks"
                                                 className="ws-input-pwd-m1-v1"
                                                 autoComplete="off"
+                                                placeholder="eg. 500"
                                                 {...register("quiz_total_marks", { valueAsNumber: true })}
                                             />
                                             {errors.quiz_total_marks && (<div className="ws-input-error mt-[2px]">{errors.quiz_total_marks.message}</div>)}
@@ -396,6 +382,7 @@ function Page() {
                                                 id="cq-qnms"
                                                 className="ws-input-pwd-m1-v1"
                                                 autoComplete="off"
+                                                placeholder="eg. 100"
                                                 value={negMarks}
                                                 onChange={handleNegMarksInputChange}
                                             />
@@ -433,6 +420,7 @@ function Page() {
                                         className="ws-input-pwd-m1-v1"
                                         autoComplete="off"
                                         rows={5}
+                                        placeholder="eg. Lorem ipsum dolor sit amet consectetur adipisicing elit. Nostrum ipsum, aliquam id quos ipsam ab!"
                                         value={quizAboutContent}
                                         onChange={(e) => setQuizAboutContent(e.target.value)}
                                     ></textarea>
@@ -453,6 +441,7 @@ function Page() {
                                                         name="quiz_terms"
                                                         className="ws-input-pwd-m1-v1"
                                                         autoComplete="off"
+                                                        placeholder="eg. Lorem ipsum dolor sit amet."
                                                         value={items.quiz_terms}
                                                         onChange={(event) => handleChangeQuizTerms(event, index)}
                                                     />
@@ -490,6 +479,7 @@ function Page() {
                                         options={options ?? []}
                                         isMultiple={true}
                                         isSearchable={true}
+                                        placeholder="Select ..."
                                         classNames={{
                                             menuButton: () => `flex cursor-pointer text-sm text-gray-500 border border-gray-300 shadow-sm transition-all duration-75 focus:outline-0 bg-zinc-100 hover:border-gray-400 dark:bg-zinc-900 dark:border-zinc-500`,
                                             menu: `font_noto_sans absolute z-10 w-full bg-white shadow-lg border rounded py-1 mt-1.5 text-sm text-gray-700 dark:bg-zinc-900 dark:border-zinc-500`,

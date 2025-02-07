@@ -330,7 +330,7 @@ function WinnerPrizeForm(props: WinnerPrizeFormType) {
                         ("")
                 }
                 <form onSubmit={handleSubmit}>
-                    <div className="flex gap-x-[20px] gap-y-[10px] items-start md:items-start flex-col md:flex-row">
+                    <div className="flex gap-x-[30px] gap-y-[15px] items-start md:items-start flex-col md:flex-row">
                         <div className="w-full md:max-w-[200px]">
                             <div className="relative">
                                 <div className="flex items-center justify-center gap-[20px] h-full w-full absolute left-0 top-0 z-[4] cursor-pointer text-white bg-[rgba(0,0,0,0.5)] opacity-0 hover:opacity-100">
@@ -359,33 +359,46 @@ function WinnerPrizeForm(props: WinnerPrizeFormType) {
                                 </h6>
                             </div>
                             <div className="pb-[20px]">
-                                <div className="flex flex-col md-t1:flex-row gap-[20px]">
+                                <div className="flex flex-col 2xl:flex-row gap-[20px]">
                                     <div className="w-full flex-auto md-t1:flex-1">
+                                        <label
+                                            className="transition-all delay-75 block mb-[5px] font-noto_sans text-[16px] font-semibold text-zinc-900 dark:text-zinc-300"
+                                            htmlFor={`przdesc-${prize_type_text}`}
+                                        >
+                                            Prize Description <span className="text-red-500">*</span>
+                                        </label>
                                         <input
                                             type="text"
                                             name="description"
                                             className="ws-input-pwd-m1-v1"
-                                            placeholder="Description"
+                                            placeholder="eg. Lorem ipsum dolor sit amet consectetur adipisicing elit. A dolorum sed ea nesciunt voluptatum magnam!"
                                             value={descr}
+                                            id={`przdesc-${prize_type_text}`}
                                             onChange={handleChangeDscr}
                                             autoComplete="off"
                                         />
                                         {descError && (<div className="ws-input-error mt-[2px]">{descError}</div>)}
                                     </div>
-                                    <div className="w-full max-w-none md-t1:max-w-[250px]">
+                                    <div className="w-full max-w-none 2xl:max-w-[250px]">
+                                        <label
+                                            className="transition-all delay-75 block mb-[5px] font-noto_sans text-[16px] font-semibold text-zinc-900 dark:text-zinc-300"
+                                            htmlFor={`scrlmt-${prize_type_text}`}
+                                        >
+                                            Score Limit <span className="text-red-500">*</span>
+                                        </label>
                                         <input
                                             type="text"
                                             name="score_limit"
                                             className="ws-input-pwd-m1-v1"
-                                            placeholder="Score Limit"
+                                            placeholder="eg. 25000"
                                             value={scoreLimit}
+                                            id={`scrlmt-${prize_type_text}`}
                                             onChange={handleChangeSL}
                                             autoComplete="off"
                                         />
                                         {SLError && (<div className="ws-input-error mt-[2px]">{SLError}</div>)}
                                     </div>
                                 </div>
-
                             </div>
                             <div className="text-right">
                                 <button

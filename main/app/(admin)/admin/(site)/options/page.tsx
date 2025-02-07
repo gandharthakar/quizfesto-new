@@ -11,14 +11,17 @@ import { GrAdd } from "react-icons/gr";
 import { IoMdCheckmark } from "react-icons/io";
 import { RiDeleteBin6Line } from "react-icons/ri";
 import Swal from "sweetalert2";
-import { GFG } from "@/app/libs/helpers/helperFunctions";
+import { callbackErrT1S1_ST1, callbackOnErrT1S1_ST1, callbackOnSucT1S1_ST1, GFG, QF_TQ_UEF_CatchErrorCB } from "@/app/libs/helpers/helperFunctions";
 import { AdminOptionsDataType } from "@/app/types/components/admin/componentsTypes";
 import TokenChecker from "@/app/libs/tokenChecker";
 import { getCookie } from "cookies-next/client";
 import { adminAuthUserCookieName } from "@/app/constant/datafaker";
+import { useReadAllAdminOptions } from "@/app/libs/tanstack-query/admin/queries/adminQueries";
+import { useDeleteAllAdminOptions, useDeleteSelectedAdminOptions } from "@/app/libs/tanstack-query/admin/mutations/adminOptionsMutations";
 
 function Page() {
 
+    const token = getCookie(adminAuthUserCookieName);
     const dataPerPage = 5;
     const [srchInp, setSrchInp] = useState<string>("");
 
@@ -29,7 +32,7 @@ function Page() {
 
     const [selectAll, setSelectAll] = useState(false);
     const [selectedItems, setSelectedItems] = useState<string[]>([]);
-    const [isLoading, setIsLoading] = useState<boolean>(true);
+    // const [isLoading, setIsLoading] = useState<boolean>(true);
 
     const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
     const menuRef = useRef<HTMLDivElement>(null);
@@ -128,100 +131,36 @@ function Page() {
         toggleItem(itemId);
     };
 
+    const delAllOpts = useDeleteAllAdminOptions({
+        token,
+        errorCB: (resp) => callbackErrT1S1_ST1(resp),
+        onErrorCB: (resp) => callbackOnErrT1S1_ST1(resp),
+        onSuccessCB: (resp) => callbackOnSucT1S1_ST1(resp)
+    });
+
     const handleDeleteAllBulkLogic = async () => {
         const conf = confirm("Are you sure want to delete all options ?");
         if (conf) {
-            setIsLoading(true);
             setIsMenuOpen(false);
-            const baseURI = window.location.origin;
-            const token = getCookie(adminAuthUserCookieName);
-            try {
-                const resp = await fetch(`${baseURI}/api/admin/options/bulk-actions/delete-all?token=${token}`, {
-                    method: "DELETE",
-                });
-                if (!resp.ok) {
-                    setIsLoading(false);
-                }
-                const body = await resp.json();
-                if (body.success) {
-                    Swal.fire({
-                        title: "Success!",
-                        text: body.message,
-                        icon: "success",
-                        timer: 2000
-                    });
-                    const set = setTimeout(() => {
-                        window.location.reload();
-                        setIsLoading(false);
-                        clearTimeout(set);
-                    }, 2000);
-                } else {
-                    Swal.fire({
-                        title: "Error!",
-                        text: body.message,
-                        icon: "error",
-                        timer: 2000
-                    });
-                    setIsLoading(false);
-                }
-                //eslint-disable-next-line
-            } catch (error: any) {
-                Swal.fire({
-                    title: "Error!",
-                    text: error.message,
-                    icon: "error",
-                    timer: 4000
-                });
-            }
+            const tokenDel = getCookie(adminAuthUserCookieName);
+            delAllOpts.mutate({ token: tokenDel ?? "" });
         }
     }
+
+    const delSelOpts = useDeleteSelectedAdminOptions({
+        token,
+        errorCB: (resp) => callbackErrT1S1_ST1(resp),
+        onErrorCB: (resp) => callbackOnErrT1S1_ST1(resp),
+        onSuccessCB: (resp) => callbackOnSucT1S1_ST1(resp)
+    });
 
     const handleDeleteSelectedBulkLogic = async () => {
         if (selectedItems.length > 0) {
             const conf = confirm("Are you sure want to delete selected options ?");
             if (conf) {
-                setIsLoading(true);
                 setIsMenuOpen(false);
-                const baseURI = window.location.origin;
-                const token = getCookie(adminAuthUserCookieName);
-                try {
-                    const resp = await fetch(`${baseURI}/api/admin/options/bulk-actions/delete-selected`, {
-                        method: "DELETE",
-                        body: JSON.stringify({ token, options_id_list: selectedItems })
-                    });
-                    if (!resp.ok) {
-                        setIsLoading(false);
-                    }
-                    const body = await resp.json();
-                    if (body.success) {
-                        Swal.fire({
-                            title: "Success!",
-                            text: body.message,
-                            icon: "success",
-                            timer: 2000
-                        });
-                        const set = setTimeout(() => {
-                            window.location.reload();
-                            clearTimeout(set);
-                        }, 2000);
-                    } else {
-                        Swal.fire({
-                            title: "Error!",
-                            text: body.message,
-                            icon: "error",
-                            timer: 2000
-                        });
-                        setIsLoading(false);
-                    }
-                    //eslint-disable-next-line
-                } catch (error: any) {
-                    Swal.fire({
-                        title: "Error!",
-                        text: error.message,
-                        icon: "error",
-                        timer: 4000
-                    });
-                }
+                const tokenDel = getCookie(adminAuthUserCookieName);
+                delSelOpts.mutate({ token: tokenDel ?? "", options_id_list: selectedItems })
             }
         } else {
             Swal.fire({
@@ -233,41 +172,24 @@ function Page() {
         }
     }
 
-    const getOptions = async () => {
-        const baseURI = window.location.origin;
-        const token = getCookie(adminAuthUserCookieName);
-        try {
-            const resp = await fetch(`${baseURI}/api/admin/options/bulk-actions/read-all?token=${token}`, {
-                method: "GET",
-            });
-            if (!resp.ok) {
-                setIsLoading(false);
-            }
-            const body = await resp.json();
-            if (body.success) {
-                setIsLoading(false);
-                setOptionsListData(GFG(body.options_list, currentPage, dataPerPage));
-                setOptionData(body.options_list);
-                setTotalPages(Math.ceil(body.options_list.length / dataPerPage));
-            } else {
-                setIsLoading(false);
-            }
-            //eslint-disable-next-line
-        } catch (error: any) {
-            Swal.fire({
-                title: "Error!",
-                text: error.message,
-                icon: "error",
-                timer: 4000
-            });
-        }
-    }
+    const { data, isError, error, isSuccess, isLoading } = useReadAllAdminOptions(token ?? "");
 
     useEffect(() => {
-        getOptions();
-        // setOptionsListData(GFG(dump_list_of_options, currentPage, dataPerPage));
+        if (isSuccess) {
+            if (data.options_list && data.options_list.length) {
+                setOptionsListData(GFG(data.options_list, currentPage, dataPerPage));
+                setOptionData(data.options_list);
+                setTotalPages(Math.ceil(data.options_list.length / dataPerPage));
+            } else {
+                setOptionData([]);
+                setOptionsListData(GFG([], 1, dataPerPage));
+                setTotalPages(Math.ceil(optionData.length / dataPerPage));
+            }
+        }
+
+        QF_TQ_UEF_CatchErrorCB(isError, error);
         //eslint-disable-next-line
-    }, []);
+    }, [data, isSuccess, isError, error, setOptionData]);
 
     useEffect(() => {
         if (selectedItems.length === optionsListData.length) {
@@ -419,7 +341,7 @@ function Page() {
                             (
                                 <>
                                     {
-                                        isLoading ?
+                                        (isLoading || (delAllOpts.isPending || delSelOpts.isPending)) ?
                                             (<div className="spinner size-1"></div>)
                                             :
                                             (

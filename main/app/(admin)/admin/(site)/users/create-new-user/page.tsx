@@ -238,6 +238,7 @@ function Page() {
                                         id="cq-qflnm"
                                         className="ws-input-pwd-m1-v1"
                                         autoComplete="off"
+                                        placeholder="eg. John Paul"
                                         {...register("full_name")}
                                     />
                                     {errors.full_name && (<div className="ws-input-error mt-[2px]">{errors.full_name.message}</div>)}
@@ -254,6 +255,7 @@ function Page() {
                                         id="cq-qeml"
                                         className="ws-input-pwd-m1-v1"
                                         autoComplete="off"
+                                        placeholder="eg. John_paul@example.com"
                                         {...register("email")}
                                     />
                                     {errors.email && (<div className="ws-input-error mt-[2px]">{errors.email.message}</div>)}
@@ -270,6 +272,7 @@ function Page() {
                                         id="cq-qpwd"
                                         className="ws-input-pwd-m1-v1"
                                         autoComplete="off"
+                                        placeholder="eg. 12345678"
                                         {...register("password")}
                                     />
                                     {errors.password && (<div className="ws-input-error mt-[2px]">{errors.password.message}</div>)}
@@ -286,6 +289,7 @@ function Page() {
                                         id="cq-qcnfpwd"
                                         className="ws-input-pwd-m1-v1"
                                         autoComplete="off"
+                                        placeholder="eg. 12345678"
                                         {...register("confirmPassword")}
                                     />
                                     {errors.confirmPassword && (<div className="ws-input-error mt-[2px]">{errors.confirmPassword.message}</div>)}
@@ -340,6 +344,7 @@ function Page() {
                                         id="cq-qphn"
                                         className="ws-input-pwd-m1-v1"
                                         autoComplete="off"
+                                        placeholder="eg. 0987654321"
                                         value={phone}
                                         onChange={handleChangePhone}
                                     />

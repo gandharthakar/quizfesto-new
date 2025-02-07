@@ -1,15 +1,15 @@
 import { TQ_CBtype } from "@/app/types/commonTypes";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { AxiosResponse } from "axios";
-import { createDuplicateQuiz, createNewQuiz, deleteAllAdminQuizesBA, deleteSelectedAdminQuizesBA, deleteSingleQuiz, updateSingleQuiz } from "@/app/libs/tanstack-query/admin/api-functions/adminQuizAPIFunctions";
-import { QF_ACreateQuizPayloadType, QF_ADSQuizesPayloadType, QF_AGetQuizPayloadType } from "@/app/types/libs/tanstack-query/admin/adminQuizTypes";
+import { createDuplicateQuestion, createNewQuestion, deleteAllAdminQuestionsBA, deleteSelectedAdminQuestionsBA, deleteSingleQuestion, updateSingleQuestion } from "@/app/libs/tanstack-query/admin/api-functions/adminQuestionsAPIFunctions";
+import { QF_ACreQuesPayloadType, QF_ADSQuestionsPayloadType, QF_ASingleQuesPayloadType } from "@/app/types/libs/tanstack-query/admin/adminQuestionType";
 
-export const useDeleteAllAdminQuizes = (callbacks?: TQ_CBtype) => {
+export const useDeleteAllAdminQuestions = (callbacks?: TQ_CBtype) => {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationKey: ["deleteAllAdminQuizes"],
-        mutationFn: (payload: { token: string }) => deleteAllAdminQuizesBA(payload),
+        mutationKey: ["deleteAllAdminQuestions"],
+        mutationFn: (payload: { token: string }) => deleteAllAdminQuestionsBA(payload),
         onSuccess(data) {
             if (data.success) {
                 if (callbacks?.onSuccessCB) {
@@ -34,7 +34,7 @@ export const useDeleteAllAdminQuizes = (callbacks?: TQ_CBtype) => {
                 console.log(error);
             } else {
                 await queryClient.invalidateQueries({
-                    queryKey: ["readAllAdminQuizes", callbacks?.token]
+                    queryKey: ["readAllAdminQuestions", callbacks?.token]
                 });
                 await queryClient.invalidateQueries({
                     queryKey: ["getAdminStats", callbacks?.token]
@@ -44,12 +44,12 @@ export const useDeleteAllAdminQuizes = (callbacks?: TQ_CBtype) => {
     });
 };
 
-export const useDeleteSelectedAdminQuizes = (callbacks?: TQ_CBtype) => {
+export const useDeleteSelectedAdminQuestions = (callbacks?: TQ_CBtype) => {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationKey: ["deleteSelectedAdminQuizes"],
-        mutationFn: (payload: QF_ADSQuizesPayloadType) => deleteSelectedAdminQuizesBA(payload),
+        mutationKey: ["deleteSelectedAdminQuestions"],
+        mutationFn: (payload: QF_ADSQuestionsPayloadType) => deleteSelectedAdminQuestionsBA(payload),
         onSuccess(data) {
             if (data.success) {
                 if (callbacks?.onSuccessCB) {
@@ -74,7 +74,7 @@ export const useDeleteSelectedAdminQuizes = (callbacks?: TQ_CBtype) => {
                 console.log(error);
             } else {
                 await queryClient.invalidateQueries({
-                    queryKey: ["readAllAdminQuizes", callbacks?.token]
+                    queryKey: ["readAllAdminQuestions", callbacks?.token]
                 });
                 await queryClient.invalidateQueries({
                     queryKey: ["getAdminStats", callbacks?.token]
@@ -84,12 +84,12 @@ export const useDeleteSelectedAdminQuizes = (callbacks?: TQ_CBtype) => {
     });
 };
 
-export const useCreateNewQuiz = (callbacks?: TQ_CBtype) => {
+export const useCreateNewQuestion = (callbacks?: TQ_CBtype) => {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationKey: ["createNewQuiz"],
-        mutationFn: (payload: QF_ACreateQuizPayloadType) => createNewQuiz(payload),
+        mutationKey: ["createNewQuestion"],
+        mutationFn: (payload: QF_ACreQuesPayloadType) => createNewQuestion(payload),
         onSuccess(data) {
             if (data.success) {
                 if (callbacks?.onSuccessCB) {
@@ -114,7 +114,7 @@ export const useCreateNewQuiz = (callbacks?: TQ_CBtype) => {
                 console.log(error);
             } else {
                 await queryClient.invalidateQueries({
-                    queryKey: ["readAllAdminQuizes", callbacks?.token]
+                    queryKey: ["readAllAdminQuestions", callbacks?.token]
                 });
                 await queryClient.invalidateQueries({
                     queryKey: ["getAdminStats", callbacks?.token]
@@ -124,12 +124,12 @@ export const useCreateNewQuiz = (callbacks?: TQ_CBtype) => {
     });
 };
 
-export const useUpdateSingleQuiz = (callbacks?: TQ_CBtype) => {
+export const useUpdateSingleQuestion = (callbacks?: TQ_CBtype) => {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationKey: ["updateSingleQuiz"],
-        mutationFn: (payload: QF_ACreateQuizPayloadType) => updateSingleQuiz(payload),
+        mutationKey: ["updateSingleQuestion"],
+        mutationFn: (payload: QF_ACreQuesPayloadType) => updateSingleQuestion(payload),
         onSuccess(data) {
             if (data.success) {
                 if (callbacks?.onSuccessCB) {
@@ -154,22 +154,22 @@ export const useUpdateSingleQuiz = (callbacks?: TQ_CBtype) => {
                 console.log(error);
             } else {
                 await queryClient.invalidateQueries({
-                    queryKey: ["readAllAdminQuizes", callbacks?.token]
+                    queryKey: ["readAllAdminQuestions", callbacks?.token]
                 });
                 await queryClient.invalidateQueries({
-                    queryKey: ["readSingleQuiz", callbacks?.quiz_id]
+                    queryKey: ["readSingleQuestion", callbacks?.question_id]
                 });
             }
         },
     });
 };
 
-export const useCreateDuplicateQuiz = (callbacks?: TQ_CBtype) => {
+export const useCreateDuplicateQuestion = (callbacks?: TQ_CBtype) => {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationKey: ["createDuplicateQuiz"],
-        mutationFn: (payload: QF_AGetQuizPayloadType) => createDuplicateQuiz(payload),
+        mutationKey: ["createDuplicateQuestion"],
+        mutationFn: (payload: QF_ASingleQuesPayloadType) => createDuplicateQuestion(payload),
         onSuccess(data) {
             if (data.success) {
                 if (callbacks?.onSuccessCB) {
@@ -194,7 +194,7 @@ export const useCreateDuplicateQuiz = (callbacks?: TQ_CBtype) => {
                 console.log(error);
             } else {
                 await queryClient.invalidateQueries({
-                    queryKey: ["readAllAdminQuizes", callbacks?.token]
+                    queryKey: ["readAllAdminQuestions", callbacks?.token]
                 });
                 await queryClient.invalidateQueries({
                     queryKey: ["getAdminStats", callbacks?.token]
@@ -204,12 +204,12 @@ export const useCreateDuplicateQuiz = (callbacks?: TQ_CBtype) => {
     });
 };
 
-export const useDeleteSingleQuiz = (callbacks?: TQ_CBtype) => {
+export const useDeleteSingleQuestion = (callbacks?: TQ_CBtype) => {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationKey: ["deleteSingleQuiz"],
-        mutationFn: (payload: QF_AGetQuizPayloadType) => deleteSingleQuiz(payload),
+        mutationKey: ["deleteSingleQuestion"],
+        mutationFn: (payload: QF_ASingleQuesPayloadType) => deleteSingleQuestion(payload),
         onSuccess(data) {
             if (data.success) {
                 if (callbacks?.onSuccessCB) {
@@ -234,7 +234,7 @@ export const useDeleteSingleQuiz = (callbacks?: TQ_CBtype) => {
                 console.log(error);
             } else {
                 await queryClient.invalidateQueries({
-                    queryKey: ["readAllAdminQuizes", callbacks?.token]
+                    queryKey: ["readAllAdminQuestions", callbacks?.token]
                 });
                 await queryClient.invalidateQueries({
                     queryKey: ["getAdminStats", callbacks?.token]

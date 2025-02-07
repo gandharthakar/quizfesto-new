@@ -2,117 +2,66 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, SubmitHandler } from "react-hook-form";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useParams } from "next/navigation";
-import Swal from "sweetalert2";
 import AdminBreadcrumbs from "@/app/components/admin/adminBreadcrumbs";
 import { AdminQuestionsFormVS, AdminQuestionsValidationSchema } from "@/app/libs/zod/schemas/adminValidationSchemas";
 import TokenChecker from "@/app/libs/tokenChecker";
 import { getCookie } from "cookies-next/client";
 import { adminAuthUserCookieName } from "@/app/constant/datafaker";
+import { useUpdateSingleQuestion } from "@/app/libs/tanstack-query/admin/mutations/adminQuestionsMutations";
+import { callbackErrT1S2_ST1, callbackOnErrT1S2_ST1, callbackOnSucT1S2_ST1, QF_TQ_UEF_CatchErrorCB } from "@/app/libs/helpers/helperFunctions";
+import { useReadSingleQuestion } from "@/app/libs/tanstack-query/admin/queries/adminQueries";
 
 function Page() {
 
+    const token = getCookie(adminAuthUserCookieName);
     const params = useParams<{ question_id: string[] }>();
     const question_id = params.question_id[0];
 
-    const [isLoading, setIsLoading] = useState<boolean>(true);
+    // const [isLoading, setIsLoading] = useState<boolean>(true);
 
     const { register, handleSubmit, setValue, formState: { errors } } = useForm<AdminQuestionsFormVS>({
         resolver: zodResolver(AdminQuestionsValidationSchema),
     });
 
+    const updSinQues = useUpdateSingleQuestion({
+        token,
+        question_id,
+        onSuccessCB: (resp) => callbackOnSucT1S2_ST1(resp),
+        errorCB: (resp) => callbackErrT1S2_ST1(resp),
+        onErrorCB: (resp) => callbackOnErrT1S2_ST1(resp),
+    })
+
     const handleFormSubmit: SubmitHandler<AdminQuestionsFormVS> = async (formdata) => {
-        setIsLoading(true);
-        const token = getCookie(adminAuthUserCookieName);
+        const tokenSub = getCookie(adminAuthUserCookieName);
         const prepData = {
-            token,
+            token: tokenSub ?? "",
             question_id,
             quiz_id: formdata.quiz_id,
             question_title: formdata.question_text,
             question_marks: formdata.question_marks
         }
-        const baseURI = window.location.origin;
-        try {
-            const resp = await fetch(`${baseURI}/api/admin/questions/crud/update`, {
-                method: "POST",
-                body: JSON.stringify(prepData)
-            });
-            if (!resp.ok) {
-                setIsLoading(false);
-            }
-            const body = await resp.json();
-            if (body.success) {
-                Swal.fire({
-                    title: "Success!",
-                    text: body.message,
-                    icon: "success",
-                    timer: 3000
-                });
-                setIsLoading(false);
-            } else {
-                Swal.fire({
-                    title: "Error!",
-                    text: body.message,
-                    icon: "error",
-                    timer: 3000
-                });
-                setIsLoading(false);
-            }
-            //eslint-disable-next-line
-        } catch (error: any) {
-            Swal.fire({
-                title: "Error!",
-                text: error.message,
-                icon: "error",
-                timer: 4000
-            });
-        }
+        updSinQues.mutate(prepData);
     }
 
-    const getQuestion = async () => {
-        const baseURI = window.location.origin;
-        const token = getCookie(adminAuthUserCookieName);
-        try {
-            const resp = await fetch(`${baseURI}/api/admin/questions/crud/read?token=${token}&question_id=${question_id}`, {
-                method: "GET",
-            });
-            if (!resp.ok) {
-                setIsLoading(false);
-            }
-            const body = await resp.json();
-            if (body.success) {
-                setValue("quiz_id", body.question.quiz_id);
-                setValue("question_text", body.question.question_title);
-                setValue("question_marks", body.question.question_marks);
-                setIsLoading(false);
-            } else {
-                Swal.fire({
-                    title: "Error!",
-                    text: body.message,
-                    icon: "error",
-                    timer: 3000
-                });
-                setIsLoading(false);
-            }
-            //eslint-disable-next-line
-        } catch (error: any) {
-            Swal.fire({
-                title: "Error!",
-                text: error.message,
-                icon: "error",
-                timer: 4000
-            });
-        }
-    }
+    const { data, isError, error, isSuccess, isLoading } = useReadSingleQuestion({
+        token: token ?? "",
+        question_id
+    });
 
     useEffect(() => {
-        // setValue("quiz_id", "12345");
-        // setValue("question_text", "This is question text ?");
-        // setValue("question_marks", 2);
-        getQuestion();
+        if (isSuccess) {
+            if (data.question) {
+                setValue("quiz_id", data.question.quiz_id);
+                setValue("question_text", data.question.question_title);
+                setValue("question_marks", data.question.question_marks);
+            }
+        }
+
+        QF_TQ_UEF_CatchErrorCB(isError, error);
         //eslint-disable-next-line
-    }, []);
+    }, [data, isSuccess, isError, error]);
 
     const breadcrumbsMenu = [
         {
@@ -156,6 +105,7 @@ function Page() {
                                         id="cq-qzid"
                                         className="ws-input-pwd-m1-v1"
                                         autoComplete="off"
+                                        placeholder="eg. 9c642378-921e-4745-b5e7-328634d01cb1"
                                         {...register("quiz_id")}
                                     />
                                     {errors.quiz_id && (<div className="ws-input-error mt-[2px]">{errors.quiz_id.message}</div>)}
@@ -172,6 +122,7 @@ function Page() {
                                         id="cq-qzqtxt"
                                         className="ws-input-pwd-m1-v1"
                                         autoComplete="off"
+                                        placeholder="eg. What is GST ?"
                                         {...register("question_text")}
                                     />
                                     {errors.question_text && (<div className="ws-input-error mt-[2px]">{errors.question_text.message}</div>)}
@@ -188,13 +139,14 @@ function Page() {
                                         id="cq-qzmrks"
                                         className="ws-input-pwd-m1-v1"
                                         autoComplete="off"
+                                        placeholder="eg. 100"
                                         {...register("question_marks", { valueAsNumber: true })}
                                     />
                                     {errors.question_marks && (<div className="ws-input-error mt-[2px]">{errors.question_marks.message}</div>)}
                                 </div>
                                 <div className="text-right">
                                     {
-                                        isLoading ?
+                                        (isLoading || updSinQues.isPending) ?
                                             (<div className="spinner size-1"></div>)
                                             :
                                             (

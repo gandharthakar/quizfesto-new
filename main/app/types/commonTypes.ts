@@ -28,5 +28,9 @@ export type TQ_CBtype = {
     onSuccessCB?: (resp?: (CommonAPIResponse | CommonAPIResponseWithZodError | undefined), cb?: () => void) => void,
     errorCB?: (resp?: (CommonAPIResponse | CommonAPIResponseWithZodError | undefined), cb?: () => void) => void,
     onErrorCB?: (resp?: (CommonAPIResponse | CommonAPIResponseWithZodError | undefined), cb?: () => void) => void,
-    token?: string
+    token?: string,
+    quiz_id?: string,
+    question_id?: string,
+    option_id?: string,
+    category_id?: string
 }

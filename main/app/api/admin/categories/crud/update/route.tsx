@@ -3,14 +3,10 @@ import { NextResponse } from "next/server";
 import { Prisma } from '@prisma/client';
 import jwt from "jsonwebtoken";
 import { sanitize } from "@/app/libs/sanitize";
-
-interface Respo {
-    success: boolean,
-    message: string
-}
+import { CommonAPIResponse } from "@/app/types/commonTypes";
 
 export async function POST(req: Request) {
-    let resp: Respo = {
+    let resp: CommonAPIResponse = {
         success: false,
         message: ''
     }

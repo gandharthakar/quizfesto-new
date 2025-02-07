@@ -275,6 +275,7 @@ function Page() {
                                 options={homeCatOpts}
                                 isMultiple={true}
                                 isSearchable={true}
+                                placeholder="Select ..."
                                 classNames={{
                                     menuButton: () => `flex cursor-pointer text-sm text-gray-500 border border-gray-300 shadow-sm transition-all duration-75 focus:outline-0 bg-zinc-100 hover:border-gray-400 dark:bg-zinc-900 dark:border-zinc-500`,
                                     menu: `font_noto_sans absolute z-10 w-full bg-white shadow-lg border rounded py-1 mt-1.5 text-sm text-gray-700 dark:bg-zinc-900 dark:border-zinc-500`,

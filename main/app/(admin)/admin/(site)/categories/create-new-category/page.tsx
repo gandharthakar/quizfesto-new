@@ -1,19 +1,20 @@
 'use client';
 
 import { useState } from "react";
-import Swal from "sweetalert2";
 import AdminBreadcrumbs from "@/app/components/admin/adminBreadcrumbs";
-import { convertToSlug } from "@/app/libs/helpers/helperFunctions";
+import { callbackErrT1S1_ST1, callbackOnErrT1S1_ST1, callbackOnSucT1S1_ST1, convertToSlug } from "@/app/libs/helpers/helperFunctions";
 import TokenChecker from "@/app/libs/tokenChecker";
 import { getCookie } from "cookies-next/client";
 import { adminAuthUserCookieName } from "@/app/constant/datafaker";
+import { useCreateNewCategory } from "@/app/libs/tanstack-query/admin/mutations/adminCategoriesMutations";
 
 function Page() {
 
+    const token = getCookie(adminAuthUserCookieName);
     const [catTitle, setCatTitle] = useState<string>("");
     const [catSlug, setCatSlug] = useState<string>("");
     const [catError, setCatError] = useState<string>("");
-    const [isLoading, setIsLoading] = useState<boolean>(false);
+    // const [isLoading, setIsLoading] = useState<boolean>(false);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value;
@@ -31,6 +32,18 @@ function Page() {
         setCatSlug(convertToSlug(value));
     }
 
+    const sucFun = () => {
+        setCatTitle("");
+        setCatSlug("");
+    }
+
+    const creSinCat = useCreateNewCategory({
+        token,
+        errorCB: (resp) => callbackErrT1S1_ST1(resp),
+        onErrorCB: (resp) => callbackOnErrT1S1_ST1(resp),
+        onSuccessCB: (resp) => callbackOnSucT1S1_ST1(resp, sucFun)
+    });
+
     const handleFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         if (catTitle == "") {
@@ -42,51 +55,13 @@ function Page() {
             }
         } else {
             setCatError("");
-            setIsLoading(true);
-            const token = getCookie(adminAuthUserCookieName);
+            const tokenSub = getCookie(adminAuthUserCookieName);
             const prepData = {
-                token,
+                token: tokenSub ?? "",
                 category_title: catTitle,
                 category_slug: catSlug
             }
-            const baseURI = window.location.origin;
-            try {
-                const resp = await fetch(`${baseURI}/api/admin/categories/crud/create`, {
-                    method: "POST",
-                    body: JSON.stringify(prepData)
-                });
-                if (!resp.ok) {
-                    setIsLoading(false);
-                }
-                const body = await resp.json();
-                if (body.success) {
-                    Swal.fire({
-                        title: "Success!",
-                        text: body.message,
-                        icon: "success",
-                        timer: 3000
-                    });
-                    setCatTitle("");
-                    setCatSlug("");
-                    setIsLoading(false);
-                } else {
-                    Swal.fire({
-                        title: "Error!",
-                        text: body.message,
-                        icon: "error",
-                        timer: 3000
-                    });
-                    setIsLoading(false);
-                }
-                //eslint-disable-next-line
-            } catch (error: any) {
-                Swal.fire({
-                    title: "Error!",
-                    text: error.message,
-                    icon: "error",
-                    timer: 4000
-                });
-            }
+            creSinCat.mutate(prepData);
         }
     }
 
@@ -132,6 +107,7 @@ function Page() {
                                         id="cq-catttl"
                                         className="ws-input-pwd-m1-v1"
                                         autoComplete="off"
+                                        placeholder="eg. GST"
                                         value={catTitle}
                                         onChange={handleInputChange}
                                     />
@@ -151,6 +127,7 @@ function Page() {
                                         id="cq-catslug"
                                         className="ws-input-pwd-m1-v1"
                                         autoComplete="off"
+                                        placeholder="eg. gst"
                                         readOnly={true}
                                         value={catSlug}
                                     />
@@ -158,7 +135,7 @@ function Page() {
 
                                 <div className="text-right">
                                     {
-                                        isLoading ?
+                                        creSinCat.isPending ?
                                             (<div className="spinner size-1"></div>)
                                             :
                                             (

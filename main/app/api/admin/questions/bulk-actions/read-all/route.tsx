@@ -3,21 +3,11 @@ import { NextResponse } from "next/server";
 import { type NextRequest } from 'next/server';
 import jwt from "jsonwebtoken";
 import { sanitize } from "@/app/libs/sanitize";
-
-interface QF_Ques {
-    question_id: string,
-    question_title: string,
-    question_marks: number,
-}
-
-interface Respo {
-    success: boolean,
-    message: string,
-    questions?: QF_Ques[]
-}
+import { CommonAPIResponse } from "@/app/types/commonTypes";
+import { AdminQuestionDataType } from "@/app/types/components/admin/componentsTypes";
 
 export async function GET(req: NextRequest) {
-    let resp: Respo = {
+    let resp: (CommonAPIResponse & { questions?: AdminQuestionDataType[] }) = {
         success: false,
         message: '',
     }

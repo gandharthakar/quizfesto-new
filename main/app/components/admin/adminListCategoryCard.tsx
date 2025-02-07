@@ -6,10 +6,11 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { RiDeleteBin6Line } from "react-icons/ri";
 import { MdOutlineModeEdit } from "react-icons/md";
-import Swal from "sweetalert2";
 import { AdminCategoriesListCardType } from "@/app/types/components/admin/componentsTypes";
 import { getCookie } from "cookies-next/client";
 import { adminAuthUserCookieName } from "@/app/constant/datafaker";
+import { useDeleteSingleCategory } from "@/app/libs/tanstack-query/admin/mutations/adminCategoriesMutations";
+import { callbackErrT1S1_ST1, callbackOnErrT1S1_ST1, callbackOnSucT1S1_ST1 } from "@/app/libs/helpers/helperFunctions";
 
 function AdminListCategoryCard(props: AdminCategoriesListCardType) {
 
@@ -22,60 +23,28 @@ function AdminListCategoryCard(props: AdminCategoriesListCardType) {
         onCheckboxChange,
     } = props;
 
+    const token = getCookie(adminAuthUserCookieName);
     const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
     const menuRef = useRef<HTMLDivElement>(null);
-    const [isLoading, setIsLoading] = useState<boolean>(false);
+    // const [isLoading, setIsLoading] = useState<boolean>(false);
 
     const handleClick = () => {
         setIsMenuOpen(false);
     }
 
+    const delSinCat = useDeleteSingleCategory({
+        token,
+        errorCB: (resp) => callbackErrT1S1_ST1(resp),
+        onErrorCB: (resp) => callbackOnErrT1S1_ST1(resp),
+        onSuccessCB: (resp) => callbackOnSucT1S1_ST1(resp)
+    });
+
     const handleDeleteCategory = async () => {
         const conf = confirm("Are you sure want to delete this category ?");
         if (conf) {
-            setIsLoading(true);
             setIsMenuOpen(false);
-            const baseURI = window.location.origin;
-            const token = getCookie(adminAuthUserCookieName);
-            try {
-                const resp = await fetch(`${baseURI}/api/admin/categories/crud/delete`, {
-                    method: "DELETE",
-                    body: JSON.stringify({ token, category_id: category_id })
-                });
-                if (!resp.ok) {
-                    setIsLoading(false);
-                }
-                const body = await resp.json();
-                if (body.success) {
-                    Swal.fire({
-                        title: "Success!",
-                        text: body.message,
-                        icon: "success",
-                        timer: 2000
-                    });
-                    const set = setTimeout(() => {
-                        window.location.reload();
-                        setIsLoading(false);
-                        clearTimeout(set);
-                    }, 2000);
-                } else {
-                    Swal.fire({
-                        title: "Error!",
-                        text: body.message,
-                        icon: "error",
-                        timer: 2000
-                    });
-                    setIsLoading(false);
-                }
-                //eslint-disable-next-line
-            } catch (error: any) {
-                Swal.fire({
-                    title: "Error!",
-                    text: error.message,
-                    icon: "error",
-                    timer: 4000
-                });
-            }
+            const tokenDel = getCookie(adminAuthUserCookieName);
+            delSinCat.mutate({ token: tokenDel ?? "", category_id: category_id });
         }
     }
 
@@ -96,7 +65,7 @@ function AdminListCategoryCard(props: AdminCategoriesListCardType) {
         <>
             <div className="transition-all delay-75 relative border-[2px] border-solid p-[15px] border-zinc-300 bg-white hover:border-zinc-600 dark:bg-zinc-800 dark:border-zinc-600 dark:hover:border-zinc-400">
                 {
-                    isLoading &&
+                    delSinCat.isPending &&
                     (
                         <>
                             <div className={`transition-all delay-75 absolute left-0 top-0 z-[10] bg-[rgba(255,255,255,0.90)] w-full h-full dark:bg-[rgba(9,9,11,0.95)] justify-center items-center flex`}>

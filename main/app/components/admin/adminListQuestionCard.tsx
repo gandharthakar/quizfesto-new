@@ -12,6 +12,8 @@ import { IoDuplicateOutline } from "react-icons/io5";
 import { AdminQuestionsListCardType } from "@/app/types/components/admin/componentsTypes";
 import { getCookie } from "cookies-next/client";
 import { adminAuthUserCookieName } from "@/app/constant/datafaker";
+import { useCreateDuplicateQuestion, useDeleteSingleQuestion } from "@/app/libs/tanstack-query/admin/mutations/adminQuestionsMutations";
+import { callbackErrT1S1_ST1, callbackOnErrT1S1_ST1, callbackOnSucT1S1_ST1 } from "@/app/libs/helpers/helperFunctions";
 
 function AdminListQuestionCard(props: AdminQuestionsListCardType) {
 
@@ -25,107 +27,42 @@ function AdminListQuestionCard(props: AdminQuestionsListCardType) {
         onCheckboxChange,
     } = props;
 
+    const token = getCookie(adminAuthUserCookieName);
     const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
     const menuRef = useRef<HTMLDivElement>(null);
-    const [isLoading, setIsLoading] = useState<boolean>(false);
+    // const [isLoading, setIsLoading] = useState<boolean>(false);
 
     const handleClick = () => {
         setIsMenuOpen(false);
     }
 
+    const delSinQues = useDeleteSingleQuestion({
+        token,
+        errorCB: (resp) => callbackErrT1S1_ST1(resp),
+        onErrorCB: (resp) => callbackOnErrT1S1_ST1(resp),
+        onSuccessCB: (resp) => callbackOnSucT1S1_ST1(resp)
+    });
+
     const handleDeleteQuestion = async () => {
         const conf = confirm("Are you sure want to delete this question ?");
         if (conf) {
-            setIsLoading(true);
             setIsMenuOpen(false);
-            const baseURI = window.location.origin;
-            const token = getCookie(adminAuthUserCookieName);
-            try {
-                const resp = await fetch(`${baseURI}/api/admin/questions/crud/delete`, {
-                    method: "DELETE",
-                    body: JSON.stringify({ token, question_id })
-                });
-                if (!resp.ok) {
-                    setIsLoading(false);
-                }
-                const body = await resp.json();
-                if (body.success) {
-                    Swal.fire({
-                        title: "Success!",
-                        text: body.message,
-                        icon: "success",
-                        timer: 2000
-                    });
-                    const set = setTimeout(() => {
-                        window.location.reload();
-                        setIsLoading(false);
-                        clearTimeout(set);
-                    }, 2000);
-                } else {
-                    Swal.fire({
-                        title: "Error!",
-                        text: body.message,
-                        icon: "error",
-                        timer: 2000
-                    });
-                    setIsLoading(false);
-                }
-                //eslint-disable-next-line
-            } catch (error: any) {
-                Swal.fire({
-                    title: "Error!",
-                    text: error.message,
-                    icon: "error",
-                    timer: 4000
-                });
-            }
+            const tokenDel = getCookie(adminAuthUserCookieName);
+            delSinQues.mutate({ token: tokenDel ?? "", question_id });
         }
     }
 
+    const dupSinQues = useCreateDuplicateQuestion({
+        token,
+        errorCB: (resp) => callbackErrT1S1_ST1(resp),
+        onErrorCB: (resp) => callbackOnErrT1S1_ST1(resp),
+        onSuccessCB: (resp) => callbackOnSucT1S1_ST1(resp)
+    });
+
     const handleDuplicateQues = async () => {
         setIsMenuOpen(false);
-        setIsLoading(true);
-        const baseURI = window.location.origin;
-        const token = getCookie(adminAuthUserCookieName);
-        try {
-            const resp = await fetch(`${baseURI}/api/admin/questions/crud/create-duplicate`, {
-                method: "POST",
-                body: JSON.stringify({ token, question_id })
-            });
-            if (!resp.ok) {
-                setIsLoading(false);
-            }
-            const body = await resp.json();
-            if (body.success) {
-                Swal.fire({
-                    title: "Success!",
-                    text: body.message,
-                    icon: "success",
-                    timer: 2000
-                });
-                const set = setTimeout(() => {
-                    window.location.reload();
-                    setIsLoading(false);
-                    clearTimeout(set);
-                }, 2000);
-            } else {
-                Swal.fire({
-                    title: "Error!",
-                    text: body.message,
-                    icon: "error",
-                    timer: 2000
-                });
-                setIsLoading(false);
-            }
-            //eslint-disable-next-line
-        } catch (error: any) {
-            Swal.fire({
-                title: "Error!",
-                text: error.message,
-                icon: "error",
-                timer: 4000
-            });
-        }
+        const tokenDup = getCookie(adminAuthUserCookieName);
+        dupSinQues.mutate({ token: tokenDup ?? "", question_id });
     }
 
     const handleCopyQuizId = () => {
@@ -158,7 +95,7 @@ function AdminListQuestionCard(props: AdminQuestionsListCardType) {
             <input type="hidden" value={checkboxValue} />
             <div className="transition-all delay-75 relative border-[2px] border-solid p-[15px] border-zinc-300 bg-white hover:border-zinc-600 dark:bg-zinc-800 dark:border-zinc-600 dark:hover:border-zinc-400">
                 {
-                    isLoading &&
+                    (dupSinQues.isPending || delSinQues.isPending) &&
                     (
                         <>
                             <div className={`transition-all delay-75 absolute left-0 top-0 z-[10] bg-[rgba(255,255,255,0.90)] w-full h-full dark:bg-[rgba(9,9,11,0.95)] justify-center items-center flex`}>

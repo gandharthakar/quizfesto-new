@@ -2,67 +2,38 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, SubmitHandler } from "react-hook-form";
-import Swal from "sweetalert2";
-import { useState } from "react";
 import AdminBreadcrumbs from "@/app/components/admin/adminBreadcrumbs";
 import { AdminOptionsFormVS, AdminOptionsValidationSchema } from "@/app/libs/zod/schemas/adminValidationSchemas";
 import TokenChecker from "@/app/libs/tokenChecker";
 import { getCookie } from "cookies-next/client";
 import { adminAuthUserCookieName } from "@/app/constant/datafaker";
+import { useCreateNewOptions } from "@/app/libs/tanstack-query/admin/mutations/adminOptionsMutations";
+import { callbackErrT1S2_ST1, callbackOnErrT1S2_ST1, callbackOnSucT1S2_ST1 } from "@/app/libs/helpers/helperFunctions";
 
 function Page() {
 
-    const [isLoading, setIsLoading] = useState<boolean>(false);
+    const token = getCookie(adminAuthUserCookieName);
+    // const [isLoading, setIsLoading] = useState<boolean>(false);
 
     const { register, handleSubmit, reset, formState: { errors } } = useForm<AdminOptionsFormVS>({
         resolver: zodResolver(AdminOptionsValidationSchema),
     });
 
+    const creNewOpts = useCreateNewOptions({
+        token,
+        onSuccessCB: (resp) => callbackOnSucT1S2_ST1(resp, reset),
+        errorCB: (resp) => callbackErrT1S2_ST1(resp),
+        onErrorCB: (resp) => callbackOnErrT1S2_ST1(resp),
+    });
+
     const handleFormSubmit: SubmitHandler<AdminOptionsFormVS> = async (formdata) => {
-        setIsLoading(true);
-        const baseURI = window.location.origin;
-        const token = getCookie(adminAuthUserCookieName);
-        try {
-            const resp = await fetch(`${baseURI}/api/admin/options/crud/create`, {
-                method: "POST",
-                body: JSON.stringify({
-                    token,
-                    options: formdata.options.split(", "),
-                    correct_option: formdata.correct_option,
-                    question_id: formdata.question_id
-                })
-            });
-            if (!resp.ok) {
-                setIsLoading(false);
-            }
-            const body = await resp.json();
-            if (body.success) {
-                Swal.fire({
-                    title: "Success!",
-                    text: body.message,
-                    icon: "success",
-                    timer: 3000
-                });
-                reset();
-                setIsLoading(false);
-            } else {
-                Swal.fire({
-                    title: "Error!",
-                    text: body.message,
-                    icon: "error",
-                    timer: 3000
-                });
-                setIsLoading(false);
-            }
-            //eslint-disable-next-line
-        } catch (error: any) {
-            Swal.fire({
-                title: "Error!",
-                text: error.message,
-                icon: "error",
-                timer: 4000
-            });
-        }
+        const tokenSub = getCookie(adminAuthUserCookieName);
+        creNewOpts.mutate({
+            token: tokenSub ?? "",
+            options: formdata.options.split(", "),
+            correct_option: formdata.correct_option,
+            question_id: formdata.question_id
+        });
     }
 
     const breadcrumbsMenu = [
@@ -107,6 +78,7 @@ function Page() {
                                         id="cq-quid"
                                         className="ws-input-pwd-m1-v1"
                                         autoComplete="off"
+                                        placeholder="eg. 9c642378-921e-4745-b5e7-328634d01cb1"
                                         {...register("question_id")}
                                     />
                                     {errors.question_id && (<div className="ws-input-error mt-[2px]">{errors.question_id.message}</div>)}
@@ -123,6 +95,7 @@ function Page() {
                                         id="cq-qzqtxt"
                                         className="ws-input-pwd-m1-v1"
                                         autoComplete="off"
+                                        placeholder="eg. Opt1, Opt2, Opt3, Opt4"
                                         {...register("options")}
                                     />
                                     {errors.options && (<div className="ws-input-error mt-[2px]">{errors.options.message}</div>)}
@@ -139,13 +112,14 @@ function Page() {
                                         id="cq-qzqtxt"
                                         className="ws-input-pwd-m1-v1"
                                         autoComplete="off"
+                                        placeholder="eg. Opt3"
                                         {...register("correct_option")}
                                     />
                                     {errors.correct_option && (<div className="ws-input-error mt-[2px]">{errors.correct_option.message}</div>)}
                                 </div>
                                 <div className="text-right">
                                     {
-                                        isLoading ?
+                                        creNewOpts.isPending ?
                                             (<div className="spinner size-1"></div>)
                                             :
                                             (

@@ -3,18 +3,8 @@ import { NextResponse } from "next/server";
 import { type NextRequest } from 'next/server';
 import jwt from "jsonwebtoken";
 import { sanitize } from "@/app/libs/sanitize";
-
-interface QF_Opt {
-    option_id: string,
-    options: string[],
-    question_text: string | Promise<string>
-}
-
-interface Respo {
-    success: boolean,
-    message: string,
-    options_list?: QF_Opt[]
-}
+import { QF_ARAOptsDataType } from "@/app/types/libs/tanstack-query/admin/adminOptionsTypes";
+import { CommonAPIResponse } from "@/app/types/commonTypes";
 
 const getQT = async (qid: string) => {
     const ques = await prisma.qF_Question.findFirst({
@@ -33,12 +23,13 @@ const getOpts = async () => {
         }
     });
 
-    const opts: QF_Opt[] = [];
+    const opts: QF_ARAOptsDataType[] = [];
     for (let i = 0; i < data.length; i++) {
         const obj = {
             option_id: data[i].option_id,
             options: data[i].options,
-            question_text: await getQT(data[i].questionid) ?? ""
+            question_text: await getQT(data[i].questionid) ?? "",
+            search_tems: data[i].options
         }
         opts.push(obj);
     }
@@ -46,7 +37,7 @@ const getOpts = async () => {
 }
 
 export async function GET(req: NextRequest) {
-    let resp: Respo = {
+    let resp: (CommonAPIResponse & { options_list?: QF_ARAOptsDataType[] }) = {
         success: false,
         message: '',
     }

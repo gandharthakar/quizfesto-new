@@ -13,14 +13,17 @@ import SitePagination from "@/app/components/sitePagination";
 import AdminListCategoryCard from "@/app/components/admin/adminListCategoryCard";
 import { FaEllipsisVertical } from "react-icons/fa6";
 import { CategoriesType } from "@/app/types/components/website/componentsTypes";
-import { GFG } from "@/app/libs/helpers/helperFunctions";
+import { callbackErrT1S1_ST1, callbackOnErrT1S1_ST1, callbackOnSucT1S1_ST1, GFG, QF_TQ_UEF_CatchErrorCB } from "@/app/libs/helpers/helperFunctions";
 import { AdminCategoriesListCardType } from "@/app/types/components/admin/componentsTypes";
 import TokenChecker from "@/app/libs/tokenChecker";
 import { getCookie } from "cookies-next/client";
 import { adminAuthUserCookieName } from "@/app/constant/datafaker";
+import { useReadAllAdminCategories } from "@/app/libs/tanstack-query/admin/queries/adminQueries";
+import { useDeleteAllAdminCategories, useDeleteSelectedAdminCategories } from "@/app/libs/tanstack-query/admin/mutations/adminCategoriesMutations";
 
 function Page() {
 
+    const token = getCookie(adminAuthUserCookieName);
     const dataPerPage = 10;
     const [srchInp, setSrchInp] = useState<string>("");
 
@@ -32,7 +35,7 @@ function Page() {
 
     const [selectAll, setSelectAll] = useState(false);
     const [selectedItems, setSelectedItems] = useState<string[]>([]);
-    const [isLoading, setIsLoading] = useState<boolean>(true);
+    // const [isLoading, setIsLoading] = useState<boolean>(true);
 
     const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
     const menuRef = useRef<HTMLDivElement>(null);
@@ -135,101 +138,36 @@ function Page() {
     //     setIsMenuOpen(false);
     // }
 
+    const delAllCats = useDeleteAllAdminCategories({
+        token,
+        errorCB: (resp) => callbackErrT1S1_ST1(resp),
+        onErrorCB: (resp) => callbackOnErrT1S1_ST1(resp),
+        onSuccessCB: (resp) => callbackOnSucT1S1_ST1(resp)
+    });
+
     const handleDeleteAllBulkLogic = async () => {
         const conf = confirm("Are you sure want to delete all Categories ?");
         if (conf) {
-            setIsLoading(true);
             setIsMenuOpen(false);
-            const baseURI = window.location.origin;
-            const token = getCookie(adminAuthUserCookieName);
-            try {
-                const resp = await fetch(`${baseURI}/api/admin/categories/bulk-actions/delete-all?token=${token}`, {
-                    method: "DELETE",
-                });
-                if (!resp.ok) {
-                    setIsLoading(false);
-                }
-                const body = await resp.json();
-                if (body.success) {
-                    Swal.fire({
-                        title: "Success!",
-                        text: body.message,
-                        icon: "success",
-                        timer: 2000
-                    });
-                    const set = setTimeout(() => {
-                        window.location.reload();
-                        setIsLoading(false);
-                        clearTimeout(set);
-                    }, 2000);
-                } else {
-                    Swal.fire({
-                        title: "Error!",
-                        text: body.message,
-                        icon: "error",
-                        timer: 2000
-                    });
-                    setIsLoading(false);
-                }
-                //eslint-disable-next-line
-            } catch (error: any) {
-                Swal.fire({
-                    title: "Error!",
-                    text: error.message,
-                    icon: "error",
-                    timer: 4000
-                });
-            }
+            const tokenDel = getCookie(adminAuthUserCookieName);
+            delAllCats.mutate({ token: tokenDel ?? "" });
         }
     }
+
+    const delSelCats = useDeleteSelectedAdminCategories({
+        token,
+        errorCB: (resp) => callbackErrT1S1_ST1(resp),
+        onErrorCB: (resp) => callbackOnErrT1S1_ST1(resp),
+        onSuccessCB: (resp) => callbackOnSucT1S1_ST1(resp)
+    });
 
     const handleDeleteSelectedBulkLogic = async () => {
         if (selectedItems.length > 0) {
             const conf = confirm("Are you sure want to delete selected Categories ?");
             if (conf) {
-                setIsLoading(true);
                 setIsMenuOpen(false);
-                const baseURI = window.location.origin;
-                const token = getCookie(adminAuthUserCookieName);
-                try {
-                    const resp = await fetch(`${baseURI}/api/admin/categories/bulk-actions/delete-selected`, {
-                        method: "DELETE",
-                        body: JSON.stringify({ token, category_id_list: selectedItems })
-                    });
-                    if (!resp.ok) {
-                        setIsLoading(false);
-                    }
-                    const body = await resp.json();
-                    if (body.success) {
-                        Swal.fire({
-                            title: "Success!",
-                            text: body.message,
-                            icon: "success",
-                            timer: 2000
-                        });
-                        const set = setTimeout(() => {
-                            window.location.reload();
-                            setIsLoading(false);
-                            clearTimeout(set);
-                        }, 2000);
-                    } else {
-                        Swal.fire({
-                            title: "Error!",
-                            text: body.message,
-                            icon: "error",
-                            timer: 2000
-                        });
-                        setIsLoading(false);
-                    }
-                    //eslint-disable-next-line
-                } catch (error: any) {
-                    Swal.fire({
-                        title: "Error!",
-                        text: error.message,
-                        icon: "error",
-                        timer: 4000
-                    });
-                }
+                const tokenDel = getCookie(adminAuthUserCookieName);
+                delSelCats.mutate({ token: tokenDel ?? "", category_id_list: selectedItems });
             }
         } else {
             Swal.fire({
@@ -262,40 +200,24 @@ function Page() {
         }
     }, [selectedItems, quizListCats]);
 
-    const getCatData = async () => {
-        const baseURI = window.location.origin;
-        const token = getCookie(adminAuthUserCookieName);
-        try {
-            const resp = await fetch(`${baseURI}/api/admin/categories/bulk-actions/read-all?token=${token}`, {
-                method: "GET",
-            });
-            if (!resp.ok) {
-                setIsLoading(false);
-            }
-            const body = await resp.json();
-            if (body.success) {
-                setIsLoading(false);
-                setQuizListCats(GFG(body.cat_data, currentPage, dataPerPage));
-                setCatData(body.cat_data);
-                setTotalPages(Math.ceil(body.cat_data.length / dataPerPage));
-            } else {
-                setIsLoading(false);
-            }
-            //eslint-disable-next-line
-        } catch (error: any) {
-            Swal.fire({
-                title: "Error!",
-                text: error.message,
-                icon: "error",
-                timer: 4000
-            });
-        }
-    }
+    const { data, isError, error, isSuccess, isLoading } = useReadAllAdminCategories(token ?? "");
 
     useEffect(() => {
-        getCatData();
+        if (isSuccess) {
+            if (data.cat_data && data.cat_data.length) {
+                setQuizListCats(GFG(data.cat_data, currentPage, dataPerPage));
+                setCatData(data.cat_data);
+                setTotalPages(Math.ceil(data.cat_data.length / dataPerPage));
+            } else {
+                setCatData([]);
+                setQuizListCats(GFG([], 1, dataPerPage));
+                setTotalPages(Math.ceil(catData.length / dataPerPage));
+            }
+        }
+
+        QF_TQ_UEF_CatchErrorCB(isError, error);
         //eslint-disable-next-line
-    }, []);
+    }, [data, isSuccess, isError, error, setCatData]);
 
     return (
         <>
@@ -425,7 +347,7 @@ function Page() {
                             (
                                 <>
                                     {
-                                        isLoading ?
+                                        (isLoading || (delAllCats.isPending || delSelCats.isPending)) ?
                                             (<div className="spinner size-1"></div>)
                                             :
                                             (

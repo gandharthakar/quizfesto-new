@@ -2,113 +2,65 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, SubmitHandler } from "react-hook-form";
-import Swal from "sweetalert2";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useParams } from "next/navigation";
 import AdminBreadcrumbs from "@/app/components/admin/adminBreadcrumbs";
 import { AdminOptionsFormVS, AdminOptionsValidationSchema } from "@/app/libs/zod/schemas/adminValidationSchemas";
 import TokenChecker from "@/app/libs/tokenChecker";
 import { getCookie } from "cookies-next/client";
 import { adminAuthUserCookieName } from "@/app/constant/datafaker";
+import { useUpdateSingleOptions } from "@/app/libs/tanstack-query/admin/mutations/adminOptionsMutations";
+import { callbackErrT1S2_ST1, callbackOnErrT1S2_ST1, callbackOnSucT1S2_ST1, QF_TQ_UEF_CatchErrorCB } from "@/app/libs/helpers/helperFunctions";
+import { useReadSingleOptions } from "@/app/libs/tanstack-query/admin/queries/adminQueries";
 
 function Page() {
 
+    const token = getCookie(adminAuthUserCookieName);
     const params = useParams<{ option_id: string[] }>();
     const option_id = params.option_id[0];
 
-    const [isLoading, setIsLoading] = useState<boolean>(true);
+    // const [isLoading, setIsLoading] = useState<boolean>(true);
 
     const { register, handleSubmit, setValue, formState: { errors } } = useForm<AdminOptionsFormVS>({
         resolver: zodResolver(AdminOptionsValidationSchema),
     });
 
+    const updSinOpts = useUpdateSingleOptions({
+        token,
+        option_id,
+        onSuccessCB: (resp) => callbackOnSucT1S2_ST1(resp),
+        errorCB: (resp) => callbackErrT1S2_ST1(resp),
+        onErrorCB: (resp) => callbackOnErrT1S2_ST1(resp),
+    });
+
     const handleFormSubmit: SubmitHandler<AdminOptionsFormVS> = async (formdata) => {
-        setIsLoading(true);
-        const baseURI = window.location.origin;
-        const token = getCookie(adminAuthUserCookieName);
-        try {
-            const resp = await fetch(`${baseURI}/api/admin/options/crud/update`, {
-                method: "POST",
-                body: JSON.stringify({
-                    token,
-                    option_id,
-                    options: formdata.options.split(", "),
-                    correct_option: formdata.correct_option,
-                    question_id: formdata.question_id
-                })
-            });
-            if (!resp.ok) {
-                setIsLoading(false);
-            }
-            const body = await resp.json();
-            if (body.success) {
-                Swal.fire({
-                    title: "Success!",
-                    text: body.message,
-                    icon: "success",
-                    timer: 3000
-                });
-                setIsLoading(false);
-            } else {
-                Swal.fire({
-                    title: "Error!",
-                    text: body.message,
-                    icon: "error",
-                    timer: 3000
-                });
-                setIsLoading(false);
-            }
-            //eslint-disable-next-line
-        } catch (error: any) {
-            Swal.fire({
-                title: "Error!",
-                text: error.message,
-                icon: "error",
-                timer: 4000
-            });
-        }
+        const tokenSub = getCookie(adminAuthUserCookieName);
+        updSinOpts.mutate({
+            token: tokenSub ?? "",
+            option_id,
+            options: formdata.options.split(", "),
+            correct_option: formdata.correct_option,
+            question_id: formdata.question_id
+        });
     }
 
-    const getOption = async () => {
-        const baseURI = window.location.origin;
-        const token = getCookie(adminAuthUserCookieName);
-        try {
-            const resp = await fetch(`${baseURI}/api/admin/options/crud/read?token=${token}&option_id=${option_id}`, {
-                method: "GET",
-            });
-            if (!resp.ok) {
-                setIsLoading(false);
-            }
-            const body = await resp.json();
-            if (body.success) {
-                setValue("question_id", body.option.questionid);
-                setValue("options", body.option.options.join(", "));
-                setValue("correct_option", body.option.correct_option);
-                setIsLoading(false);
-            } else {
-                Swal.fire({
-                    title: "Error!",
-                    text: body.message,
-                    icon: "error",
-                    timer: 3000
-                });
-                setIsLoading(false);
-            }
-            //eslint-disable-next-line
-        } catch (error: any) {
-            Swal.fire({
-                title: "Error!",
-                text: error.message,
-                icon: "error",
-                timer: 4000
-            });
-        }
-    }
+    const { data, isError, error, isSuccess, isLoading } = useReadSingleOptions({
+        token: token ?? "",
+        option_id
+    });
 
     useEffect(() => {
-        getOption();
+        if (isSuccess) {
+            if (data.option) {
+                setValue("question_id", data.option.questionid);
+                setValue("options", data.option.options.join(", "));
+                setValue("correct_option", data.option.correct_option);
+            }
+        }
+
+        QF_TQ_UEF_CatchErrorCB(isError, error);
         //eslint-disable-next-line
-    }, []);
+    }, [data, isSuccess, isError, error]);
 
     const breadcrumbsMenu = [
         {
@@ -152,6 +104,7 @@ function Page() {
                                         id="cq-quid"
                                         className="ws-input-pwd-m1-v1"
                                         autoComplete="off"
+                                        placeholder="eg. 9c642378-921e-4745-b5e7-328634d01cb1"
                                         {...register("question_id")}
                                     />
                                     {errors.question_id && (<div className="ws-input-error mt-[2px]">{errors.question_id.message}</div>)}
@@ -168,6 +121,7 @@ function Page() {
                                         id="cq-qzqtxt"
                                         className="ws-input-pwd-m1-v1"
                                         autoComplete="off"
+                                        placeholder="eg. Opt1, Opt2, Opt3, Opt4"
                                         {...register("options")}
                                     />
                                     {errors.options && (<div className="ws-input-error mt-[2px]">{errors.options.message}</div>)}
@@ -184,13 +138,14 @@ function Page() {
                                         id="cq-qzqtxt"
                                         className="ws-input-pwd-m1-v1"
                                         autoComplete="off"
+                                        placeholder="eg. Opt3"
                                         {...register("correct_option")}
                                     />
                                     {errors.correct_option && (<div className="ws-input-error mt-[2px]">{errors.correct_option.message}</div>)}
                                 </div>
                                 <div className="text-right">
                                     {
-                                        isLoading ?
+                                        (isLoading || updSinOpts.isPending) ?
                                             (<div className="spinner size-1"></div>)
                                             :
                                             (

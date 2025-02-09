@@ -1,35 +1,48 @@
 import prisma from "@/app/libs/db";
 import { NextResponse } from "next/server";
+import { type NextRequest } from 'next/server';
 import jwt from "jsonwebtoken";
-import { CommonAPIResponse } from "@/app/types/commonTypes";
 import { sanitize } from "@/app/libs/sanitize";
+import { RTSPkgSelectType } from "@/app/types/components/admin/componentsTypes";
+import { CommonAPIResponse } from "@/app/types/commonTypes";
 
-export async function POST(req: Request) {
-    let resp: CommonAPIResponse = {
-        success: false,
-        message: ''
+const getCatsLabel = async (id_list: string[]) => {
+    const data = await prisma.qF_Quiz_Category.findMany({
+        where: {
+            category_id: {
+                in: id_list
+            }
+        }
+    });
+
+    const cts: RTSPkgSelectType[] = [];
+
+    for (let i = 0; i < data.length; i++) {
+        const obj = {
+            value: data[i].category_id,
+            label: data[i].category_title
+        }
+        cts.push(obj);
     }
+    return cts;
+}
 
+export async function GET(req: NextRequest) {
+    let resp: (CommonAPIResponse & { quiz_categories?: RTSPkgSelectType[] }) = {
+        success: false,
+        message: '',
+    }
     let sts: number = 200;
     let isTrueAdminUser: boolean = false;
 
     try {
 
-        const body = await req.json();
-
-        const token = sanitize(body.token);
-        const s1 = sanitize(JSON.stringify(body.home_cats));
-        const home_cats = JSON.parse(s1);
-        const home_cats_id = sanitize(body.home_cats_id);
-
-        // const { token, home_cats, home_cats_id } = body;
-
-        if (token && (home_cats || home_cats_id)) {
-
-            const res = jwt.verify(token as string, process.env.JWT_SECRET ?? "") as { is_admin_user: string };
-
+        const searchParams = req.nextUrl.searchParams;
+        const token = sanitize(searchParams.get('token'));
+        const quiz_id = sanitize(searchParams.get('quiz_id'));
+        const res = jwt.verify(token as string, process.env.JWT_SECRET ?? "") as { is_admin_user: string };
+        if (token && quiz_id) {
             if (res) {
-
                 const user_id = res.is_admin_user;
 
                 const fu__in__usrtblmdl = await prisma.qF_User.findFirst({
@@ -61,47 +74,39 @@ export async function POST(req: Request) {
                 }
 
                 if (isTrueAdminUser) {
-                    const existingCat = await prisma.qF_Homepage_Categories.findFirst();
-                    if (existingCat === null) {
-                        await prisma.qF_Homepage_Categories.create({
-                            data: {
-                                home_cats: home_cats
-                            }
-                        });
+                    const alreadQuizExited = await prisma.qF_Quiz.findFirst({
+                        where: {
+                            quiz_id
+                        }
+                    });
+
+                    if (alreadQuizExited) {
                         sts = 200;
                         resp = {
                             success: true,
-                            message: "Categories Added Successfully!"
+                            message: "Quiz Categories Found!",
+                            quiz_categories: await getCatsLabel(alreadQuizExited.quiz_categories)
                         }
                     } else {
-                        await prisma.qF_Homepage_Categories.update({
-                            where: {
-                                home_cat_id: home_cats_id,
-                            },
-                            data: {
-                                home_cats: home_cats
-                            }
-                        })
                         sts = 200;
                         resp = {
-                            success: true,
-                            message: "Categories Updated Successfully!"
+                            success: false,
+                            message: "Quiz Not Exist!",
                         }
                     }
                 } else {
-                    sts = 200;
                     resp = {
                         success: false,
-                        message: "User Not Found."
+                        message: 'User Not Found.',
                     }
+                    sts = 200;
                 }
-
             }
         } else {
             sts = 400;
             resp = {
                 success: false,
-                message: "Missing Required Fields!"
+                message: "Missing Required Fields!",
             }
         }
 
@@ -111,7 +116,7 @@ export async function POST(req: Request) {
         // sts = 500;
         // resp = {
         //     success: false,
-        //     message: error.message
+        //     message: error.message,
         // }
         if (error.message == "jwt expired") {
             resp = {

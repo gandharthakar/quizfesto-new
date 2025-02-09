@@ -45,6 +45,7 @@ function Page() {
     // const [isLoading, setIsLoading] = useState<boolean>(true);
     const [negMarks, setNegMarks] = useState<string>('');
     const [negMErr, setNegMErr] = useState<string>('');
+    const [updCatsLoad, setUpdCatsLoad] = useState<boolean>(true);
 
     const handleNegMarksInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { value } = e.target;
@@ -195,7 +196,7 @@ function Page() {
             quiz_id,
             quiz_title: formdata.quiz_main_title,
             quiz_summary: formdata.quiz_summ,
-            quiz_categories: quizCats && quizCats.length > 0 ? quizCats.map(item => item.value) : [],
+            //quiz_categories: quizCats && quizCats.length > 0 ? quizCats.map(item => item.value) : [],
             quiz_cover_photo: isValidImg ? fileInput : '',
             quiz_display_time: formdata.quiz_disp_time,
             quiz_estimated_time: formdata.quiz_est_time,
@@ -209,14 +210,55 @@ function Page() {
         updSiglQuiz.mutate(prepData);
     }
 
+    const updateCats = async () => {
+        setUpdCatsLoad(true);
+        const baseURI = window.location.origin;
+        const token = getCookie(adminAuthUserCookieName);
+        try {
+            const cats = quizCats && quizCats.length > 0 ? quizCats.map(item => item.value) : [];
+            const resp = await fetch(`${baseURI}/api/admin/quizes/crud/set-categories`, {
+                method: "POST",
+                body: JSON.stringify({ token, quiz_id, quiz_categories: cats })
+            });
+            if (!resp.ok) {
+                setUpdCatsLoad(false);
+            }
+            const body = await resp.json();
+            if (body.success) {
+                Swal.fire({
+                    title: "Success!",
+                    text: body.message,
+                    icon: "success",
+                    timer: 4000
+                });
+                setUpdCatsLoad(false);
+            } else {
+                Swal.fire({
+                    title: "Error!",
+                    text: body.message,
+                    icon: "error",
+                    timer: 4000
+                });
+                setUpdCatsLoad(false);
+            }
+            //eslint-disable-next-line
+        } catch (error: any) {
+            Swal.fire({
+                title: "Error!",
+                text: error.message,
+                icon: "error",
+                timer: 4000
+            });
+        }
+    }
+
     const getCats = useReadAllAdminCategories(token ?? "");
 
     useEffect(() => {
         if (getCats.isSuccess) {
             if (getCats.data.cat_data && getCats.data.cat_data.length) {
                 const cts = getCats.data.cat_data;
-                //eslint-disable-next-line
-                let opts: RTSPkgSelectType[] = [];
+                const opts: RTSPkgSelectType[] = [];
                 for (let i = 0; i < cts.length; i++) {
                     const obj = {
                         value: cts[i].category_id,
@@ -232,46 +274,6 @@ function Page() {
         //eslint-disable-next-line
     }, [getCats.data, getCats.isSuccess, getCats.isError, getCats.error, setOptions]);
 
-    // const getCats = async () => {
-    //     const baseURI = window.location.origin;
-    //     const token = getCookie(adminAuthUserCookieName);
-    //     try {
-    //         const resp = await fetch(`${baseURI}/api/admin/categories/bulk-actions/read-all?token=${token}`, {
-    //             method: "GET"
-    //         });
-    //         const body = await resp.json();
-    //         if (body.success) {
-    //             const cts = body.cat_data;
-    //             console.log(cts);
-    //             //eslint-disable-next-line
-    //             let opts: RTSPkgSelectType[] = [];
-    //             for (let i = 0; i < cts.length; i++) {
-    //                 const obj = {
-    //                     value: cts[i].category_id,
-    //                     label: cts[i].category_title
-    //                 }
-    //                 opts.push(obj);
-    //             }
-    //             setOptions(opts);
-    //         } else {
-    //             Swal.fire({
-    //                 title: "Error!",
-    //                 text: body.message,
-    //                 icon: "error",
-    //                 timer: 4000
-    //             });
-    //         }
-    //         //eslint-disable-next-line
-    //     } catch (error: any) {
-    //         Swal.fire({
-    //             title: "Error!",
-    //             text: error.message,
-    //             icon: "error",
-    //             timer: 4000
-    //         });
-    //     }
-    // }
-
     const { data, isError, error, isSuccess, isLoading } = useReadSingleQuiz({
         token: token ?? "",
         quiz_id
@@ -280,7 +282,6 @@ function Page() {
     useEffect(() => {
         if (isSuccess) {
             if (data.quiz) {
-                console.log(data.quiz);
                 setValue("quiz_main_title", data.quiz.quiz_title);
                 setValue("quiz_summ", data.quiz.quiz_summary);
                 setValue("quiz_disp_time", data.quiz.quiz_display_time);
@@ -294,9 +295,9 @@ function Page() {
                     setQuizAboutContent(data.quiz.quiz_about_text);
                 }
 
-                if (data.quiz.quiz_categories.length > 0) {
-                    setQuizCats(data.quiz.quiz_categories);
-                }
+                // if (data.quiz.quiz_categories.length > 0) {
+                //     setQuizCats(data.quiz.quiz_categories);
+                // }
 
                 if (data.quiz.quiz_terms.length > 0) {
                     const terms = data.quiz.quiz_terms.map((itm) => {
@@ -322,6 +323,45 @@ function Page() {
         QF_TQ_UEF_CatchErrorCB(isError, error);
         //eslint-disable-next-line
     }, [data, isSuccess, isError, error]);
+
+    const getCatsByID = async () => {
+        const baseURI = window.location.origin;
+        const token = getCookie(adminAuthUserCookieName);
+        try {
+            const resp = await fetch(`${baseURI}/api/admin/quizes/crud/get-categories?token=${token}&quiz_id=${quiz_id}`, {
+                method: "GET"
+            });
+            if (!resp.ok) {
+                setUpdCatsLoad(false);
+            }
+            const body = await resp.json();
+            if (body.success) {
+                setQuizCats(body.quiz_categories);
+                setUpdCatsLoad(false);
+            } else {
+                Swal.fire({
+                    title: "Error!",
+                    text: body.message,
+                    icon: "error",
+                    timer: 4000
+                });
+                setUpdCatsLoad(false);
+            }
+            //eslint-disable-next-line
+        } catch (error: any) {
+            Swal.fire({
+                title: "Error!",
+                text: error.message,
+                icon: "error",
+                timer: 4000
+            });
+        }
+    }
+
+    useEffect(() => {
+        getCatsByID();
+        //eslint-disable-next-line
+    }, []);
 
     const breadcrumbsMenu = [
         {
@@ -554,29 +594,44 @@ function Page() {
                         <div className="w-full xl-s2:min-w-[400px] xl-s2:max-w-[400px] xl-1:min-w-[450px] xl-1:max-w-[450px] md:w-auto">
                             <div className="transition-all sticky top-[0px] delay-75 border-[2px] border-solid p-[15px] md:p-[25px] border-zinc-300 bg-white dark:bg-zinc-800 dark:border-zinc-600">
                                 <div className="pb-[20px]">
-                                    <label
-                                        className="transition-all delay-75 block mb-[5px] font-noto_sans text-[16px] font-semibold text-zinc-900 dark:text-zinc-300"
-                                    >
-                                        Categories
-                                    </label>
-                                    <Select
-                                        primaryColor={"indigo"}
-                                        value={quizCats}
-                                        onChange={handleChangeSelect}
-                                        options={options ?? []}
-                                        isMultiple={true}
-                                        isSearchable={true}
-                                        placeholder="Select ..."
-                                        classNames={{
-                                            menuButton: () => `flex cursor-pointer text-sm text-gray-500 border border-gray-300 shadow-sm transition-all duration-75 focus:outline-0 bg-zinc-100 hover:border-gray-400 dark:bg-zinc-900 dark:border-zinc-500`,
-                                            menu: `font_noto_sans absolute z-10 w-full bg-white shadow-lg border rounded py-1 mt-1.5 text-sm text-gray-700 dark:bg-zinc-900 dark:border-zinc-500`,
-                                            tagItem: () => `bg-gray-200 border rounded-sm flex space-x-1 pl-1 dark:bg-zinc-800 dark:border-zinc-500 dark:text-zinc-200`,
-                                            tagItemText: `text-zinc-900 font_noto_sans truncate cursor-default select-none dark:text-zinc-200`,
-                                            listItem: () => `block font_noto_sans transition duration-200 px-3 py-3 cursor-pointer select-none truncate rounded text-zinc-500 hover:bg-zinc-100 dark:text-zinc-200 dark:hover:bg-zinc-800`,
-                                            searchContainer: `relative py-[10px] px-[15px]`,
-                                            searchBox: `w-full font_noto_sans py-2 pl-8 pr-2 text-sm text-zinc-800 bg-gray-100 border border-gray-200 focus:outline-0 dark:bg-zinc-800 dark:border-zinc-600 dark:text-zinc-200`,
-                                        }}
-                                    />
+                                    <div className="flex flex-col gap-y-[15px]">
+                                        <div className="w-full">
+                                            <label
+                                                className="transition-all delay-75 block mb-[5px] font-noto_sans text-[16px] font-semibold text-zinc-900 dark:text-zinc-300"
+                                            >
+                                                Categories
+                                            </label>
+                                            <Select
+                                                primaryColor={"indigo"}
+                                                value={quizCats}
+                                                onChange={handleChangeSelect}
+                                                options={options ?? []}
+                                                isMultiple={true}
+                                                isSearchable={true}
+                                                placeholder="Select ..."
+                                                classNames={{
+                                                    menuButton: () => `flex cursor-pointer text-sm text-gray-500 border border-gray-300 shadow-sm transition-all duration-75 focus:outline-0 bg-zinc-100 hover:border-gray-400 dark:bg-zinc-900 dark:border-zinc-500`,
+                                                    menu: `font_noto_sans absolute z-10 w-full bg-white shadow-lg border rounded py-1 mt-1.5 text-sm text-gray-700 dark:bg-zinc-900 dark:border-zinc-500`,
+                                                    tagItem: () => `bg-gray-200 border rounded-sm flex space-x-1 pl-1 dark:bg-zinc-800 dark:border-zinc-500 dark:text-zinc-200`,
+                                                    tagItemText: `text-zinc-900 font_noto_sans truncate cursor-default select-none dark:text-zinc-200`,
+                                                    listItem: () => `block font_noto_sans transition duration-200 px-3 py-3 cursor-pointer select-none truncate rounded text-zinc-500 hover:bg-zinc-100 dark:text-zinc-200 dark:hover:bg-zinc-800`,
+                                                    searchContainer: `relative py-[10px] px-[15px]`,
+                                                    searchBox: `w-full font_noto_sans py-2 pl-8 pr-2 text-sm text-zinc-800 bg-gray-100 border border-gray-200 focus:outline-0 dark:bg-zinc-800 dark:border-zinc-600 dark:text-zinc-200`,
+                                                }}
+                                            />
+                                        </div>
+                                        <div className="w-full text-right">
+                                            <button
+                                                type="button"
+                                                title={updCatsLoad ? ("Updating...") : ("update")}
+                                                className="inline-block cursor-pointer transition-all delay-75 font-noto_sans text-[14px] font-semibold py-[7px] px-[15px] text-white bg-theme-color-2 hover:bg-theme-color-2-hover-dark disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none"
+                                                onClick={updateCats}
+                                                disabled={updCatsLoad}
+                                            >
+                                                {updCatsLoad ? ("Updating...") : ("update")}
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
                                 <div className="pb-[20px]">
                                     <label

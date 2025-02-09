@@ -37,8 +37,8 @@ export async function POST(req: Request) {
         const s3 = sanitize(JSON.stringify(body.quiz_terms));
         const quiz_terms = JSON.parse(s3);
 
-        const s4 = sanitize(JSON.stringify(body.quiz_categories));
-        const quiz_categories = JSON.parse(s4);
+        // const s4 = sanitize(JSON.stringify(body.quiz_categories));
+        // const quiz_categories = JSON.parse(s4);
         const quiz_cover_photo = sanitize(body.quiz_cover_photo);
 
         const s5 = sanitize(JSON.stringify(body.negative_marking_score));
@@ -128,7 +128,7 @@ export async function POST(req: Request) {
                                     quiz_status,
                                     quiz_about_text,
                                     quiz_terms,
-                                    quiz_categories,
+                                    // quiz_categories,
                                     quiz_cover_photo,
                                     negative_marking_score
                                 }

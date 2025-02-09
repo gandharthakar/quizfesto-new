@@ -2,18 +2,10 @@ import prisma from "@/app/libs/db";
 import { NextResponse } from "next/server";
 import { type NextRequest } from 'next/server';
 import jwt from "jsonwebtoken";
-
-interface homeCats {
-    value: string,
-    label: string
-}
-
-interface Respo {
-    success: boolean,
-    message: string,
-    home_cats?: homeCats[],
-    home_cats_id?: string
-}
+import { RTSPkgSelectType } from "@/app/types/components/admin/componentsTypes";
+import { CommonAPIResponse } from "@/app/types/commonTypes";
+import { QF_AGetHomeCatsDataType } from "@/app/types/libs/tanstack-query/admin/adminCategoriesTypes";
+import { sanitize } from "@/app/libs/sanitize";
 
 const getCatsLabel = async (id_list: string[]) => {
     const data = await prisma.qF_Quiz_Category.findMany({
@@ -23,7 +15,7 @@ const getCatsLabel = async (id_list: string[]) => {
             }
         }
     });
-    const cts: homeCats[] = [];
+    const cts: RTSPkgSelectType[] = [];
     for (let i = 0; i < data.length; i++) {
         const obj = {
             value: data[i].category_id,
@@ -35,7 +27,7 @@ const getCatsLabel = async (id_list: string[]) => {
 }
 
 export async function GET(req: NextRequest) {
-    let resp: Respo = {
+    let resp: (CommonAPIResponse & QF_AGetHomeCatsDataType) = {
         success: false,
         message: ''
     }
@@ -46,7 +38,7 @@ export async function GET(req: NextRequest) {
     try {
 
         const searchParams = req.nextUrl.searchParams;
-        const token = searchParams.get('token');
+        const token = sanitize(searchParams.get('token'));
 
         if (token) {
 

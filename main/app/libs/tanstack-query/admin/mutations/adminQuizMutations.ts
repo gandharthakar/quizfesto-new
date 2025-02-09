@@ -2,7 +2,7 @@ import { TQ_CBtype } from "@/app/types/commonTypes";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { AxiosResponse } from "axios";
 import { createDuplicateQuiz, createNewQuiz, deleteAllAdminQuizesBA, deleteSelectedAdminQuizesBA, deleteSingleQuiz, updateSingleQuiz } from "@/app/libs/tanstack-query/admin/api-functions/adminQuizAPIFunctions";
-import { QF_ACreateQuizPayloadType, QF_ADSQuizesPayloadType, QF_AGetQuizPayloadType } from "@/app/types/libs/tanstack-query/admin/adminQuizTypes";
+import { QF_ACreateQuizPayloadType, QF_ADSQuizesPayloadType, QF_AGetQuizPayloadType, QF_AUpdateQuizPayloadType } from "@/app/types/libs/tanstack-query/admin/adminQuizTypes";
 
 export const useDeleteAllAdminQuizes = (callbacks?: TQ_CBtype) => {
     const queryClient = useQueryClient();
@@ -129,7 +129,7 @@ export const useUpdateSingleQuiz = (callbacks?: TQ_CBtype) => {
 
     return useMutation({
         mutationKey: ["updateSingleQuiz"],
-        mutationFn: (payload: QF_ACreateQuizPayloadType) => updateSingleQuiz(payload),
+        mutationFn: (payload: QF_AUpdateQuizPayloadType) => updateSingleQuiz(payload),
         onSuccess(data) {
             if (data.success) {
                 if (callbacks?.onSuccessCB) {

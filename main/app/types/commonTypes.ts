@@ -32,5 +32,6 @@ export type TQ_CBtype = {
     quiz_id?: string,
     question_id?: string,
     option_id?: string,
-    category_id?: string
+    category_id?: string,
+    uid?: string
 }

@@ -7,8 +7,10 @@ import { QF_ASingleQuesPayloadType } from "@/app/types/libs/tanstack-query/admin
 import { readAllAdminQuestionsBA, readSingleQuestion } from "@/app/libs/tanstack-query/admin/api-functions/adminQuestionsAPIFunctions";
 import { readAllAdminOptionsBA, readSingleOptions } from "@/app/libs/tanstack-query/admin/api-functions/adminOptionsAPIFunctions";
 import { QF_ADelOptionsPayloadType } from "@/app/types/libs/tanstack-query/admin/adminOptionsTypes";
-import { readAllAdminCategoriesBA, readSingleCategory } from "@/app/libs/tanstack-query/admin/api-functions/adminCategoriesAPIFunctions";
+import { readAllAdminCategoriesBA, readAllAdminHomeCategoriesBA, readSingleCategory } from "@/app/libs/tanstack-query/admin/api-functions/adminCategoriesAPIFunctions";
 import { QF_AGetSingleCatPayloadType } from "@/app/types/libs/tanstack-query/admin/adminCategoriesTypes";
+import { readAllAdminUsersBA, readSingleUser } from "@/app/libs/tanstack-query/admin/api-functions/adminUsersAPIFunctions";
+import { QF_AGetSingleUserPayloadType } from "@/app/types/libs/tanstack-query/admin/adminUsersTypes";
 
 // Admin Settings Queries.
 
@@ -120,6 +122,34 @@ export const useReadSingleCategory = (payload: QF_AGetSingleCatPayloadType) => {
     return useQuery({
         queryKey: ["readSingleCategory", payload.category_id],
         queryFn: () => readSingleCategory(payload),
+        ...TQ_DefaultConfig
+    });
+}
+
+// Admin Home Categories Queries.
+
+export const useReadAllAdminHomeCategories = (token: string) => {
+    return useQuery({
+        queryKey: ["readAllAdminHomeCategories", token],
+        queryFn: () => readAllAdminHomeCategoriesBA(token),
+        ...TQ_DefaultConfig
+    });
+}
+
+// Admin Users Queries.
+
+export const useReadAllAdminUsers = (token: string) => {
+    return useQuery({
+        queryKey: ["readAllAdminUsers", token],
+        queryFn: () => readAllAdminUsersBA(token),
+        ...TQ_DefaultConfig
+    });
+}
+
+export const useReadSingleUsers = (payload: QF_AGetSingleUserPayloadType) => {
+    return useQuery({
+        queryKey: ["readSingleUsers", payload.uid],
+        queryFn: () => readSingleUser(payload),
         ...TQ_DefaultConfig
     });
 }

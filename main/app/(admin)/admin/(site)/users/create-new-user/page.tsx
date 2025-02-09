@@ -3,20 +3,21 @@
 import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, SubmitHandler } from "react-hook-form";
-import Swal from 'sweetalert2';
 import Image from "next/image";
 import { MdOutlineAddAPhoto } from "react-icons/md";
 import { FaRegTrashCan } from "react-icons/fa6";
 import AdminBreadcrumbs from "@/app/components/admin/adminBreadcrumbs";
-import { convertBase64, validatePhone } from "@/app/libs/helpers/helperFunctions";
+import { callbackErrT1S2_ST1, callbackOnErrT1S2_ST1, callbackOnSucT1S2_ST1, convertBase64, validatePhone } from "@/app/libs/helpers/helperFunctions";
 import { UserDataPayloadType } from "@/app/types/pages/admin/adminPageCommonTypes";
 import { AdminCreateUserFormVS, AdminCreateUserValidationSchema } from "@/app/libs/zod/schemas/adminValidationSchemas";
 import TokenChecker from "@/app/libs/tokenChecker";
 import { getCookie } from "cookies-next/client";
 import { adminAuthUserCookieName } from "@/app/constant/datafaker";
+import { useCreateNewUser } from "@/app/libs/tanstack-query/admin/mutations/adminUsersMutations";
 
 function Page() {
 
+    const token = getCookie(adminAuthUserCookieName);
     const [phone, setPhone] = useState<string>("");
     const [phoneError, setPhoneError] = useState<string>("");
     const [profileImage, setProfileImage] = useState<string>("");
@@ -25,7 +26,7 @@ function Page() {
     const [imageFileSize, setImageFileSize] = useState<boolean>(false);
     const [imageDimensions, setImageDimensions] = useState<boolean>(false);
     const [errorFileInput, setErrorFileInput] = useState<string>('');
-    const [isLoading, setIsLoading] = useState<boolean>(false);
+    // const [isLoading, setIsLoading] = useState<boolean>(false);
     const [gender, setGender] = useState<string>('');
     const [blockUser, setBlockUser] = useState<string>('false');
 
@@ -91,49 +92,63 @@ function Page() {
         resolver: zodResolver(AdminCreateUserValidationSchema),
     });
 
-    const submitData = async (data: UserDataPayloadType) => {
-        setIsLoading(true);
-        const baseURI = window.location.origin;
-        try {
-            const resp = await fetch(`${baseURI}/api/admin/users/crud/create`, {
-                method: "POST",
-                body: JSON.stringify(data),
-            });
-            if (!resp.ok) {
-                setIsLoading(false);
-            }
-            const body = await resp.json();
-            if (body.success) {
-                Swal.fire({
-                    title: "Success!",
-                    text: body.message,
-                    icon: "success",
-                    timer: 3000
-                });
-                setIsLoading(false);
-                removeButtonClick();
-                setPhone('');
-                setGender("");
-                reset();
-            } else {
-                Swal.fire({
-                    title: "Error!",
-                    text: body.message,
-                    icon: "error",
-                    timer: 3000
-                });
-                setIsLoading(false);
-            }
-            //eslint-disable-next-line
-        } catch (error: any) {
-            Swal.fire({
-                title: "Error!",
-                text: error.message,
-                icon: "error",
-                timer: 4000
-            });
-        }
+    // const submitData = async (data: UserDataPayloadType) => {
+    //     setIsLoading(true);
+    //     const baseURI = window.location.origin;
+    //     try {
+    //         const resp = await fetch(`${baseURI}/api/admin/users/crud/create`, {
+    //             method: "POST",
+    //             body: JSON.stringify(data),
+    //         });
+    //         if (!resp.ok) {
+    //             setIsLoading(false);
+    //         }
+    //         const body = await resp.json();
+    //         if (body.success) {
+    //             Swal.fire({
+    //                 title: "Success!",
+    //                 text: body.message,
+    //                 icon: "success",
+    //                 timer: 3000
+    //             });
+    //             setIsLoading(false);
+    //             removeButtonClick();
+    //             setPhone('');
+    //             setGender("");
+    //             reset();
+    //         } else {
+    //             Swal.fire({
+    //                 title: "Error!",
+    //                 text: body.message,
+    //                 icon: "error",
+    //                 timer: 3000
+    //             });
+    //             setIsLoading(false);
+    //         }
+    //         //eslint-disable-next-line
+    //     } catch (error: any) {
+    //         Swal.fire({
+    //             title: "Error!",
+    //             text: error.message,
+    //             icon: "error",
+    //             timer: 4000
+    //         });
+    //     }
+    // }
+
+    const sucCallb = () => {
+        removeButtonClick();
+        setPhone('');
+        setGender("");
+        reset();
     }
+
+    const updPhnSet = useCreateNewUser({
+        onSuccessCB: (resp) => callbackOnSucT1S2_ST1(resp, sucCallb),
+        errorCB: (resp) => callbackErrT1S2_ST1(resp),
+        onErrorCB: (resp) => callbackOnErrT1S2_ST1(resp),
+        token
+    });
 
     const handleFormSubmit: SubmitHandler<AdminCreateUserFormVS> = async (formdata) => {
 
@@ -175,7 +190,7 @@ function Page() {
 
         const token = getCookie(adminAuthUserCookieName);
         const prepData: UserDataPayloadType = {
-            token: token as string,
+            token: token ?? "",
             user_full_name: formdata.full_name,
             user_email: formdata.email,
             user_password: formdata.password,
@@ -188,10 +203,10 @@ function Page() {
         }
 
         if (imageFile == '') {
-            await submitData(prepData);
+            updPhnSet.mutate(prepData);
         } else {
             if (validImage) {
-                await submitData(prepData);
+                updPhnSet.mutate(prepData);
             }
         }
     }
@@ -407,7 +422,7 @@ function Page() {
                                 </div>
                                 <div className="text-right">
                                     {
-                                        isLoading ?
+                                        updPhnSet.isPending ?
                                             (<div className="spinner size-1"></div>)
                                             :
                                             (

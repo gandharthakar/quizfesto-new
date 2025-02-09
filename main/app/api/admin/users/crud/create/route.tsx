@@ -3,22 +3,15 @@ import { NextResponse } from "next/server";
 import { hash } from "bcrypt";
 import jwt from "jsonwebtoken";
 import { sanitize } from "@/app/libs/sanitize";
-import { zodIssuesMyType } from "@/app/types/commonTypes";
+import { CommonAPIResponseWithZodError } from "@/app/types/commonTypes";
 import { AdminCreateUserValidationSchema } from "@/app/libs/zod/schemas/adminValidationSchemas";
-
-interface Respo {
-    success: boolean,
-    message: string,
-    errors?: zodIssuesMyType[]
-}
 
 export async function POST(req: Request) {
 
-    let resp: Respo = {
+    let resp: CommonAPIResponseWithZodError = {
         success: false,
         message: ''
     }
-
 
     let sts: number = 200;
     let isTrueAdminUser: boolean = false;

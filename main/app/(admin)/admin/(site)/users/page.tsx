@@ -13,13 +13,16 @@ import AdminListUsersCard from "@/app/components/admin/adminListUsersCard";
 import { FaEllipsisVertical } from "react-icons/fa6";
 import { GrPowerReset } from "react-icons/gr";
 import { AdminUserDataType } from "@/app/types/components/admin/componentsTypes";
-import { GFG } from "@/app/libs/helpers/helperFunctions";
+import { callbackErrT1S1_ST1, callbackOnErrT1S1_ST1, callbackOnSucT1S1_ST1, GFG, QF_TQ_UEF_CatchErrorCB } from "@/app/libs/helpers/helperFunctions";
 import TokenChecker from "@/app/libs/tokenChecker";
 import { getCookie } from "cookies-next/client";
 import { adminAuthUserCookieName } from "@/app/constant/datafaker";
+import { useReadAllAdminUsers } from "@/app/libs/tanstack-query/admin/queries/adminQueries";
+import { useDeleteAllAdminUsers, useDeleteSelectedAdminUsers } from "@/app/libs/tanstack-query/admin/mutations/adminUsersMutations";
 
 function Page() {
 
+    const token = getCookie(adminAuthUserCookieName);
     const dataPerPage = 10;
     const [srchInp, setSrchInp] = useState<string>("");
 
@@ -35,7 +38,7 @@ function Page() {
     const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
     const menuRef = useRef<HTMLDivElement>(null);
 
-    const [isLoading, setIsLoading] = useState<boolean>(true);
+    // const [isLoading, setIsLoading] = useState<boolean>(true);
 
     const handleSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setSrchInp(e.target.value);
@@ -148,7 +151,7 @@ function Page() {
         if (selectedItems.length > 0) {
             const conf = confirm("Are you sure want to reset participation data for selected users ?");
             if (conf) {
-                setIsLoading(true);
+                // setIsLoading(true);
                 setIsMenuOpen(false);
                 const baseURI = window.location.origin;
                 const token = getCookie(adminAuthUserCookieName);
@@ -157,9 +160,9 @@ function Page() {
                         method: "DELETE",
                         body: JSON.stringify({ token, user_id_list: selectedItems }),
                     });
-                    if (!resp.ok) {
-                        setIsLoading(false);
-                    }
+                    // if (!resp.ok) {
+                    //     setIsLoading(false);
+                    // }
                     const body = await resp.json();
                     if (body.success) {
                         Swal.fire({
@@ -168,7 +171,7 @@ function Page() {
                             icon: "success",
                             timer: 3000
                         });
-                        setIsLoading(false);
+                        // setIsLoading(false);
                     } else {
                         Swal.fire({
                             title: "Error!",
@@ -176,7 +179,7 @@ function Page() {
                             icon: "error",
                             timer: 3000
                         });
-                        setIsLoading(false);
+                        // setIsLoading(false);
                     }
                     //eslint-disable-next-line
                 } catch (error: any) {
@@ -195,14 +198,13 @@ function Page() {
                 icon: "error",
                 timer: 3000
             });
-            setIsLoading(false);
         }
     }
 
     const handleRDAllBulkLogic = async () => {
         const conf = confirm("Are you sure want to reset participation data for all users ?");
         if (conf) {
-            setIsLoading(true);
+            // setIsLoading(true);
             setIsMenuOpen(false);
             const baseURI = window.location.origin;
             const token = getCookie(adminAuthUserCookieName);
@@ -210,9 +212,9 @@ function Page() {
                 const resp = await fetch(`${baseURI}/api/admin/users/participation-data/delete-all?token=${token}`, {
                     method: "DELETE",
                 });
-                if (!resp.ok) {
-                    setIsLoading(false);
-                }
+                // if (!resp.ok) {
+                //     setIsLoading(false);
+                // }
                 const body = await resp.json();
                 if (body.success) {
                     Swal.fire({
@@ -221,7 +223,7 @@ function Page() {
                         icon: "success",
                         timer: 3000
                     });
-                    setIsLoading(false);
+                    // setIsLoading(false);
                 } else {
                     Swal.fire({
                         title: "Error!",
@@ -229,7 +231,7 @@ function Page() {
                         icon: "error",
                         timer: 3000
                     });
-                    setIsLoading(false);
+                    // setIsLoading(false);
                 }
                 //eslint-disable-next-line
             } catch (error: any) {
@@ -243,53 +245,20 @@ function Page() {
         }
     }
 
+    const delSelUsr = useDeleteSelectedAdminUsers({
+        token,
+        errorCB: (resp) => callbackErrT1S1_ST1(resp),
+        onErrorCB: (resp) => callbackOnErrT1S1_ST1(resp),
+        onSuccessCB: (resp) => callbackOnSucT1S1_ST1(resp)
+    });
+
     const handleDeleteSelectedBulkLogic = async () => {
         if (selectedItems.length > 0) {
             const conf = confirm("Are you sure want to delete selected users ?");
             if (conf) {
-                setIsLoading(true);
                 setIsMenuOpen(false);
-                const baseURI = window.location.origin;
-                const token = getCookie(adminAuthUserCookieName);
-                try {
-                    const resp = await fetch(`${baseURI}/api/admin/users/bulk-actions/delete-selected`, {
-                        method: "DELETE",
-                        body: JSON.stringify({ token, user_id_list: selectedItems })
-                    });
-                    if (!resp.ok) {
-                        setIsLoading(false);
-                    }
-                    const body = await resp.json();
-                    if (body.success) {
-                        Swal.fire({
-                            title: "Success!",
-                            text: body.message,
-                            icon: "success",
-                            timer: 2000
-                        });
-                        const set = setTimeout(() => {
-                            window.location.reload();
-                            setIsLoading(false);
-                            clearTimeout(set);
-                        }, 2000);
-                    } else {
-                        Swal.fire({
-                            title: "Error!",
-                            text: body.message,
-                            icon: "error",
-                            timer: 3000
-                        });
-                        setIsLoading(false);
-                    }
-                    //eslint-disable-next-line
-                } catch (error: any) {
-                    Swal.fire({
-                        title: "Error!",
-                        text: error.message,
-                        icon: "error",
-                        timer: 4000
-                    });
-                }
+                const tokenDel = getCookie(adminAuthUserCookieName);
+                delSelUsr.mutate({ token: tokenDel ?? "", user_id_list: selectedItems });
             }
         } else {
             Swal.fire({
@@ -301,51 +270,19 @@ function Page() {
         }
     }
 
+    const delAllUsr = useDeleteAllAdminUsers({
+        token,
+        errorCB: (resp) => callbackErrT1S1_ST1(resp),
+        onErrorCB: (resp) => callbackOnErrT1S1_ST1(resp),
+        onSuccessCB: (resp) => callbackOnSucT1S1_ST1(resp)
+    });
+
     const handleDeleteAllBulkLogic = async () => {
         const conf = confirm("Are you sure want to delete all users ?");
         if (conf) {
-            setIsLoading(true);
             setIsMenuOpen(false);
-            const baseURI = window.location.origin;
-            const token = getCookie(adminAuthUserCookieName);
-            try {
-                const resp = await fetch(`${baseURI}/api/admin/users/bulk-actions/delete-all?token=${token}`, {
-                    method: "DELETE",
-                });
-                if (!resp.ok) {
-                    setIsLoading(false);
-                }
-                const body = await resp.json();
-                if (body.success) {
-                    Swal.fire({
-                        title: "Success!",
-                        text: body.message,
-                        icon: "success",
-                        timer: 2000
-                    });
-                    const set = setTimeout(() => {
-                        window.location.reload();
-                        setIsLoading(false);
-                        clearTimeout(set);
-                    }, 2000);
-                } else {
-                    Swal.fire({
-                        title: "Error!",
-                        text: body.message,
-                        icon: "error",
-                        timer: 2000
-                    });
-                    setIsLoading(false);
-                }
-                //eslint-disable-next-line
-            } catch (error: any) {
-                Swal.fire({
-                    title: "Error!",
-                    text: error.message,
-                    icon: "error",
-                    timer: 4000
-                });
-            }
+            const tokenDel = getCookie(adminAuthUserCookieName);
+            delAllUsr.mutate({ token: tokenDel ?? "" });
         }
     }
 
@@ -375,40 +312,24 @@ function Page() {
         document.addEventListener('mousedown', menuHandler);
     }, []);
 
-    const getUserData = async () => {
-        const baseURI = window.location.origin;
-        const token = getCookie(adminAuthUserCookieName);
-        try {
-            const resp = await fetch(`${baseURI}/api/admin/users/bulk-actions/read-all?token=${token}`, {
-                method: "GET",
-            });
-            if (!resp.ok) {
-                setIsLoading(false);
-            }
-            const body = await resp.json();
-            if (body.success) {
-                setIsLoading(false);
-                setUserList(GFG(body.users, currentPage, dataPerPage));
-                setUserData(body.users);
-                setTotalPages(Math.ceil(body.users.length / dataPerPage));
-            } else {
-                setIsLoading(false);
-            }
-            //eslint-disable-next-line
-        } catch (error: any) {
-            Swal.fire({
-                title: "Error!",
-                text: error.message,
-                icon: "error",
-                timer: 4000
-            });
-        }
-    }
+    const { data, isError, error, isSuccess, isLoading } = useReadAllAdminUsers(token ?? "");
 
     useEffect(() => {
-        getUserData();
+        if (isSuccess) {
+            if (data.users) {
+                setUserList(GFG(data.users, currentPage, dataPerPage));
+                setUserData(data.users);
+                setTotalPages(Math.ceil(data.users.length / dataPerPage));
+            } else {
+                setUserData([]);
+                setUserList(GFG([], 1, dataPerPage));
+                setTotalPages(Math.ceil(userData.length / dataPerPage));
+            }
+        }
+
+        QF_TQ_UEF_CatchErrorCB(isError, error);
         //eslint-disable-next-line
-    }, []);
+    }, [data, isSuccess, isError, error, setUserData]);
 
     return (
         <>
@@ -569,7 +490,7 @@ function Page() {
                             (
                                 <>
                                     {
-                                        isLoading ?
+                                        (isLoading || (delSelUsr.isPending || delAllUsr.isPending)) ?
                                             (<div className="spinner size-1"></div>)
                                             :
                                             (

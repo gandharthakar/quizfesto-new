@@ -1,35 +1,29 @@
 import prisma from "@/app/libs/db";
 import { NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
-import { CommonAPIResponse } from "@/app/types/commonTypes";
 import { sanitize } from "@/app/libs/sanitize";
+import { CommonAPIResponse } from "@/app/types/commonTypes";
 
 export async function POST(req: Request) {
     let resp: CommonAPIResponse = {
         success: false,
         message: ''
     }
-
     let sts: number = 200;
     let isTrueAdminUser: boolean = false;
 
     try {
 
         const body = await req.json();
-
         const token = sanitize(body.token);
-        const s1 = sanitize(JSON.stringify(body.home_cats));
-        const home_cats = JSON.parse(s1);
-        const home_cats_id = sanitize(body.home_cats_id);
+        const quiz_id = sanitize(body.quiz_id);
+        const s1 = sanitize(JSON.stringify(body.quiz_categories));
+        const quiz_categories = JSON.parse(s1);
 
-        // const { token, home_cats, home_cats_id } = body;
-
-        if (token && (home_cats || home_cats_id)) {
-
+        if (token && quiz_id && quiz_categories) {
             const res = jwt.verify(token as string, process.env.JWT_SECRET ?? "") as { is_admin_user: string };
 
             if (res) {
-
                 const user_id = res.is_admin_user;
 
                 const fu__in__usrtblmdl = await prisma.qF_User.findFirst({
@@ -61,41 +55,39 @@ export async function POST(req: Request) {
                 }
 
                 if (isTrueAdminUser) {
-                    const existingCat = await prisma.qF_Homepage_Categories.findFirst();
-                    if (existingCat === null) {
-                        await prisma.qF_Homepage_Categories.create({
+                    const alreadQuizExited = await prisma.qF_Quiz.findFirst({
+                        where: {
+                            quiz_id
+                        }
+                    });
+                    if (alreadQuizExited) {
+                        await prisma.qF_Quiz.update({
+                            where: {
+                                quiz_id
+                            },
                             data: {
-                                home_cats: home_cats
+                                quiz_categories,
                             }
                         });
                         sts = 200;
                         resp = {
                             success: true,
-                            message: "Categories Added Successfully!"
+                            message: "Quiz Categories Updated Successfully!"
                         }
                     } else {
-                        await prisma.qF_Homepage_Categories.update({
-                            where: {
-                                home_cat_id: home_cats_id,
-                            },
-                            data: {
-                                home_cats: home_cats
-                            }
-                        })
                         sts = 200;
                         resp = {
-                            success: true,
-                            message: "Categories Updated Successfully!"
+                            success: false,
+                            message: "Quiz Not Exist!"
                         }
                     }
                 } else {
-                    sts = 200;
                     resp = {
                         success: false,
-                        message: "User Not Found."
+                        message: 'User Not Found.',
                     }
+                    sts = 200;
                 }
-
             }
         } else {
             sts = 400;

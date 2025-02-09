@@ -1,15 +1,15 @@
 import { TQ_CBtype } from "@/app/types/commonTypes";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { AxiosResponse } from "axios";
-import { createNewCategory, deleteAllAdminCategoriesBA, deleteAllAdminHomeCategoriesBA, deleteSelectedAdminCategoriesBA, deleteSingleCategory, updateAllAdminHomeCategoriesBA, updateSingleCategory } from "@/app/libs/tanstack-query/admin/api-functions/adminCategoriesAPIFunctions";
-import { QF_ACreCatPayloadType, QF_ADSCatsPayloadType, QF_AGetSingleCatPayloadType, QF_ASetHomeCatsPayloadType, QF_AUpdCatPayloadType } from "@/app/types/libs/tanstack-query/admin/adminCategoriesTypes";
+import { createNewUser, deleteAllAdminUsersBA, deleteSelectedAdminUsersBA, deleteSingleUser, updateSingleUser } from "@/app/libs/tanstack-query/admin/api-functions/adminUsersAPIFunctions";
+import { QF_ACreUserDataType, QF_ADSUsersPayloadType, QF_AGetSingleUserPayloadType, QF_ASetSingleUserPayloadType } from "@/app/types/libs/tanstack-query/admin/adminUsersTypes";
 
-export const useDeleteAllAdminCategories = (callbacks?: TQ_CBtype) => {
+export const useDeleteAllAdminUsers = (callbacks?: TQ_CBtype) => {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationKey: ["deleteAllAdminCategories"],
-        mutationFn: (payload: { token: string }) => deleteAllAdminCategoriesBA(payload),
+        mutationKey: ["deleteAllAdminUsers"],
+        mutationFn: (payload: { token: string }) => deleteAllAdminUsersBA(payload),
         onSuccess(data) {
             if (data.success) {
                 if (callbacks?.onSuccessCB) {
@@ -34,93 +34,7 @@ export const useDeleteAllAdminCategories = (callbacks?: TQ_CBtype) => {
                 console.log(error);
             } else {
                 await queryClient.invalidateQueries({
-                    queryKey: ["readAllAdminCategories", callbacks?.token]
-                });
-                await queryClient.invalidateQueries({
-                    queryKey: ["getAdminStats", callbacks?.token]
-                });
-                await queryClient.invalidateQueries({
-                    queryKey: ["readAllAdminHomeCategories", callbacks?.token]
-                });
-            }
-        },
-    });
-};
-
-export const useDeleteSelectedAdminCategories = (callbacks?: TQ_CBtype) => {
-    const queryClient = useQueryClient();
-
-    return useMutation({
-        mutationKey: ["deleteSelectedAdminCategories"],
-        mutationFn: (payload: QF_ADSCatsPayloadType) => deleteSelectedAdminCategoriesBA(payload),
-        onSuccess(data) {
-            if (data.success) {
-                if (callbacks?.onSuccessCB) {
-                    callbacks.onSuccessCB(data);
-                }
-            } else {
-                if (callbacks?.errorCB) {
-                    callbacks.errorCB(data);
-                }
-            }
-        },
-        onError(error: (Error & { response: AxiosResponse })) {
-            const resp = error.response.data;
-            if (!resp.success) {
-                if (callbacks?.onErrorCB) {
-                    callbacks.onErrorCB(resp);
-                }
-            }
-        },
-        onSettled: async (_, error) => {
-            if (error) {
-                console.log(error);
-            } else {
-                await queryClient.invalidateQueries({
-                    queryKey: ["readAllAdminCategories", callbacks?.token]
-                });
-                await queryClient.invalidateQueries({
-                    queryKey: ["getAdminStats", callbacks?.token]
-                });
-                await queryClient.invalidateQueries({
-                    queryKey: ["readAllAdminHomeCategories", callbacks?.token]
-                });
-            }
-        },
-    });
-};
-
-export const useCreateNewCategory = (callbacks?: TQ_CBtype) => {
-    const queryClient = useQueryClient();
-
-    return useMutation({
-        mutationKey: ["createNewCategory"],
-        mutationFn: (payload: QF_ACreCatPayloadType) => createNewCategory(payload),
-        onSuccess(data) {
-            if (data.success) {
-                if (callbacks?.onSuccessCB) {
-                    callbacks.onSuccessCB(data);
-                }
-            } else {
-                if (callbacks?.errorCB) {
-                    callbacks.errorCB(data);
-                }
-            }
-        },
-        onError(error: (Error & { response: AxiosResponse })) {
-            const resp = error.response.data;
-            if (!resp.success) {
-                if (callbacks?.onErrorCB) {
-                    callbacks.onErrorCB(resp);
-                }
-            }
-        },
-        onSettled: async (_, error) => {
-            if (error) {
-                console.log(error);
-            } else {
-                await queryClient.invalidateQueries({
-                    queryKey: ["readAllAdminCategories", callbacks?.token]
+                    queryKey: ["readAllAdminUsers", callbacks?.token]
                 });
                 await queryClient.invalidateQueries({
                     queryKey: ["getAdminStats", callbacks?.token]
@@ -130,12 +44,12 @@ export const useCreateNewCategory = (callbacks?: TQ_CBtype) => {
     });
 };
 
-export const useUpdateSingleCategory = (callbacks?: TQ_CBtype) => {
+export const useDeleteSelectedAdminUsers = (callbacks?: TQ_CBtype) => {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationKey: ["updateSingleCategory"],
-        mutationFn: (payload: QF_AUpdCatPayloadType) => updateSingleCategory(payload),
+        mutationKey: ["deleteSelectedAdminUsers"],
+        mutationFn: (payload: QF_ADSUsersPayloadType) => deleteSelectedAdminUsersBA(payload),
         onSuccess(data) {
             if (data.success) {
                 if (callbacks?.onSuccessCB) {
@@ -160,68 +74,22 @@ export const useUpdateSingleCategory = (callbacks?: TQ_CBtype) => {
                 console.log(error);
             } else {
                 await queryClient.invalidateQueries({
-                    queryKey: ["readAllAdminCategories", callbacks?.token]
-                });
-                await queryClient.invalidateQueries({
-                    queryKey: ["readSingleCategory", callbacks?.category_id]
-                });
-                await queryClient.invalidateQueries({
-                    queryKey: ["readAllAdminHomeCategories", callbacks?.token]
-                });
-            }
-        },
-    });
-};
-
-export const useDeleteSingleCategory = (callbacks?: TQ_CBtype) => {
-    const queryClient = useQueryClient();
-
-    return useMutation({
-        mutationKey: ["deleteSingleCategory"],
-        mutationFn: (payload: QF_AGetSingleCatPayloadType) => deleteSingleCategory(payload),
-        onSuccess(data) {
-            if (data.success) {
-                if (callbacks?.onSuccessCB) {
-                    callbacks.onSuccessCB(data);
-                }
-            } else {
-                if (callbacks?.errorCB) {
-                    callbacks.errorCB(data);
-                }
-            }
-        },
-        onError(error: (Error & { response: AxiosResponse })) {
-            const resp = error.response.data;
-            if (!resp.success) {
-                if (callbacks?.onErrorCB) {
-                    callbacks.onErrorCB(resp);
-                }
-            }
-        },
-        onSettled: async (_, error) => {
-            if (error) {
-                console.log(error);
-            } else {
-                await queryClient.invalidateQueries({
-                    queryKey: ["readAllAdminCategories", callbacks?.token]
+                    queryKey: ["readAllAdminUsers", callbacks?.token]
                 });
                 await queryClient.invalidateQueries({
                     queryKey: ["getAdminStats", callbacks?.token]
                 });
-                await queryClient.invalidateQueries({
-                    queryKey: ["readAllAdminHomeCategories", callbacks?.token]
-                });
             }
         },
     });
 };
 
-export const useDeleteAllAdminHomeCategories = (callbacks?: TQ_CBtype) => {
+export const useCreateNewUser = (callbacks?: TQ_CBtype) => {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationKey: ["deleteAllAdminHomeCategories"],
-        mutationFn: (payload: { token: string }) => deleteAllAdminHomeCategoriesBA(payload),
+        mutationKey: ["createNewUser"],
+        mutationFn: (payload: QF_ACreUserDataType) => createNewUser(payload),
         onSuccess(data) {
             if (data.success) {
                 if (callbacks?.onSuccessCB) {
@@ -246,19 +114,22 @@ export const useDeleteAllAdminHomeCategories = (callbacks?: TQ_CBtype) => {
                 console.log(error);
             } else {
                 await queryClient.invalidateQueries({
-                    queryKey: ["readAllAdminHomeCategories", callbacks?.token]
+                    queryKey: ["readAllAdminUsers", callbacks?.token]
+                });
+                await queryClient.invalidateQueries({
+                    queryKey: ["getAdminStats", callbacks?.token]
                 });
             }
         },
     });
 };
 
-export const useCreateUpdateHomeCategories = (callbacks?: TQ_CBtype) => {
+export const useUpdateSingleUser = (callbacks?: TQ_CBtype) => {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationKey: ["createUpdateHomeCategories"],
-        mutationFn: (payload: QF_ASetHomeCatsPayloadType) => updateAllAdminHomeCategoriesBA(payload),
+        mutationKey: ["updateSingleUser"],
+        mutationFn: (payload: QF_ASetSingleUserPayloadType) => updateSingleUser(payload),
         onSuccess(data) {
             if (data.success) {
                 if (callbacks?.onSuccessCB) {
@@ -283,7 +154,50 @@ export const useCreateUpdateHomeCategories = (callbacks?: TQ_CBtype) => {
                 console.log(error);
             } else {
                 await queryClient.invalidateQueries({
-                    queryKey: ["readAllAdminHomeCategories", callbacks?.token]
+                    queryKey: ["readAllAdminUsers", callbacks?.token]
+                });
+                await queryClient.invalidateQueries({
+                    queryKey: ["readSingleUsers", callbacks?.uid]
+                });
+            }
+        },
+    });
+};
+
+export const useDeleteSingleUser = (callbacks?: TQ_CBtype) => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationKey: ["deleteSingleUser"],
+        mutationFn: (payload: QF_AGetSingleUserPayloadType) => deleteSingleUser(payload),
+        onSuccess(data) {
+            if (data.success) {
+                if (callbacks?.onSuccessCB) {
+                    callbacks.onSuccessCB(data);
+                }
+            } else {
+                if (callbacks?.errorCB) {
+                    callbacks.errorCB(data);
+                }
+            }
+        },
+        onError(error: (Error & { response: AxiosResponse })) {
+            const resp = error.response.data;
+            if (!resp.success) {
+                if (callbacks?.onErrorCB) {
+                    callbacks.onErrorCB(resp);
+                }
+            }
+        },
+        onSettled: async (_, error) => {
+            if (error) {
+                console.log(error);
+            } else {
+                await queryClient.invalidateQueries({
+                    queryKey: ["readAllAdminUsers", callbacks?.token]
+                });
+                await queryClient.invalidateQueries({
+                    queryKey: ["getAdminStats", callbacks?.token]
                 });
             }
         },

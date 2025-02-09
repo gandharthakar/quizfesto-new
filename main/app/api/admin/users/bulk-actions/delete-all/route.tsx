@@ -3,14 +3,10 @@ import { NextResponse } from "next/server";
 import { type NextRequest } from 'next/server';
 import jwt from "jsonwebtoken";
 import { sanitize } from "@/app/libs/sanitize";
-
-interface Respo {
-    success: boolean,
-    message: string
-}
+import { CommonAPIResponse } from "@/app/types/commonTypes";
 
 export async function DELETE(req: NextRequest) {
-    let resp: Respo = {
+    let resp: CommonAPIResponse = {
         success: false,
         message: ''
     }
@@ -20,8 +16,10 @@ export async function DELETE(req: NextRequest) {
 
     try {
 
-        const searchParams = req.nextUrl.searchParams;
-        const token = sanitize(searchParams.get('token'));
+        const body = await req.json();
+        const token = sanitize(body.token);
+        // const searchParams = req.nextUrl.searchParams;
+        // const token = sanitize(searchParams.get('token'));
         if (token) {
             const res = jwt.verify(token as string, process.env.JWT_SECRET ?? "") as { is_admin_user: string };
 

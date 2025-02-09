@@ -5,28 +5,28 @@ import jwt from "jsonwebtoken";
 import { sanitize } from "@/app/libs/sanitize";
 import { CommonAPIResponseWithZodError } from "@/app/types/commonTypes";
 import { QF_AGetQuizDataType } from "@/app/types/libs/tanstack-query/admin/adminQuizTypes";
-import { RTSPkgSelectType } from "@/app/types/components/admin/componentsTypes";
+// import { RTSPkgSelectType } from "@/app/types/components/admin/componentsTypes";
 
-const getCatsLabel = async (id_list: string[]) => {
-    const data = await prisma.qF_Quiz_Category.findMany({
-        where: {
-            category_id: {
-                in: id_list
-            }
-        }
-    });
+// const getCatsLabel = async (id_list: string[]) => {
+//     const data = await prisma.qF_Quiz_Category.findMany({
+//         where: {
+//             category_id: {
+//                 in: id_list
+//             }
+//         }
+//     });
 
-    const cts: RTSPkgSelectType[] = [];
+//     const cts: RTSPkgSelectType[] = [];
 
-    for (let i = 0; i < data.length; i++) {
-        const obj = {
-            value: data[i].category_id,
-            label: data[i].category_title
-        }
-        cts.push(obj);
-    }
-    return cts;
-}
+//     for (let i = 0; i < data.length; i++) {
+//         const obj = {
+//             value: data[i].category_id,
+//             label: data[i].category_title
+//         }
+//         cts.push(obj);
+//     }
+//     return cts;
+// }
 
 export async function GET(req: NextRequest) {
     let resp: (CommonAPIResponseWithZodError & { quiz?: QF_AGetQuizDataType }) = {
@@ -100,7 +100,7 @@ export async function GET(req: NextRequest) {
                                 quiz_about_text: alreadQuizExited.quiz_about_text ?? "",
                                 quiz_terms: alreadQuizExited.quiz_terms,
                                 quiz_cover_photo: alreadQuizExited.quiz_cover_photo ?? "",
-                                quiz_categories: await getCatsLabel(alreadQuizExited.quiz_categories),
+                                // quiz_categories: await getCatsLabel(alreadQuizExited.quiz_categories),
                                 negative_marking_score: alreadQuizExited.negative_marking_score
                             }
                         }

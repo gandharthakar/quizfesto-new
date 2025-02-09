@@ -7,12 +7,16 @@ import { RTSPkgSelectType } from "@/app/types/components/admin/componentsTypes";
 import TokenChecker from "@/app/libs/tokenChecker";
 import { getCookie } from "cookies-next/client";
 import { adminAuthUserCookieName } from "@/app/constant/datafaker";
+import { callbackErrT1S1_ST1, callbackOnErrT1S1_ST1, callbackOnSucT1S1_ST1, QF_TQ_UEF_CatchErrorCB } from "@/app/libs/helpers/helperFunctions";
+import { useReadAllAdminCategories, useReadAllAdminHomeCategories } from "@/app/libs/tanstack-query/admin/queries/adminQueries";
+import { useCreateUpdateHomeCategories, useDeleteAllAdminHomeCategories } from "@/app/libs/tanstack-query/admin/mutations/adminCategoriesMutations";
 
 function Page() {
 
+    const token = getCookie(adminAuthUserCookieName);
     const [homeCats, setHomeCats] = useState<RTSPkgSelectType[]>([]);
     const [homeCatOpts, setHomeCatOpts] = useState<RTSPkgSelectType[]>([]);
-    const [isLoading, setIsLoading] = useState<boolean>(true);
+    // const [isLoading, setIsLoading] = useState<boolean>(true);
     const [homeCatsId, setHomeCatsId] = useState<string>("");
 
     //eslint-disable-next-line
@@ -21,7 +25,7 @@ function Page() {
     }
 
     const getSavedCats = async (cb_new?: () => void, cb_update?: () => void) => {
-        setIsLoading(true);
+        // setIsLoading(true);
         let isCatsExist = false;
         const baseURI = window.location.origin;
         const token = getCookie(adminAuthUserCookieName);
@@ -32,8 +36,8 @@ function Page() {
             const body = await resp.json();
             if (body.success) {
                 isCatsExist = true;
-                setHomeCats(body.home_cats);
-                setHomeCatsId(body.home_cats_id);
+                // setHomeCats(body.home_cats);
+                // setHomeCatsId(body.home_cats_id);
                 if (cb_update) {
                     cb_update();
                 }
@@ -55,93 +59,35 @@ function Page() {
         }
     }
 
+    const delAllHomCats = useDeleteAllAdminHomeCategories({
+        token,
+        errorCB: (resp) => callbackErrT1S1_ST1(resp),
+        onErrorCB: (resp) => callbackOnErrT1S1_ST1(resp),
+        onSuccessCB: (resp) => callbackOnSucT1S1_ST1(resp)
+    });
+
     const clearCats = async () => {
         const conf = confirm("Are you sure want to clear home page top categories ?");
         if (conf) {
-            const baseURI = window.location.origin;
-            const token = getCookie(adminAuthUserCookieName);
-            try {
-                const resp = await fetch(`${baseURI}/api/admin/categories/home-categories/clear?token=${token}`, {
-                    method: "DELETE",
-                });
-                const body = await resp.json();
-                if (body.success) {
-                    Swal.fire({
-                        title: "Success!",
-                        text: body.message,
-                        icon: "success",
-                        timer: 2000
-                    });
-                    const set = setTimeout(() => {
-                        window.location.reload();
-                        clearTimeout(set);
-                    }, 2000);
-                } else {
-                    Swal.fire({
-                        title: "Error!",
-                        text: body.message,
-                        icon: "error",
-                        timer: 2000
-                    });
-                }
-                //eslint-disable-next-line
-            } catch (error: any) {
-                Swal.fire({
-                    title: "Error!",
-                    text: error.message,
-                    icon: "error",
-                    timer: 4000
-                });
-            }
+            const tokenDel = getCookie(adminAuthUserCookieName);
+            delAllHomCats.mutate({ token: tokenDel ?? "" });
         }
     }
+
+    const creUpdHomCats = useCreateUpdateHomeCategories({
+        token,
+        errorCB: (resp) => callbackErrT1S1_ST1(resp),
+        onErrorCB: (resp) => callbackOnErrT1S1_ST1(resp),
+        onSuccessCB: (resp) => callbackOnSucT1S1_ST1(resp)
+    });
 
     const setHomeCatsDB = async () => {
         const cats: string[] = [];
         for (let i = 0; i < homeCats.length; i++) {
             cats.push(homeCats[i].value);
         }
-        const baseURI = window.location.origin;
-        const token = getCookie(adminAuthUserCookieName);
-        try {
-            const resp = await fetch(`${baseURI}/api/admin/categories/home-categories/create-update`, {
-                method: "POST",
-                body: JSON.stringify({ token, home_cats: cats })
-            });
-            if (!resp.ok) {
-                setIsLoading(false);
-            }
-            const body = await resp.json();
-            if (body.success) {
-                Swal.fire({
-                    title: "Success!",
-                    text: body.message,
-                    icon: "success",
-                    timer: 2000
-                });
-                const set = setTimeout(() => {
-                    window.location.reload();
-                    clearTimeout(set);
-                }, 2000);
-                setIsLoading(false);
-            } else {
-                Swal.fire({
-                    title: "Error!",
-                    text: body.message,
-                    icon: "error",
-                    timer: 2000
-                });
-                setIsLoading(false);
-            }
-            //eslint-disable-next-line
-        } catch (error: any) {
-            Swal.fire({
-                title: "Error!",
-                text: error.message,
-                icon: "error",
-                timer: 4000
-            });
-        }
+        const tokenSub = getCookie(adminAuthUserCookieName);
+        creUpdHomCats.mutate({ token: tokenSub ?? "", home_cats: cats });
     }
 
     const updateHomeCatsDB = async () => {
@@ -149,47 +95,8 @@ function Page() {
         for (let i = 0; i < homeCats.length; i++) {
             cats.push(homeCats[i].value);
         }
-        const baseURI = window.location.origin;
-        const token = getCookie(adminAuthUserCookieName);
-        try {
-            const resp = await fetch(`${baseURI}/api/admin/categories/home-categories/create-update`, {
-                method: "POST",
-                body: JSON.stringify({ token, home_cats: cats, home_cats_id: homeCatsId })
-            });
-            if (!resp.ok) {
-                setIsLoading(false);
-            }
-            const body = await resp.json();
-            if (body.success) {
-                Swal.fire({
-                    title: "Success!",
-                    text: body.message,
-                    icon: "success",
-                    timer: 2000
-                });
-                const set = setTimeout(() => {
-                    window.location.reload();
-                    clearTimeout(set);
-                }, 2000);
-                setIsLoading(false);
-            } else {
-                Swal.fire({
-                    title: "Error!",
-                    text: body.message,
-                    icon: "error",
-                    timer: 2000
-                });
-                setIsLoading(false);
-            }
-            //eslint-disable-next-line
-        } catch (error: any) {
-            Swal.fire({
-                title: "Error!",
-                text: error.message,
-                icon: "error",
-                timer: 4000
-            });
-        }
+        const tokenSub = getCookie(adminAuthUserCookieName);
+        creUpdHomCats.mutate({ token: tokenSub ?? "", home_cats: cats, home_cats_id: homeCatsId });
     }
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -206,20 +113,14 @@ function Page() {
         }
     }
 
-    const getCats = async () => {
-        const baseURI = window.location.origin;
-        const token = getCookie(adminAuthUserCookieName);
-        try {
-            const resp = await fetch(`${baseURI}/api/admin/categories/bulk-actions/read-all?token=${token}`, {
-                method: "GET",
-            });
-            if (!resp.ok) {
-                setIsLoading(false);
-            }
-            const body = await resp.json();
-            if (body.success) {
-                const cts = body.cat_data;
-                const opts: RTSPkgSelectType[] = [];
+    const { data, isError, error, isSuccess, isLoading } = useReadAllAdminCategories(token ?? "");
+
+    useEffect(() => {
+        if (isSuccess) {
+            if (data.cat_data && data.cat_data.length) {
+                const cts = data.cat_data;
+                //eslint-disable-next-line
+                let opts: RTSPkgSelectType[] = [];
                 for (let i = 0; i < cts.length; i++) {
                     const obj = {
                         value: cts[i].category_id,
@@ -228,38 +129,27 @@ function Page() {
                     opts.push(obj);
                 }
                 setHomeCatOpts(opts);
-                setIsLoading(false);
-            } else {
-                Swal.fire({
-                    title: "Error!",
-                    text: body.message,
-                    icon: "error",
-                    timer: 4000
-                });
-                setIsLoading(false);
             }
-            //eslint-disable-next-line
-        } catch (error: any) {
-            Swal.fire({
-                title: "Error!",
-                text: error.message,
-                icon: "error",
-                timer: 4000
-            });
         }
-    }
+
+        QF_TQ_UEF_CatchErrorCB(isError, error);
+    }, [data, isSuccess, isError, error, setHomeCatOpts]);
+
+    const getHomeSavedCats = useReadAllAdminHomeCategories(token ?? "");
 
     useEffect(() => {
-        // const options: TwSelInt[] = [
-        //     { value: "fox", label: "🦊 Fox" },
-        //     { value: "Butterfly", label: "🦋 Butterfly" },
-        //     { value: "Honeybee", label: "🐝 Honeybee" }
-        // ];
-
-        // setHomeCatOpts(options);
-        getCats();
-        getSavedCats();
-    }, []);
+        if (getHomeSavedCats.isSuccess) {
+            const data = getHomeSavedCats.data;
+            if (data.home_cats && data.home_cats.length) {
+                setHomeCats(data.home_cats);
+            } else {
+                setHomeCats([]);
+            }
+            if (data.home_cats_id) {
+                setHomeCatsId(data.home_cats_id);
+            }
+        }
+    }, [getHomeSavedCats.data, getHomeSavedCats.isSuccess, getHomeSavedCats.isError, getHomeSavedCats.error, setHomeCats]);
 
     return (
         <>
@@ -289,7 +179,7 @@ function Page() {
                         </div>
                         <div className="text-right">
                             {
-                                isLoading ?
+                                ((isLoading && getHomeSavedCats.isLoading) || creUpdHomCats.isPending) ?
                                     (<div className="spinner size-1"></div>)
                                     :
                                     (

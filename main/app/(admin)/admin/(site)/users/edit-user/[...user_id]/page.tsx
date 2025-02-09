@@ -9,15 +9,17 @@ import { MdOutlineAddAPhoto } from "react-icons/md";
 import { FaRegTrashCan } from "react-icons/fa6";
 import { useParams } from "next/navigation";
 import AdminBreadcrumbs from "@/app/components/admin/adminBreadcrumbs";
-import { convertBase64, validatePhone, validPassword } from "@/app/libs/helpers/helperFunctions";
-import { UserDataPayloadType } from "@/app/types/pages/admin/adminPageCommonTypes";
+import { callbackErrT1S2_ST1, callbackOnErrT1S2_ST1, callbackOnSucT1S2_ST1, convertBase64, QF_TQ_UEF_CatchErrorCB, validatePhone, validPassword } from "@/app/libs/helpers/helperFunctions";
 import { AdminEditUserFormVS, AdminEditUserValidationSchema } from "@/app/libs/zod/schemas/adminValidationSchemas";
 import TokenChecker from "@/app/libs/tokenChecker";
 import { getCookie } from "cookies-next/client";
 import { adminAuthUserCookieName } from "@/app/constant/datafaker";
+import { useReadSingleUsers } from "@/app/libs/tanstack-query/admin/queries/adminQueries";
+import { useUpdateSingleUser } from "@/app/libs/tanstack-query/admin/mutations/adminUsersMutations";
 
 function Page() {
 
+    const token = getCookie(adminAuthUserCookieName);
     const [phone, setPhone] = useState<string>("");
     const [phoneError, setPhoneError] = useState<string>("");
 
@@ -32,7 +34,7 @@ function Page() {
     const [imageFileSize, setImageFileSize] = useState<boolean>(false);
     const [imageDimensions, setImageDimensions] = useState<boolean>(false);
     const [errorFileInput, setErrorFileInput] = useState<string>('');
-    const [isLoading, setIsLoading] = useState<boolean>(true);
+    // const [isLoading, setIsLoading] = useState<boolean>(true);
     const [gender, setGender] = useState<string>('');
     const [blockUser, setBlockUser] = useState<string>('false');
 
@@ -130,45 +132,13 @@ function Page() {
         resolver: zodResolver(AdminEditUserValidationSchema),
     });
 
-    const submitData = async (data: UserDataPayloadType) => {
-        setIsLoading(true);
-        const baseURI = window.location.origin;
-        try {
-            const resp = await fetch(`${baseURI}/api/admin/users/crud/update`, {
-                method: "POST",
-                body: JSON.stringify(data),
-            });
-            if (!resp.ok) {
-                setIsLoading(false);
-            }
-            const body = await resp.json();
-            if (body.success) {
-                Swal.fire({
-                    title: "Success!",
-                    text: body.message,
-                    icon: "success",
-                    timer: 3000
-                });
-                setIsLoading(false);
-            } else {
-                Swal.fire({
-                    title: "Error!",
-                    text: body.message,
-                    icon: "error",
-                    timer: 3000
-                });
-                setIsLoading(false);
-            }
-            //eslint-disable-next-line
-        } catch (error: any) {
-            Swal.fire({
-                title: "Error!",
-                text: error.message,
-                icon: "error",
-                timer: 4000
-            });
-        }
-    }
+    const updSinUsr = useUpdateSingleUser({
+        uid: user_id_par,
+        token,
+        onSuccessCB: (resp) => callbackOnSucT1S2_ST1(resp),
+        errorCB: (resp) => callbackErrT1S2_ST1(resp),
+        onErrorCB: (resp) => callbackOnErrT1S2_ST1(resp),
+    });
 
     const handleFormSubmit: SubmitHandler<AdminEditUserFormVS> = async (formdata) => {
 
@@ -209,8 +179,8 @@ function Page() {
         }
 
         const token = getCookie(adminAuthUserCookieName);
-        const prepData: UserDataPayloadType = {
-            token: token as string,
+        const prepData = {
+            token: token ?? "",
             uid: user_id_par,
             user_full_name: formdata.full_name,
             user_email: formdata.email,
@@ -224,70 +194,18 @@ function Page() {
         }
 
         if (imageFile == '') {
-            await submitData(prepData);
+            updSinUsr.mutate(prepData);
         } else {
             if (validImage) {
-                await submitData(prepData);
+                updSinUsr.mutate(prepData);
             }
-        }
-    }
-
-    const getUser = async () => {
-        const baseURI = window.location.origin;
-        const token = getCookie(adminAuthUserCookieName);
-        try {
-            const resp = await fetch(`${baseURI}/api/admin/users/crud/read?token=${token}&uid=${user_id_par}`, {
-                method: "GET",
-            });
-            if (!resp.ok) {
-                setIsLoading(false);
-            }
-            const body = await resp.json();
-            if (body.success) {
-                // Swal.fire({
-                //     title: "Success!",
-                //     text: body.message,
-                //     icon: "success",
-                //     timer: 3000
-                // });
-                setValue("full_name", body.user.user_full_name);
-                setValue("email", body.user.user_email);
-                setValue("role", body.user.role);
-                setImageFile(body.user.user_photo);
-                setProfileImage(body.user.user_photo);
-                setPhone(body.user.user_phone);
-                setBlockUser(body.user.block_user);
-                setImageDimensions(true);
-                setImageFileSize(true);
-                setIsLoading(false);
-                setFileExt("jpg");
-                if (body.user.user_gender !== null) {
-                    setGender(body.user.user_gender);
-                }
-            } else {
-                Swal.fire({
-                    title: "Error!",
-                    text: body.message,
-                    icon: "error",
-                    timer: 3000
-                });
-                setIsLoading(false);
-            }
-            //eslint-disable-next-line
-        } catch (error: any) {
-            Swal.fire({
-                title: "Error!",
-                text: error.message,
-                icon: "error",
-                timer: 4000
-            });
         }
     }
 
     const resetData = async () => {
         const conf = confirm("Are you sure want reset participation data ?");
         if (conf) {
-            setIsLoading(true);
+            // setIsLoading(true);
             const baseURI = window.location.origin;
             const token = getCookie(adminAuthUserCookieName);
             try {
@@ -296,7 +214,7 @@ function Page() {
                     body: JSON.stringify({ token, uid: user_id_par }),
                 });
                 if (!resp.ok) {
-                    setIsLoading(false);
+                    // setIsLoading(false);
                 }
                 const body = await resp.json();
                 if (body.success) {
@@ -306,7 +224,7 @@ function Page() {
                         icon: "success",
                         timer: 3000
                     });
-                    setIsLoading(false);
+                    // setIsLoading(false);
                 } else {
                     Swal.fire({
                         title: "Error!",
@@ -314,7 +232,7 @@ function Page() {
                         icon: "error",
                         timer: 3000
                     });
-                    setIsLoading(false);
+                    // setIsLoading(false);
                 }
                 //eslint-disable-next-line
             } catch (error: any) {
@@ -328,18 +246,34 @@ function Page() {
         }
     }
 
+    const { data, isError, error, isSuccess, isLoading } = useReadSingleUsers({
+        token: token ?? "",
+        uid: user_id_par
+    });
+
     useEffect(() => {
-        // setValue("full_name", "Amit Jadhav");
-        // setValue("email", "amitjn@ay.com");
-        // setValue("role", "Normal");
-        // setImageFile("/images/testimonials/michael-davis.jpg");
-        // setProfileImage("/images/testimonials/michael-davis.jpg");
-        // setImageDimensions(true);
-        // setImageFileSize(true);
-        // setFileExt("jpg");
-        getUser();
+        if (isSuccess) {
+            if (data.user) {
+                console.log(data.user);
+                setValue("full_name", data.user.user_full_name);
+                setValue("email", data.user.user_email);
+                setValue("role", data.user.role);
+                setImageFile(data.user.user_photo ?? "");
+                setProfileImage(data.user.user_photo ?? "");
+                setPhone(data.user.user_phone ?? "");
+                setBlockUser(data.user.block_user);
+                setImageDimensions(true);
+                setImageFileSize(true);
+                setFileExt("jpg");
+                if (data.user.user_gender !== null) {
+                    setGender(data.user.user_gender ?? "");
+                }
+            }
+        }
+
+        QF_TQ_UEF_CatchErrorCB(isError, error);
         //eslint-disable-next-line
-    }, []);
+    }, [data, isSuccess, isError, error]);
 
     const breadcrumbsMenu = [
         {
@@ -576,7 +510,7 @@ function Page() {
                                 </div>
                                 <div className="text-right">
                                     {
-                                        isLoading ?
+                                        (isLoading || updSinUsr.isPending) ?
                                             (<div className="spinner size-1"></div>)
                                             :
                                             (

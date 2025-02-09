@@ -372,8 +372,6 @@ export const callbackErrT1S2_ST1 = (resp: (CommonAPIResponseWithZodError | undef
     }
 }
 
-//  ---- 
-
 //eslint-disable-next-line
 export const QF_TQ_UEF_CatchErrorCB = (isError: boolean, error: any) => {
     // Catch errors.

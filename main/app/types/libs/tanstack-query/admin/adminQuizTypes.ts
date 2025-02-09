@@ -1,5 +1,3 @@
-import { RTSPkgSelectType } from "@/app/types/components/admin/componentsTypes";
-
 export type QF_ARAQuizesDataType = {
     quiz_id: string,
     quiz_title: string,
@@ -29,6 +27,8 @@ export type QF_ACreateQuizPayloadType = {
     negative_marking_score: number
 }
 
+export type QF_AUpdateQuizPayloadType = Omit<QF_ACreateQuizPayloadType, 'quiz_categories'>
+
 export type QF_AGetQuizDataType = {
     quiz_id: string,
     quiz_title: string,
@@ -40,7 +40,7 @@ export type QF_AGetQuizDataType = {
     quiz_status: string,
     quiz_about_text: string,
     quiz_terms: string[],
-    quiz_categories: RTSPkgSelectType[],
+    // quiz_categories: RTSPkgSelectType[],
     quiz_cover_photo: string,
     negative_marking_score: number
 }

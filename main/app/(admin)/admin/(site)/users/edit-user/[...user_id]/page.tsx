@@ -254,7 +254,6 @@ function Page() {
     useEffect(() => {
         if (isSuccess) {
             if (data.user) {
-                console.log(data.user);
                 setValue("full_name", data.user.user_full_name);
                 setValue("email", data.user.user_email);
                 setValue("role", data.user.role);

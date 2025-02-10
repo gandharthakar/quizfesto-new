@@ -4,6 +4,7 @@ import { convertDigitIn } from "@/app/libs/helpers/helperFunctions";
 import { type NextRequest } from 'next/server';
 import jwt from "jsonwebtoken";
 import { sanitize } from "@/app/libs/sanitize";
+import { CommonAPIResponse } from "@/app/types/commonTypes";
 
 // interface QF_Winning_Record {
 //     user_id: string,
@@ -23,12 +24,12 @@ import { sanitize } from "@/app/libs/sanitize";
 //     user_profile_picture?: string
 // }
 
-interface Respo {
-    success: boolean,
-    message: string,
-    //eslint-disable-next-line
-    winners?: any[]
-}
+// interface Respo {
+//     success: boolean,
+//     message: string,
+//     //eslint-disable-next-line
+//     winners?: any[]
+// }
 
 //eslint-disable-next-line
 const getWinner = (data: any[], minScore: number, maxScore: number, onlyMaxScore: boolean) => {
@@ -167,8 +168,9 @@ const prepScoreRecord = async (winData: any[], winType: number, WinTypeDscr: str
     return obj;
 }
 
-export async function GET(req: NextRequest) {
-    let resp: Respo = {
+export async function POST(req: NextRequest) {
+    //eslint-disable-next-line
+    let resp: (CommonAPIResponse & { winners?: any[] }) = {
         success: false,
         message: ''
     }
@@ -178,8 +180,10 @@ export async function GET(req: NextRequest) {
 
     try {
 
-        const searchParams = req.nextUrl.searchParams;
-        const token = sanitize(searchParams.get('token'));
+        const body = await req.json();
+        const token = sanitize(body.token);
+        // const searchParams = req.nextUrl.searchParams;
+        // const token = sanitize(searchParams.get('token'));
 
         if (token) {
             const res = jwt.verify(token as string, process.env.JWT_SECRET ?? "") as { is_admin_user: string };

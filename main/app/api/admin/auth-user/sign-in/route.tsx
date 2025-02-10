@@ -3,18 +3,11 @@ import { NextResponse } from "next/server";
 import { compare } from "bcrypt";
 import jwt from "jsonwebtoken";
 import { sanitize } from "@/app/libs/sanitize";
-import { zodIssuesMyType } from "@/app/types/commonTypes";
+import { CommonAPIResponseWithZodError } from "@/app/types/commonTypes";
 import { AdminLoginValidationSchema } from "@/app/libs/zod/schemas/adminValidationSchemas";
 
-interface Resp {
-    success: boolean,
-    message: string,
-    token?: string,
-    errors?: zodIssuesMyType[]
-}
-
 export async function POST(req: Request) {
-    let resp: Resp = {
+    let resp: CommonAPIResponseWithZodError = {
         success: false,
         message: ''
     }

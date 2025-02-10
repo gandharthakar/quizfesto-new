@@ -6,9 +6,11 @@ import { MdOutlineAddAPhoto } from "react-icons/md";
 import { RiCloseLargeFill } from "react-icons/ri";
 import Swal from "sweetalert2";
 import { WinnerPrizeFormType } from "@/app/types/components/admin/componentsTypes";
-import { convertBase64 } from "@/app/libs/helpers/helperFunctions";
+import { callbackErrT1S1_ST1, callbackOnErrT1S1_ST1, callbackOnSucT1S1_ST1, convertBase64, QF_TQ_UEF_CatchErrorCB } from "@/app/libs/helpers/helperFunctions";
 import { getCookie } from "cookies-next/client";
 import { adminAuthUserCookieName } from "@/app/constant/datafaker";
+import { useDeleteSinglePrize, useUpdateSinglePrize } from "@/app/libs/tanstack-query/admin/mutations/adminPrizesMutations";
+import { useReadSinglePrize } from "@/app/libs/tanstack-query/admin/queries/adminQueries";
 
 function WinnerPrizeForm(props: WinnerPrizeFormType) {
 
@@ -16,6 +18,7 @@ function WinnerPrizeForm(props: WinnerPrizeFormType) {
 
     const defaultImage = "https://placehold.co/700x500/png";
 
+    const token = getCookie(adminAuthUserCookieName);
     const [profileImage, setProfileImage] = useState<string>("");
     const [imageFile, setImageFile] = useState<string>('');
     const [fileExt, setFileExt] = useState<string>('');
@@ -25,7 +28,7 @@ function WinnerPrizeForm(props: WinnerPrizeFormType) {
     const [descError, setDescError] = useState<string>("");
     const [scoreLimit, setScoreLimit] = useState<string>("");
     const [SLError, setSLError] = useState<string>("");
-    const [isLoading, setIsLoading] = useState<boolean>(false);
+    // const [isLoading, setIsLoading] = useState<boolean>(false);
     const [btnTxt, setBtnTxt] = useState<string>("Save");
 
     const handleImageFileInput = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -72,51 +75,19 @@ function WinnerPrizeForm(props: WinnerPrizeFormType) {
         setScoreLimit("");
     }
 
+    const delSinPrz = useDeleteSinglePrize({
+        token,
+        prize_type: prize_type_text.toString(),
+        errorCB: (resp) => callbackErrT1S1_ST1(resp),
+        onErrorCB: (resp) => callbackOnErrT1S1_ST1(resp),
+        onSuccessCB: (resp) => callbackOnSucT1S1_ST1(resp)
+    });
+
     const removePrize = async () => {
         const conf = confirm("Are you sure you want to remove prize ?");
         if (conf) {
-            setIsLoading(true);
-            const baseURI = window.location.origin;
-            const token = getCookie(adminAuthUserCookieName);
-            try {
-                const resp = await fetch(`${baseURI}/api/admin/prizes/delete`, {
-                    method: "DELETE",
-                    body: JSON.stringify({ token, prize_type: prize_type_text })
-                });
-                if (!resp.ok) {
-                    setIsLoading(false);
-                }
-                const body = await resp.json();
-                if (body.success) {
-                    Swal.fire({
-                        title: "Success!",
-                        text: body.message,
-                        icon: "success",
-                        timer: 1500
-                    });
-                    const s1 = setTimeout(() => {
-                        window.location.reload();
-                        clearTimeout(s1);
-                    }, 1500);
-                    setIsLoading(false);
-                } else {
-                    Swal.fire({
-                        title: "Error!",
-                        text: body.message,
-                        icon: "error",
-                        timer: 3000
-                    });
-                    setIsLoading(false);
-                }
-                //eslint-disable-next-line
-            } catch (error: any) {
-                Swal.fire({
-                    title: "Error!",
-                    text: error.message,
-                    icon: "error",
-                    timer: 4000
-                });
-            }
+            const tokenDel = getCookie(adminAuthUserCookieName);
+            delSinPrz.mutate({ token: tokenDel ?? "", prize_type: Number(prize_type_text) });
         }
     }
 
@@ -143,6 +114,14 @@ function WinnerPrizeForm(props: WinnerPrizeFormType) {
             }
         }
     }
+
+    const creUpdSinPrz = useUpdateSinglePrize({
+        // token,
+        prize_type: prize_type_text.toString(),
+        errorCB: (resp) => callbackErrT1S1_ST1(resp),
+        onErrorCB: (resp) => callbackOnErrT1S1_ST1(resp),
+        onSuccessCB: (resp) => callbackOnSucT1S1_ST1(resp)
+    });
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -212,115 +191,49 @@ function WinnerPrizeForm(props: WinnerPrizeFormType) {
         }
 
         if (validPrizeCoverPhoto && descr && validSL) {
-            const token = getCookie(adminAuthUserCookieName);
+            const tokenSub = getCookie(adminAuthUserCookieName);
             const data = {
-                token,
-                prize_type: prize_type_text,
+                token: tokenSub ?? "",
+                prize_type: Number(prize_type_text),
                 prize_photo: imageFile,
                 prize_description: descr,
                 winning_score_limit: Number(scoreLimit)
             }
-            setIsLoading(true);
-            const baseURI = window.location.origin;
-            try {
-                const resp = await fetch(`${baseURI}/api/admin/prizes/create-update`, {
-                    method: "POST",
-                    body: JSON.stringify(data)
-                });
-                if (!resp.ok) {
-                    setIsLoading(false);
-                }
-                const body = await resp.json();
-                if (body.success) {
-                    setIsLoading(false);
-                    Swal.fire({
-                        title: "Success!",
-                        text: body.message,
-                        icon: "success",
-                        timer: 1500
-                    });
-                    // let s1 = setTimeout(() => {
-                    //     window.location.reload();
-                    //     clearTimeout(s1);
-                    // }, 1500);
-                } else {
-                    setIsLoading(false);
-                    Swal.fire({
-                        title: "Error!",
-                        text: body.message,
-                        icon: "error",
-                        timer: 10000
-                    });
-                }
-                //eslint-disable-next-line
-            } catch (error: any) {
-                Swal.fire({
-                    title: "Error!",
-                    text: error.message,
-                    icon: "error",
-                    timer: 4000
-                });
-            }
+            creUpdSinPrz.mutate(data);
         }
     }
 
-    const getPrize = async () => {
-        setIsLoading(true);
-        const baseURI = window.location.origin;
-        const token = getCookie(adminAuthUserCookieName);
-        try {
-            const resp = await fetch(`${baseURI}/api/admin/prizes/read?token=${token}&prize_type=${prize_type_text}`, {
-                method: "GET",
-            });
-            if (!resp.ok) {
-                setIsLoading(false);
-            }
-            const body = await resp.json();
-            if (body.success) {
-                setIsLoading(false);
-                // Swal.fire({
-                //     title: "Success!",
-                //     text: body.message,
-                //     icon: "success",
-                //     timer: 4000
-                // });
-                if (body.message == "No Prize Found!") {
-                    setBtnTxt("Save");
-                } else {
-                    setBtnTxt("Update");
-                    setDescr(body.prize_description);
-                    setProfileImage(body.prize_cover_photo);
-                    setImageFile(body.prize_cover_photo);
-                    setScoreLimit(body.winning_score_limit);
-                    setFileExt("png");
-                    setImageFileSize(true);
-                    setImageDimensions(true);
-                }
-            } else {
-                setIsLoading(false);
-            }
-            //eslint-disable-next-line
-        } catch (error: any) {
-            Swal.fire({
-                title: "Error!",
-                text: error.message,
-                icon: "error",
-                timer: 4000
-            });
-        }
-    }
+    const { data, isError, error, isSuccess, isLoading } = useReadSinglePrize({
+        token: token ?? "",
+        prize_type: prize_type_text.toString()
+    });
 
     useEffect(() => {
-        getPrize();
-        //eslint-disable-next-line
-    }, []);
+
+        if (isSuccess) {
+            if (data.message == "No Prize Found!") {
+                setBtnTxt("Save");
+            } else {
+                setBtnTxt("Update");
+                setDescr(data.prize_description ?? "");
+                setProfileImage(data.prize_cover_photo ?? "");
+                setImageFile(data.prize_cover_photo ?? "");
+                setScoreLimit(data.winning_score_limit?.toString() ?? "");
+                setFileExt("png");
+                setImageFileSize(true);
+                setImageDimensions(true);
+            }
+        }
+
+        QF_TQ_UEF_CatchErrorCB(isError, error);
+    }, [data, isSuccess, isError, error]);
 
     return (
         <>
             <input type="hidden" value={profileImage} />
             <div className="transition-all delay-75 relative border-[2px] border-solid p-[15px] border-zinc-300 bg-white hover:border-zinc-600 dark:bg-zinc-800 dark:border-zinc-600 dark:hover:border-zinc-400">
                 {
-                    isLoading ?
+                    (isLoading || (delSinPrz.isPending || creUpdSinPrz.isPending)) ?
                         (
                             <div className={`transition-all delay-75 absolute left-0 top-0 z-[5] bg-[rgba(255,255,255,0.90)] w-full h-full dark:bg-[rgba(9,9,11,0.95)] justify-center items-center flex`}>
                                 <div className="spinner"></div>

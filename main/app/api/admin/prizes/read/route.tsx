@@ -3,18 +3,11 @@ import { NextResponse } from "next/server";
 import { type NextRequest } from 'next/server';
 import jwt from "jsonwebtoken";
 import { sanitize } from "@/app/libs/sanitize";
-
-interface Respo {
-    success: boolean,
-    message: string,
-    prize_type?: number,
-    prize_description?: string,
-    prize_cover_photo?: string,
-    winning_score_limit?: number
-}
+import { CommonAPIResponse } from "@/app/types/commonTypes";
+import { QF_AGetPrizeDataType } from "@/app/types/libs/tanstack-query/admin/adminPrizesTypes";
 
 export async function GET(req: NextRequest) {
-    let resp: Respo = {
+    let resp: (CommonAPIResponse & QF_AGetPrizeDataType) = {
         success: false,
         message: ''
     }

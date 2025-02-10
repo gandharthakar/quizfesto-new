@@ -11,6 +11,9 @@ import { readAllAdminCategoriesBA, readAllAdminHomeCategoriesBA, readSingleCateg
 import { QF_AGetSingleCatPayloadType } from "@/app/types/libs/tanstack-query/admin/adminCategoriesTypes";
 import { readAllAdminUsersBA, readSingleUser } from "@/app/libs/tanstack-query/admin/api-functions/adminUsersAPIFunctions";
 import { QF_AGetSingleUserPayloadType } from "@/app/types/libs/tanstack-query/admin/adminUsersTypes";
+import { readAllAdminWinnersBA } from "@/app/libs/tanstack-query/admin/api-functions/adminWinnersAPIFunctions";
+import { readSinglePrize } from "@/app/libs/tanstack-query/admin/api-functions/adminPrizesAPIFunctions";
+import { QF_AGetPrizePayloadType } from "@/app/types/libs/tanstack-query/admin/adminPrizesTypes";
 
 // Admin Settings Queries.
 
@@ -150,6 +153,26 @@ export const useReadSingleUsers = (payload: QF_AGetSingleUserPayloadType) => {
     return useQuery({
         queryKey: ["readSingleUsers", payload.uid],
         queryFn: () => readSingleUser(payload),
+        ...TQ_DefaultConfig
+    });
+}
+
+// Admin Winners Queries.
+
+export const useReadAllAdminWinners = (token: string) => {
+    return useQuery({
+        queryKey: ["readAllAdminWinners", token],
+        queryFn: () => readAllAdminWinnersBA(token),
+        ...TQ_DefaultConfig
+    });
+}
+
+// Admin Prizes Queries.
+
+export const useReadSinglePrize = (payload: QF_AGetPrizePayloadType) => {
+    return useQuery({
+        queryKey: ["readSinglePrize", payload.prize_type],
+        queryFn: () => readSinglePrize(payload),
         ...TQ_DefaultConfig
     });
 }

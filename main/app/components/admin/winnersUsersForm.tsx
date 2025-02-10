@@ -2,10 +2,11 @@
 
 import Image from "next/image";
 import { useState } from "react";
-import Swal from "sweetalert2";
 import { WinnerUserFormType } from "@/app/types/components/admin/componentsTypes";
 import { getCookie } from "cookies-next/client";
 import { adminAuthUserCookieName } from "@/app/constant/datafaker";
+import { useDeleteSingleWinner, useUpdateSingleWinner } from "@/app/libs/tanstack-query/admin/mutations/adminWinnersMutations";
+import { callbackErrT1S1_ST1, callbackOnErrT1S1_ST1, callbackOnSucT1S1_ST1 } from "@/app/libs/helpers/helperFunctions";
 
 function WinnersUsersForm(props: WinnerUserFormType) {
 
@@ -19,9 +20,10 @@ function WinnersUsersForm(props: WinnerUserFormType) {
         user_profile_picture
     } = props;
 
+    const token = getCookie(adminAuthUserCookieName);
     const [input, setInput] = useState<string>(winner_description ? winner_description : '');
     const [inputError, setInputError] = useState<string>('');
-    const [isLoading, setIsLoading] = useState<boolean>(false);
+    // const [isLoading, setIsLoading] = useState<boolean>(false);
     const buttonText = winning_position_text ? "Update" : "Save";
 
     const InputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -40,47 +42,27 @@ function WinnersUsersForm(props: WinnerUserFormType) {
         }
     }
 
+    const delSinWnr = useDeleteSingleWinner({
+        token,
+        errorCB: (resp) => callbackErrT1S1_ST1(resp),
+        onErrorCB: (resp) => callbackOnErrT1S1_ST1(resp),
+        onSuccessCB: (resp) => callbackOnSucT1S1_ST1(resp)
+    });
+
     const removeWinner = async () => {
         const conf = confirm("Are you sure want to remove this winner ?");
         if (conf) {
-            const baseURI = window.location.origin;
-            const token = getCookie(adminAuthUserCookieName);
-            try {
-                const resp = await fetch(`${baseURI}/api/admin/winners/crud/remove`, {
-                    method: "DELETE",
-                    body: JSON.stringify({ token, winner_type }),
-                });
-                const body = await resp.json();
-                if (body.success) {
-                    Swal.fire({
-                        title: "Success!",
-                        text: body.message,
-                        icon: "success",
-                        timer: 3000
-                    });
-                    const set = setTimeout(() => {
-                        window.location.reload();
-                        clearTimeout(set);
-                    }, 3000);
-                } else {
-                    Swal.fire({
-                        title: "Error!",
-                        text: body.message,
-                        icon: "error",
-                        timer: 3000
-                    });
-                }
-                //eslint-disable-next-line
-            } catch (error: any) {
-                Swal.fire({
-                    title: "Error!",
-                    text: error.message,
-                    icon: "error",
-                    timer: 4000
-                });
-            }
+            const tokenDel = getCookie(adminAuthUserCookieName);
+            delSinWnr.mutate({ token: tokenDel ?? "", winner_type });
         }
     }
+
+    const updSinWnr = useUpdateSingleWinner({
+        token,
+        errorCB: (resp) => callbackErrT1S1_ST1(resp),
+        onErrorCB: (resp) => callbackOnErrT1S1_ST1(resp),
+        onSuccessCB: (resp) => callbackOnSucT1S1_ST1(resp)
+    });
 
     const handleSubmitForm = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -101,44 +83,8 @@ function WinnersUsersForm(props: WinnerUserFormType) {
         }
 
         if (isValidForm) {
-            setIsLoading(true);
-            const baseURI = window.location.origin;
-            const token = getCookie(adminAuthUserCookieName);
-            try {
-                const resp = await fetch(`${baseURI}/api/admin/winners/crud/update`, {
-                    method: "POST",
-                    body: JSON.stringify({ token, winner_type, winner_description: input }),
-                });
-                if (!resp.ok) {
-                    setIsLoading(false);
-                }
-                const body = await resp.json();
-                if (body.success) {
-                    Swal.fire({
-                        title: "Success!",
-                        text: body.message,
-                        icon: "success",
-                        timer: 3000
-                    });
-                    setIsLoading(false);
-                } else {
-                    Swal.fire({
-                        title: "Error!",
-                        text: body.message,
-                        icon: "error",
-                        timer: 3000
-                    });
-                    setIsLoading(false);
-                }
-                //eslint-disable-next-line
-            } catch (error: any) {
-                Swal.fire({
-                    title: "Error!",
-                    text: error.message,
-                    icon: "error",
-                    timer: 4000
-                });
-            }
+            const tokenSub = getCookie(adminAuthUserCookieName);
+            updSinWnr.mutate({ token: tokenSub ?? "", winner_type, winner_description: input });
         }
     }
 
@@ -200,7 +146,7 @@ function WinnersUsersForm(props: WinnerUserFormType) {
                                     Remove
                                 </button>
                                 {
-                                    isLoading ?
+                                    (delSinWnr.isPending || updSinWnr.isPending) ?
                                         (<div className="spinner size-4"></div>)
                                         :
                                         (

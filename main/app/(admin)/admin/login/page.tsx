@@ -145,12 +145,14 @@ function Page() {
                                 }
                             </div>
                             <div className="text-center">
-                                <Link href="/" title="Visit Site" target="_blank" className="flex gap-x-[5px] justify-center items-center text-theme-color-1 dark:text-theme-color-2 hover:underline">
-                                    <BiLinkExternal size={20} className="w-[18px] h-[18px] md:w-[20px] md:h-[20px]" />
-                                    <div className="font-noto_sans text-[16px] md:text-[18px] font-semibold">
-                                        Visit Site
-                                    </div>
-                                </Link>
+                                <div className="inline-block">
+                                    <Link href="/" title="Visit Site" target="_blank" className="flex gap-x-[5px] justify-center items-center text-theme-color-1 dark:text-theme-color-2 hover:underline">
+                                        <BiLinkExternal size={20} className="w-[18px] h-[18px] md:w-[20px] md:h-[20px]" />
+                                        <div className="font-noto_sans text-[16px] md:text-[18px] font-semibold">
+                                            Visit Site
+                                        </div>
+                                    </Link>
+                                </div>
                             </div>
                         </form>
                     </div>

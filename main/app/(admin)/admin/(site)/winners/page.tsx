@@ -4,119 +4,65 @@ import WinnersUsersForm from "@/app/components/admin/winnersUsersForm";
 import TokenChecker from "@/app/libs/tokenChecker";
 import { WinnerUserFormType } from "@/app/types/components/admin/componentsTypes";
 import { useEffect, useState } from "react";
-import Swal from "sweetalert2";
 import { getCookie } from "cookies-next/client";
 import { adminAuthUserCookieName } from "@/app/constant/datafaker";
+import { useReadAllAdminWinners } from "@/app/libs/tanstack-query/admin/queries/adminQueries";
+import { callbackErrT1S1_ST1, callbackOnErrT1S1_ST1, callbackOnSucT1S1_ST1, QF_TQ_UEF_CatchErrorCB } from "@/app/libs/helpers/helperFunctions";
+import { useDeleteAllAdminWinners, useFindAllAdminWinners } from "@/app/libs/tanstack-query/admin/mutations/adminWinnersMutations";
 
 function Page() {
 
+    const token = getCookie(adminAuthUserCookieName);
     const [winnersData, setWinnersData] = useState<WinnerUserFormType[]>([]);
-    const [isLoading, setIsLoading] = useState<boolean>(true);
+    // const [isLoading, setIsLoading] = useState<boolean>(true);
+
+    const findSinWin = useFindAllAdminWinners({
+        token,
+        errorCB: (resp) => callbackErrT1S1_ST1(resp),
+        onErrorCB: (resp) => callbackOnErrT1S1_ST1(resp),
+        onSuccessCB: (resp) => callbackOnSucT1S1_ST1(resp)
+    });
 
     const getWinners = async () => {
-        setIsLoading(true);
-        setWinnersData([]);
-        const baseURI = window.location.origin;
-        const token = getCookie(adminAuthUserCookieName);
-        try {
-            const resp = await fetch(`${baseURI}/api/admin/winners/crud/find?token=${token}`, {
-                method: "GET",
-            });
-            if (!resp.ok) {
-                setIsLoading(false);
+        const tokenSub = getCookie(adminAuthUserCookieName);
+        findSinWin.mutate({ token: tokenSub ?? "" });
+        if (findSinWin.isSuccess) {
+            if (findSinWin.data?.winners) {
+                setWinnersData(findSinWin.data?.winners);
             }
-            const body = await resp.json();
-            if (body.success) {
-                setIsLoading(false);
-                setWinnersData(body.winners);
-            } else {
-                setIsLoading(false);
-            }
-            //eslint-disable-next-line
-        } catch (error: any) {
-            Swal.fire({
-                title: "Error!",
-                text: error.message,
-                icon: "error",
-                timer: 4000
-            });
         }
     }
 
-    const readWinners = async () => {
-        const baseURI = window.location.origin;
-        const token = getCookie(adminAuthUserCookieName);
-        try {
-            const resp = await fetch(`${baseURI}/api/admin/winners/bulk-actions/read-all?token=${token}`, {
-                method: "GET",
-            });
-            if (!resp.ok) {
-                setIsLoading(false);
-            }
-            const body = await resp.json();
-            if (body.success) {
-                setIsLoading(false);
-                setWinnersData(body.winners);
-            } else {
-                setIsLoading(false);
-            }
-            //eslint-disable-next-line
-        } catch (error: any) {
-            Swal.fire({
-                title: "Error!",
-                text: error.message,
-                icon: "error",
-                timer: 4000
-            });
-        }
-    }
+    const delSinWin = useDeleteAllAdminWinners({
+        token,
+        errorCB: (resp) => callbackErrT1S1_ST1(resp),
+        onErrorCB: (resp) => callbackOnErrT1S1_ST1(resp),
+        onSuccessCB: (resp) => callbackOnSucT1S1_ST1(resp)
+    });
 
     const deleteWinners = async () => {
         const conf = confirm("Are you sure want to remove all winners ?");
 
         if (conf) {
-            const baseURI = window.location.origin;
-            const token = getCookie(adminAuthUserCookieName);
-            try {
-                const resp = await fetch(`${baseURI}/api/admin/winners/bulk-actions/remove-all?token=${token}`, {
-                    method: "DELETE"
-                });
-
-                const body = await resp.json();
-                if (body.success) {
-                    Swal.fire({
-                        title: "Success!",
-                        text: body.message,
-                        icon: "success",
-                        timer: 3000
-                    });
-                    const set = setTimeout(() => {
-                        window.location.reload();
-                        clearTimeout(set);
-                    }, 3000);
-                } else {
-                    Swal.fire({
-                        title: "Error!",
-                        text: body.message,
-                        icon: "error",
-                        timer: 3000
-                    });
-                }
-                //eslint-disable-next-line
-            } catch (error: any) {
-                Swal.fire({
-                    title: "Error!",
-                    text: error.message,
-                    icon: "error",
-                    timer: 4000
-                });
-            }
+            const tokenDel = getCookie(adminAuthUserCookieName);
+            delSinWin.mutate({ token: tokenDel ?? "" });
         }
     }
 
+    const { data, isError, error, isSuccess, isLoading } = useReadAllAdminWinners(token ?? "");
+
     useEffect(() => {
-        readWinners();
-    }, []);
+
+        if (isSuccess) {
+            if (data.winners && data.winners.length) {
+                setWinnersData(data.winners);
+            } else {
+                setWinnersData([]);
+            }
+        }
+
+        QF_TQ_UEF_CatchErrorCB(isError, error);
+    }, [data, isSuccess, isError, error, setWinnersData]);
 
     return (
         <>
@@ -169,7 +115,7 @@ function Page() {
                                 (
                                     <>
                                         {
-                                            isLoading ?
+                                            (isLoading || (delSinWin.isPending || findSinWin.isPending)) ?
                                                 (<div className="spinner size-1"></div>)
                                                 :
                                                 (

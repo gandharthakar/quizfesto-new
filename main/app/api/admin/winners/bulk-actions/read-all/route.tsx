@@ -4,23 +4,8 @@ import { convertDigitIn, getWinnerPosTxt } from "@/app/libs/helpers/helperFuncti
 import { type NextRequest } from 'next/server';
 import jwt from "jsonwebtoken";
 import { sanitize } from "@/app/libs/sanitize";
-
-interface WinUsrFrm {
-    winner_id: string,
-    winner_type: number,
-    winning_position_text: string,
-    user_id?: string,
-    winner_date: string,
-    user_full_name: string,
-    winner_description: string,
-    user_profile_picture?: string
-}
-
-interface Respo {
-    success: boolean,
-    message: string,
-    winners?: WinUsrFrm[]
-}
+import { CommonAPIResponse } from "@/app/types/commonTypes";
+import { QF_ARAWinnersDataType } from "@/app/types/libs/tanstack-query/admin/adminWinnersTypes";
 
 const getUserDetails = async (user_id: string, onlyName: boolean) => {
     const data = await prisma.qF_User.findFirst({
@@ -36,7 +21,7 @@ const getUserDetails = async (user_id: string, onlyName: boolean) => {
 }
 
 export async function GET(req: NextRequest) {
-    let resp: Respo = {
+    let resp: (CommonAPIResponse & { winners?: QF_ARAWinnersDataType[] }) = {
         success: false,
         message: ''
     }
@@ -90,7 +75,7 @@ export async function GET(req: NextRequest) {
 
                     if (data.length > 0) {
 
-                        const arr: WinUsrFrm[] = [];
+                        const arr: QF_ARAWinnersDataType[] = [];
                         for (let i = 0; i < data.length; i++) {
                             const obj = {
                                 winner_id: data[i].winner_id,

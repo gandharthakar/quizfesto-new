@@ -22,6 +22,7 @@ export type CommonAPIResponse = {
 
 export type CommonAPIResponseWithZodError = {
     errors?: zodIssuesMyType[]
+    token?: string,
 } & CommonAPIResponse
 
 export type TQ_CBtype = {
@@ -33,5 +34,6 @@ export type TQ_CBtype = {
     question_id?: string,
     option_id?: string,
     category_id?: string,
-    uid?: string
+    uid?: string,
+    prize_type?: string
 }

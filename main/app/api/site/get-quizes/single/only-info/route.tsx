@@ -1,30 +1,9 @@
 import prisma from "@/app/libs/db";
 import { NextResponse } from "next/server";
-
-interface QF_Cats_Pub {
-    category_id: string,
-    category_title: string,
-    category_slug: string
-}
-
-interface QF_Quiz_Pub {
-    quiz_id: string,
-    quiz_title: string,
-    quiz_summary: string,
-    quiz_display_time: string,
-    quiz_total_question: number,
-    quiz_total_marks: number,
-    quiz_about_text: string,
-    quiz_terms: string[],
-    quiz_categories: QF_Cats_Pub[],
-    quiz_cover_photo?: string,
-}
-
-interface Respo {
-    success: boolean,
-    message: string
-    quiz?: QF_Quiz_Pub
-}
+import { type NextRequest } from 'next/server';
+import { sanitize } from "@/app/libs/sanitize";
+import { CommonAPIResponse } from "@/app/types/commonTypes";
+import { QF_MasterQuizDataType } from "@/app/types/libs/tanstack-query/website/websiteCommonTypes";
 
 const getCats = async (ids: string[]) => {
     const cats = await prisma.qF_Quiz_Category.findMany({
@@ -38,9 +17,9 @@ const getCats = async (ids: string[]) => {
     return cats;
 }
 
-export async function POST(req: Request) {
+export async function GET(req: NextRequest) {
 
-    let resp: Respo = {
+    let resp: (CommonAPIResponse & { quiz?: QF_MasterQuizDataType }) = {
         success: false,
         message: '',
     }
@@ -49,8 +28,10 @@ export async function POST(req: Request) {
 
     try {
 
-        const body = await req.json();
-        const { quiz_id } = body;
+        const searchParams = req.nextUrl.searchParams;
+        const quiz_id = sanitize(searchParams.get('quiz_id'));
+        // const body = await req.json();
+        // const { quiz_id } = body;
 
         if (quiz_id) {
             const data = await prisma.qF_Quiz.findFirst({

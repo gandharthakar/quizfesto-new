@@ -1,32 +1,9 @@
 import prisma from "@/app/libs/db";
+import { sanitize } from "@/app/libs/sanitize";
+import { CommonAPIResponse } from "@/app/types/commonTypes";
+import { QF_MasterCategoriesDataType, QF_MasterQuizDataType } from "@/app/types/libs/tanstack-query/website/websiteCommonTypes";
 import { NextResponse } from "next/server";
 import { type NextRequest } from 'next/server';
-
-interface QF_Cats_Pub {
-    category_id: string,
-    category_title: string,
-    category_slug: string
-}
-
-interface QF_Quiz_Pub {
-    quiz_id: string,
-    quiz_title: string,
-    quiz_summary: string,
-    quiz_display_time: string,
-    quiz_total_question: number,
-    quiz_total_marks: number,
-    quiz_about_text: string,
-    quiz_terms: string[],
-    quiz_categories: QF_Cats_Pub[],
-    quiz_cover_photo?: string,
-}
-
-interface Respo {
-    success: boolean,
-    message: string
-    quizes?: QF_Quiz_Pub[],
-    category?: QF_Cats_Pub
-}
 
 const getCats = async (ids: string[]) => {
     const cats = await prisma.qF_Quiz_Category.findMany({
@@ -41,7 +18,10 @@ const getCats = async (ids: string[]) => {
 }
 
 export async function GET(req: NextRequest) {
-    let resp: Respo = {
+    let resp: (CommonAPIResponse & {
+        quizes?: QF_MasterQuizDataType[],
+        category?: QF_MasterCategoriesDataType
+    }) = {
         success: false,
         message: '',
     }
@@ -51,7 +31,7 @@ export async function GET(req: NextRequest) {
     try {
 
         const searchParams = req.nextUrl.searchParams;
-        const category_slug = searchParams.get('category_slug');
+        const category_slug = sanitize(searchParams.get('category_slug'));
 
         if (category_slug) {
 
@@ -80,7 +60,7 @@ export async function GET(req: NextRequest) {
             });
             if (data.length > 0) {
 
-                const arr: QF_Quiz_Pub[] = [];
+                const arr: QF_MasterQuizDataType[] = [];
 
                 for (let i = 0; i < data.length; i++) {
                     const obj = {
@@ -114,11 +94,6 @@ export async function GET(req: NextRequest) {
                 resp = {
                     success: false,
                     message: "Quiz Not Found!",
-                    category: {
-                        category_id: cat_id?.category_id ?? "",
-                        category_title: cat_id?.category_title ?? "",
-                        category_slug: cat_id?.category_slug ?? ""
-                    }
                 }
             }
         } else {

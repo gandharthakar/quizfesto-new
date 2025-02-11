@@ -6,18 +6,20 @@ import { RiSearch2Line } from "react-icons/ri";
 import { useEffect, useState } from "react";
 import Swal from "sweetalert2";
 import SitePagination from "@/app/components/sitePagination";
-import { QuizCardPropsType } from "@/app/types/pages/website/viewQuizDetailsPageTypes";
-import { GFG } from "@/app/libs/helpers/helperFunctions";
+// import { QuizCardPropsType } from "@/app/types/pages/website/viewQuizDetailsPageTypes";
+import { GFG, QF_TQ_UEF_CatchErrorCB } from "@/app/libs/helpers/helperFunctions";
+import { useGetPublicQuizzesOnlyInfo } from "@/app/libs/tanstack-query/website/queries/websiteQueries";
+import { QF_MasterQuizDataType } from "@/app/types/libs/tanstack-query/website/websiteCommonTypes";
 
 export default function Page() {
 
     const dataPerPage = 6;
     const [srchInp, setSrchInp] = useState<string>("");
     const [currentPage, setCurrentPage] = useState<number>(1);
-    const [quizData, setQuizData] = useState<QuizCardPropsType[]>([]);
+    const [quizData, setQuizData] = useState<QF_MasterQuizDataType[]>([]);
     const [totalPages, setTotalPages] = useState<number>(Math.ceil(quizData.length / dataPerPage));
-    const [quizList, setQuizList] = useState<QuizCardPropsType[]>([]);
-    const [isLoading, setIsLoading] = useState<boolean>(true);
+    const [quizList, setQuizList] = useState<QF_MasterQuizDataType[]>([]);
+    // const [isLoading, setIsLoading] = useState<boolean>(true);
 
     const handleSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setSrchInp(e.target.value);
@@ -95,46 +97,24 @@ export default function Page() {
         setQuizList(GFG(quizData, newPage, dataPerPage));
     };
 
-    const getQuizes = async () => {
-        const baseURI = window.location.origin;
-        try {
-            const resp = await fetch(`${baseURI}/api/site/get-quizes/bulk-list/only-info`, {
-                method: "GET",
-            });
-            if (!resp.ok) {
-                setIsLoading(false);
-            }
-            const body = await resp.json();
-            if (body.success) {
-                setIsLoading(false);
-                setQuizList(GFG(body.quizes, currentPage, dataPerPage));
-                setQuizData(body.quizes);
-                setTotalPages(Math.ceil(body.quizes.length / dataPerPage));
-            } else {
-                Swal.fire({
-                    title: "Error!",
-                    text: body.message,
-                    icon: "error",
-                    timer: 3000
-                });
-                setIsLoading(false);
-            }
-            //eslint-disable-next-line
-        } catch (error: any) {
-            Swal.fire({
-                title: "Error!",
-                text: error.message,
-                icon: "error",
-                timer: 4000
-            });
-        }
-    }
+    const { data, isError, error, isSuccess, isLoading } = useGetPublicQuizzesOnlyInfo();
 
     useEffect(() => {
-        // setQuizList(GFG(dump_quizzes_list, currentPage, dataPerPage));
-        getQuizes();
+        if (isSuccess) {
+            if (data.quizes && data.quizes.length) {
+                setQuizList(GFG(data.quizes, currentPage, dataPerPage));
+                setQuizData(data.quizes);
+                setTotalPages(Math.ceil(data.quizes.length / dataPerPage));
+            } else {
+                setQuizData([]);
+                setQuizList(GFG([], 1, dataPerPage));
+                setTotalPages(Math.ceil(quizData.length / dataPerPage));
+            }
+        }
+
+        QF_TQ_UEF_CatchErrorCB(isError, error);
         //eslint-disable-next-line
-    }, []);
+    }, [data, isSuccess, isError, error, setQuizData]);
 
     return (
         <>

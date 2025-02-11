@@ -1,14 +1,11 @@
 import prisma from "@/app/libs/db";
+import { CommonAPIResponse } from "@/app/types/commonTypes";
+import { QF_PUBPrizesDataType } from "@/app/types/libs/tanstack-query/website/websiteCommonTypes";
 import { NextResponse } from "next/server";
-
-interface Respo {
-    success: boolean,
-    message: string
-}
 
 export async function GET() {
 
-    let resp: Respo = {
+    let resp: (CommonAPIResponse & { prizes?: QF_PUBPrizesDataType[] }) = {
         success: false,
         message: ''
     }
@@ -22,12 +19,9 @@ export async function GET() {
             resp = {
                 success: true,
                 message: "Prizes Found!",
-            }
-            const db_data = {
                 prizes: data,
-                ...resp
-            };
-            return NextResponse.json(db_data, { status: sts });
+            }
+            return NextResponse.json(resp, { status: sts });
         } else {
             sts = 200;
             resp = {

@@ -39,6 +39,9 @@ export const useDeleteAllAdminWinners = (callbacks?: TQ_CBtype) => {
                 await queryClient.invalidateQueries({
                     queryKey: ["getAdminStats", callbacks?.token]
                 });
+                await queryClient.invalidateQueries({
+                    queryKey: ["getPublicWinners"]
+                });
             }
         },
     });
@@ -79,6 +82,9 @@ export const useFindAllAdminWinners = (callbacks?: TQ_CBtype) => {
                 await queryClient.invalidateQueries({
                     queryKey: ["getAdminStats", callbacks?.token]
                 });
+                await queryClient.invalidateQueries({
+                    queryKey: ["getPublicWinners"]
+                });
             }
         },
     });
@@ -115,6 +121,9 @@ export const useUpdateSingleWinner = (callbacks?: TQ_CBtype) => {
             } else {
                 await queryClient.invalidateQueries({
                     queryKey: ["readAllAdminWinners", callbacks?.token]
+                });
+                await queryClient.invalidateQueries({
+                    queryKey: ["getPublicWinners"]
                 });
             }
         },
@@ -155,6 +164,9 @@ export const useDeleteSingleWinner = (callbacks?: TQ_CBtype) => {
                 });
                 await queryClient.invalidateQueries({
                     queryKey: ["getAdminStats", callbacks?.token]
+                });
+                await queryClient.invalidateQueries({
+                    queryKey: ["getPublicWinners"]
                 });
             }
         },

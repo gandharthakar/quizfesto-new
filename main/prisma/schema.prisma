@@ -116,7 +116,7 @@ model QF_Winning_Prizes {
   prize_type          Int      @unique
   prize_description   String
   prize_cover_photo   String?
-  winning_score_limit Int
+  winning_score_limit Int      @default(0)
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
 }

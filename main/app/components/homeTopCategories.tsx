@@ -3,49 +3,27 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { CategoriesType } from "@/app/types/components/website/componentsTypes";
-import Swal from "sweetalert2";
+import { useGetHomeFeCats } from "@/app/libs/tanstack-query/website/queries/websiteQueries";
+import { QF_TQ_UEF_CatchErrorCB } from "@/app/libs/helpers/helperFunctions";
 
 function HomeTopCategories() {
 
     const [cats, setCats] = useState<CategoriesType[]>([]);
-    const [isLoading, setIsLoading] = useState<boolean>(true);
+    // const [isLoading, setIsLoading] = useState<boolean>(true);
 
-    const getTopCats = async () => {
-        const baseURI = window.location.origin;
-        try {
-            const resp = await fetch(`${baseURI}/api/site/get-home-featured-categories`, {
-                method: "GET",
-            });
-            if (!resp.ok) {
-                setIsLoading(false);
-            }
-            const body = await resp.json();
-            if (body.success) {
-                setCats(body.home_cats);
-                setIsLoading(false);
-            } else {
-                Swal.fire({
-                    title: "Error!",
-                    text: body.message,
-                    icon: "error",
-                    timer: 3000
-                });
-                setIsLoading(false);
-            }
-            //eslint-disable-next-line
-        } catch (error: any) {
-            Swal.fire({
-                title: "Error!",
-                text: error.message,
-                icon: "error",
-                timer: 4000
-            });
-        }
-    }
+    const { data, isError, error, isSuccess, isLoading } = useGetHomeFeCats();
 
     useEffect(() => {
-        getTopCats();
-    }, []);
+        if (isSuccess) {
+            if (data.home_cats) {
+                setCats(data.home_cats);
+            } else {
+                setCats([]);
+            }
+        }
+
+        QF_TQ_UEF_CatchErrorCB(isError, error);
+    }, [data, isSuccess, isError, error, setCats]);
 
     return (
         <>

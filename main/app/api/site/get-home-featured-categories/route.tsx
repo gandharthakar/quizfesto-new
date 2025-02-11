@@ -1,17 +1,7 @@
 import prisma from "@/app/libs/db";
+import { CommonAPIResponse } from "@/app/types/commonTypes";
+import { CategoriesType } from "@/app/types/components/website/componentsTypes";
 import { NextResponse } from "next/server";
-
-interface Cats {
-    category_id: string,
-    category_title: string,
-    category_slug: string
-}
-
-interface Respo {
-    success: boolean,
-    message: string,
-    home_cats: Cats[]
-}
 
 const getCatsLabel = async (id_list: string[]) => {
     const data = await prisma.qF_Quiz_Category.findMany({
@@ -25,10 +15,9 @@ const getCatsLabel = async (id_list: string[]) => {
 }
 
 export async function GET() {
-    let resp: Respo = {
+    let resp: (CommonAPIResponse & { home_cats?: CategoriesType[] }) = {
         success: false,
         message: '',
-        home_cats: []
     }
 
     let sts: number = 200;
@@ -41,7 +30,6 @@ export async function GET() {
             resp = {
                 success: false,
                 message: "No Categories Found!",
-                home_cats: []
             }
         } else {
             sts = 200;
@@ -59,7 +47,6 @@ export async function GET() {
         resp = {
             success: false,
             message: error.message,
-            home_cats: []
         }
         return NextResponse.json(resp, { status: sts });
     }

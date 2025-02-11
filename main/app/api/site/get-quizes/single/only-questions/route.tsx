@@ -1,30 +1,9 @@
 import prisma from "@/app/libs/db";
+import { CommonAPIResponse } from "@/app/types/commonTypes";
+import { QF_pUBGetQuizQuesDataType, QF_PUBQuessDataType } from "@/app/types/libs/tanstack-query/website/websiteCommonTypes";
 import { NextResponse } from "next/server";
-
-interface QF_Quiz_Pub_Quess {
-    question_id: string,
-    question_title: string,
-    question_marks: number,
-    question_options: string
-}
-
-interface QF_Quiz_Pub_QA {
-    quiz_id: string,
-    quiz_title: string,
-    quiz_total_question: number,
-    quiz_total_marks: number,
-    quiz_estimated_time: string,
-    quiz_display_time: string,
-    quiz_cover_photo: string,
-    questions?: QF_Quiz_Pub_Quess[],
-    negative_marking_score: number
-}
-
-interface Respo {
-    success: boolean,
-    message: string,
-    quiz?: QF_Quiz_Pub_QA
-}
+import { type NextRequest } from 'next/server';
+import { sanitize } from "@/app/libs/sanitize";
 
 const getOptions = async (qid: string) => {
     const qdata = await prisma.qF_Option.findFirst({
@@ -38,8 +17,8 @@ const getOptions = async (qid: string) => {
     return qdata?.options.join(", ");
 }
 
-export async function POST(req: Request) {
-    let resp: Respo = {
+export async function GET(req: NextRequest) {
+    let resp: (CommonAPIResponse & { quiz?: QF_pUBGetQuizQuesDataType }) = {
         success: false,
         message: ''
     }
@@ -48,8 +27,10 @@ export async function POST(req: Request) {
 
     try {
 
-        const body = await req.json();
-        const { quiz_id } = body;
+        const searchParams = req.nextUrl.searchParams;
+        const quiz_id = sanitize(searchParams.get('quiz_id'));
+        // const body = await req.json();
+        // const { quiz_id } = body;
 
         if (quiz_id) {
 
@@ -66,7 +47,7 @@ export async function POST(req: Request) {
                     }
                 });
 
-                const qArrData: QF_Quiz_Pub_Quess[] = [];
+                const qArrData: QF_PUBQuessDataType[] = [];
 
                 for (let i = 0; i < ques_ids.length; i++) {
                     const obj = {

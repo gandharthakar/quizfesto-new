@@ -295,9 +295,9 @@ export default function Page() {
 
     const getQuizQuestions = async () => {
         const baseURI = window.location.origin;
-        const resp = await fetch(`${baseURI}/api/site/get-quizes/single/only-questions`, {
-            method: "POST",
-            body: JSON.stringify({ quiz_id }),
+        const resp = await fetch(`${baseURI}/api/site/get-quizes/single/only-questions?quiz_id=${quiz_id}`, {
+            method: "GET",
+            // body: JSON.stringify({ quiz_id }),
         });
         if (!resp.ok) {
             setIsLoading(false);

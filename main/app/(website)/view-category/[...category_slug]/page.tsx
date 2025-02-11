@@ -8,7 +8,8 @@ import Swal from "sweetalert2";
 import SitePagination from "@/app/components/sitePagination";
 import { useParams } from "next/navigation";
 import { QuizCardPropsType } from "@/app/types/pages/website/viewQuizDetailsPageTypes";
-import { GFG } from "@/app/libs/helpers/helperFunctions";
+import { GFG, QF_TQ_UEF_CatchErrorCB } from "@/app/libs/helpers/helperFunctions";
+import { useGetPublicQuizzesByCategory } from "@/app/libs/tanstack-query/website/queries/websiteQueries";
 
 function Page() {
 
@@ -21,7 +22,7 @@ function Page() {
     const [quizData, setQuizData] = useState<QuizCardPropsType[]>([]);
     const [totalPages, setTotalPages] = useState<number>(Math.ceil(quizData.length / dataPerPage));
     const [quizList, setQuizList] = useState<QuizCardPropsType[]>([]);
-    const [isLoading, setIsLoading] = useState<boolean>(true);
+    // const [isLoading, setIsLoading] = useState<boolean>(true);
     const [catName, setCatName] = useState<string>('Category');
 
     const handleSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -100,51 +101,27 @@ function Page() {
         setQuizList(GFG(quizData, newPage, dataPerPage));
     };
 
-    const getQuizes = async () => {
-        const baseURI = window.location.origin;
-        try {
-            const resp = await fetch(`${baseURI}/api/site/get-quizes/bulk-list/category-wise?category_slug=${cat_slug}`, {
-                method: "GET",
-            });
-            if (!resp.ok) {
-                setIsLoading(false);
-            }
-            const body = await resp.json();
-            if (body.success) {
-                console.log(body);
-                setIsLoading(false);
-                setQuizList(GFG(body.quizes, currentPage, dataPerPage));
-                setQuizData(body.quizes);
-                setTotalPages(Math.ceil(body.quizes.length / dataPerPage));
-                setCatName(body.category.category_title);
-            } else {
-                Swal.fire({
-                    title: "Error!",
-                    text: body.message,
-                    icon: "error",
-                    timer: 3000
-                });
-                if (body.category.category_title) {
-                    setCatName(body.category.category_title);
-                }
-                setIsLoading(false);
-            }
-            //eslint-disable-next-line
-        } catch (error: any) {
-            Swal.fire({
-                title: "Error!",
-                text: error.message,
-                icon: "error",
-                timer: 4000
-            });
-        }
-    }
+    const { data, isError, error, isSuccess, isLoading } = useGetPublicQuizzesByCategory(cat_slug ?? "");
 
     useEffect(() => {
-        getQuizes();
-        // setQuizList(GFG(dump_quizzes_list, currentPage, dataPerPage));
+        if (isSuccess) {
+            if (data.quizes && data.quizes.length) {
+                setQuizList(GFG(data.quizes, currentPage, dataPerPage));
+                setQuizData(data.quizes);
+                setTotalPages(Math.ceil(data.quizes.length / dataPerPage));
+            } else {
+                setQuizData([]);
+                setQuizList(GFG([], 1, dataPerPage));
+                setTotalPages(Math.ceil(quizData.length / dataPerPage));
+            }
+
+            if (data.category) {
+                setCatName(data.category.category_title);
+            }
+        }
+        QF_TQ_UEF_CatchErrorCB(isError, error);
         //eslint-disable-next-line
-    }, []);
+    }, [data, isSuccess, isError, error, setQuizData]);
 
     return (
         <>

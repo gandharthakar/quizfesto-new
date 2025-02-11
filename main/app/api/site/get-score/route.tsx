@@ -2,24 +2,8 @@ import prisma from "@/app/libs/db";
 import { NextResponse } from "next/server";
 // import { dump_quiz_data } from "@/app/constant/datafaker";
 import { sanitize } from "@/app/libs/sanitize";
-
-interface Respo {
-    success: boolean,
-    message: string,
-    quiz_coorect_answers_count: number,
-    quiz_total_score: number
-}
-
-interface QuizGivenAns {
-    question_id: string,
-    user_choosen_option: string,
-    question_marks: number
-}
-
-interface QuizQues {
-    question_id: string,
-    correct_option: string
-}
+import { QF_PUBGetScoreDataType, QuizGivenAns, QuizQues } from "@/app/types/libs/tanstack-query/website/websiteCommonTypes";
+import { CommonAPIResponse } from "@/app/types/commonTypes";
 
 function countCorrectAnswers(questions: QuizQues[], answers: QuizGivenAns[]) {
     // Initialize a counter for correct answers
@@ -69,7 +53,7 @@ const getCorrectOption = async (qid: string) => {
 
 export async function POST(req: Request) {
 
-    let resp: Respo = {
+    let resp: (CommonAPIResponse & QF_PUBGetScoreDataType) = {
         success: false,
         message: '',
         quiz_coorect_answers_count: 0,
@@ -119,9 +103,7 @@ export async function POST(req: Request) {
             sts = 400;
             resp = {
                 success: false,
-                message: "Requested Data Not Provided.",
-                quiz_coorect_answers_count: 0,
-                quiz_total_score: 0
+                message: "Requested Data Not Provided."
             }
         }
         return NextResponse.json(resp, { status: sts });
@@ -131,8 +113,6 @@ export async function POST(req: Request) {
         resp = {
             success: false,
             message: error.message,
-            quiz_coorect_answers_count: 0,
-            quiz_total_score: 0
         }
         return NextResponse.json(resp, { status: sts });
     }

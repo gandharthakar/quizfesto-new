@@ -17,6 +17,8 @@ import parse from 'html-react-parser';
 import { RootState } from "@/app/libs/redux-service/store";
 import { useSelector } from "react-redux";
 import { QuizCardPropsType, quizCategoriesType } from "@/app/types/pages/website/viewQuizDetailsPageTypes";
+import { useGetPublicSingleQuizzesOnlyInfo } from "@/app/libs/tanstack-query/website/queries/websiteQueries";
+import { QF_TQ_UEF_CatchErrorCB } from "@/app/libs/helpers/helperFunctions";
 
 export default function Page() {
 
@@ -37,7 +39,7 @@ export default function Page() {
     const [quizTerms, setQuizTerms] = useState<string[]>([]);
     const [relatedQuizes, setRelatedQuizes] = useState<QuizCardPropsType[]>([]);
     const [alreadyPlayedByUser, setAlreadyPlayedByUser] = useState<boolean>(true);
-    const [isLoading, setIsLoading] = useState<boolean>(true);
+    // const [isLoading, setIsLoading] = useState<boolean>(true);
     const [isLoading0, setIsLoading0] = useState<boolean>(true);
     const [isAdminBlockedYou, setIsAdminBlockedYou] = useState<boolean>(false);
 
@@ -64,45 +66,18 @@ export default function Page() {
         });
     }
 
-    const getQuizes = async () => {
-        const baseURI = window.location.origin;
-        const resp = await fetch(`${baseURI}/api/site/get-quizes/single/only-info`, {
-            method: "POST",
-            body: JSON.stringify({ quiz_id: qz_id }),
-        });
-        const body = await resp.json();
-        if (body.success) {
-            setQuizCats(body.quiz.quiz_categories);
-            setQuizTitle(body.quiz.quiz_title);
-            setQuizSummary(body.quiz.quiz_summary);
-            setQuizCover(body.quiz.quiz_cover_photo);
-            setQuizNOQ(body.quiz.quiz_total_question);
-            setQuizTotMks(body.quiz.quiz_total_marks);
-            setQuizDuration(body.quiz.quiz_display_time);
-            setQuizDescription(body.quiz.quiz_about_text);
-            setQuizTerms(body.quiz.quiz_terms);
-        } else {
-            Swal.fire({
-                title: "Error!",
-                text: body.message,
-                icon: "error",
-                timer: 3000
-            });
-        }
-    }
-
     const getRelatedQuizes = async () => {
         const baseURI = window.location.origin;
-        const resp = await fetch(`${baseURI}/api/site/get-quizes/bulk-list/related-quizes`, {
-            method: "POST",
-            body: JSON.stringify({ quiz_id: qz_id }),
+        const resp = await fetch(`${baseURI}/api/site/get-quizes/bulk-list/related-quizes?quiz_id=${qz_id}`, {
+            method: "GET",
+            // body: JSON.stringify({ quiz_id: qz_id }),
         });
         const body = await resp.json();
         if (body.success) {
-            setIsLoading(false);
+            // setIsLoading(false);
             setRelatedQuizes(body.quizes);
         } else {
-            setIsLoading(false);
+            // setIsLoading(false);
         }
     }
 
@@ -147,12 +122,25 @@ export default function Page() {
         }
     }
 
+    const { data, isError, error, isSuccess, isLoading } = useGetPublicSingleQuizzesOnlyInfo(qz_id ?? "");
+
     useEffect(() => {
-        // setQuizList(GFG(dump_quizzes_list, currentPage, dataPerPage));
-        getQuizes();
-        getRelatedQuizes();
-        //eslint-disable-next-line
-    }, []);
+        if (isSuccess) {
+            if (data.quiz) {
+                setQuizCats(data.quiz.quiz_categories);
+                setQuizTitle(data.quiz.quiz_title);
+                setQuizSummary(data.quiz.quiz_summary);
+                setQuizCover(data.quiz.quiz_cover_photo ?? "");
+                setQuizNOQ(data.quiz.quiz_total_question);
+                setQuizTotMks(data.quiz.quiz_total_marks);
+                setQuizDuration(data.quiz.quiz_display_time);
+                setQuizDescription(data.quiz.quiz_about_text);
+                setQuizTerms(data.quiz.quiz_terms ?? []);
+            }
+        }
+
+        QF_TQ_UEF_CatchErrorCB(isError, error);
+    }, [data, isSuccess, isError, error]);
 
     useEffect(() => {
         if (AuthUserCh) {
@@ -164,6 +152,11 @@ export default function Page() {
         }
         //eslint-disable-next-line
     }, [AuthUserCh]);
+
+    useEffect(() => {
+        getRelatedQuizes();
+        //eslint-disable-next-line
+    }, []);
 
     return (
         <>

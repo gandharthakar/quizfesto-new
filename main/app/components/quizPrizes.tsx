@@ -3,7 +3,8 @@
 import Image from "next/image";
 import parse from 'html-react-parser';
 import { useEffect, useState } from "react";
-import Swal from "sweetalert2";
+import { useGetPublicPrizes } from "@/app/libs/tanstack-query/website/queries/websiteQueries";
+import { QF_TQ_UEF_CatchErrorCB } from "@/app/libs/helpers/helperFunctions";
 
 export default function QuizPrizes() {
 
@@ -12,71 +13,38 @@ export default function QuizPrizes() {
 
     const [prize1Photo, setPrize1Photo] = useState<string>(defaultImage);
     const [prize1Dscr, setPrize1Dscr] = useState<string>(defaultDescr);
-    const [loading1, setLoading1] = useState<boolean>(true);
+    // const [loading1, setLoading1] = useState<boolean>(true);
     const [prize2Photo, setPrize2Photo] = useState<string>(defaultImage);
     const [prize2Dscr, setPrize2Dscr] = useState<string>(defaultDescr);
-    const [loading2, setLoading2] = useState<boolean>(true);
+    // const [loading2, setLoading2] = useState<boolean>(true);
     const [prize3Photo, setPrize3Photo] = useState<string>(defaultImage);
     const [prize3Dscr, setPrize3Dscr] = useState<string>(defaultDescr);
-    const [loading3, setLoading3] = useState<boolean>(true);
+    // const [loading3, setLoading3] = useState<boolean>(true);
 
-    const getPrizes = async () => {
-        const baseURI = window.location.origin;
-        try {
-            const resp = await fetch(`${baseURI}/api/site/get-prizes`, {
-                method: "GET",
-            });
-            if (!resp.ok) {
-                setLoading1(false);
-                setLoading2(false);
-                setLoading3(false);
-            }
-            const body = await resp.json();
-            if (body.message == "No Prizes Found!") {
-                setLoading1(false);
-                setLoading2(false);
-                setLoading3(false);
-            } else {
-                for (let i = 0; i < body.prizes.length; i++) {
-                    if (body.prizes[i].prize_type === 1) {
-                        setPrize1Photo(body.prizes[i].prize_cover_photo);
-                        setPrize1Dscr(body.prizes[i].prize_description);
-                        setLoading1(false);
-                    } else {
-                        setLoading1(false);
+    const { data, isError, error, isSuccess, isLoading } = useGetPublicPrizes();
+
+    useEffect(() => {
+        if (isSuccess) {
+            if (data.prizes) {
+                for (let i = 0; i < data.prizes.length; i++) {
+                    if (data.prizes[i].prize_type === 1) {
+                        setPrize1Photo(data.prizes[i].prize_cover_photo ?? "");
+                        setPrize1Dscr(data.prizes[i].prize_description);
                     }
-
-                    if (body.prizes[i].prize_type === 2) {
-                        setPrize2Photo(body.prizes[i].prize_cover_photo);
-                        setPrize2Dscr(body.prizes[i].prize_description);
-                        setLoading2(false);
-                    } else {
-                        setLoading2(false);
+                    if (data.prizes[i].prize_type === 2) {
+                        setPrize2Photo(data.prizes[i].prize_cover_photo ?? "");
+                        setPrize2Dscr(data.prizes[i].prize_description);
                     }
-
-                    if (body.prizes[i].prize_type === 3) {
-                        setPrize3Photo(body.prizes[i].prize_cover_photo);
-                        setPrize3Dscr(body.prizes[i].prize_description);
-                        setLoading3(false);
-                    } else {
-                        setLoading3(false);
+                    if (data.prizes[i].prize_type === 3) {
+                        setPrize3Photo(data.prizes[i].prize_cover_photo ?? "");
+                        setPrize3Dscr(data.prizes[i].prize_description);
                     }
                 }
             }
-            //eslint-disable-next-line
-        } catch (error: any) {
-            Swal.fire({
-                title: "Error!",
-                text: error.message,
-                icon: "error",
-                timer: 4000
-            });
         }
-    }
 
-    useEffect(() => {
-        getPrizes();
-    }, []);
+        QF_TQ_UEF_CatchErrorCB(isError, error);
+    }, [data, isSuccess, isError, error]);
 
     return (
         <>
@@ -98,7 +66,7 @@ export default function QuizPrizes() {
                     <div className="flex flex-col gap-y-[20px]">
                         <div className="transition-all delay-75 relative w-full border-[2px] border-solid bg-zinc-100 flex flex-col items-start md:items-center md:flex-row gap-y-[15px] gap-x-[30px] dark:bg-zinc-900 hover:border-theme-color-2 dark:border-zinc-700 dark:hover:border-theme-color-2">
                             {
-                                loading1 ?
+                                isLoading ?
                                     (
                                         <div className={`transition-all delay-75 absolute left-0 top-0 z-[10] bg-[rgba(255,255,255,0.90)] w-full h-full dark:bg-[rgba(9,9,11,0.95)] justify-center items-center flex`}>
                                             <div className="spinner"></div>
@@ -127,7 +95,7 @@ export default function QuizPrizes() {
                         </div>
                         <div className="transition-all delay-75 relative w-full border-[2px] border-solid bg-zinc-100 flex flex-col items-start md:items-center md:flex-row gap-y-[15px] gap-x-[30px] dark:bg-zinc-900 hover:border-theme-color-2 dark:border-zinc-700 dark:hover:border-theme-color-2">
                             {
-                                loading2 ?
+                                isLoading ?
                                     (
                                         <div className={`transition-all delay-75 absolute left-0 top-0 z-[10] bg-[rgba(255,255,255,0.90)] w-full h-full dark:bg-[rgba(9,9,11,0.95)] justify-center items-center flex`}>
                                             <div className="spinner"></div>
@@ -156,7 +124,7 @@ export default function QuizPrizes() {
                         </div>
                         <div className="transition-all delay-75 relative w-full border-[2px] border-solid bg-zinc-100 flex flex-col items-start md:items-center md:flex-row gap-y-[15px] gap-x-[30px] dark:bg-zinc-900 hover:border-theme-color-2 dark:border-zinc-700 dark:hover:border-theme-color-2">
                             {
-                                loading3 ?
+                                isLoading ?
                                     (
                                         <div className={`transition-all delay-75 absolute left-0 top-0 z-[10] bg-[rgba(255,255,255,0.90)] w-full h-full dark:bg-[rgba(9,9,11,0.95)] justify-center items-center flex`}>
                                             <div className="spinner"></div>

@@ -1,10 +1,11 @@
 'use client';
 
+import { QF_TQ_UEF_CatchErrorCB } from "@/app/libs/helpers/helperFunctions";
+import { useGetPublicWinners } from "@/app/libs/tanstack-query/website/queries/websiteQueries";
 import { WinnersType } from "@/app/types/pages/website/winnersPageTypes";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { FaCrown } from "react-icons/fa";
-import Swal from "sweetalert2";
 
 export default function Page() {
 
@@ -12,60 +13,32 @@ export default function Page() {
     const [winData1, setWin1Data] = useState<WinnersType>();
     const [winData2, setWin2Data] = useState<WinnersType>();
     const [winData3, setWin3Data] = useState<WinnersType>();
-    const [isLoading, setIsLoading] = useState<boolean>(true);
+    // const [isLoading, setIsLoading] = useState<boolean>(true);
 
-    const getWinners = async () => {
-        const baseURI = window.location.origin;
-        try {
-            const resp = await fetch(`${baseURI}/api/site/get-winners`, {
-                method: "GET",
-            });
-            if (!resp.ok) {
-                setIsLoading(false);
-                setHaveWinners(false);
-            }
-            const body = await resp.json();
-            if (body.success) {
-                if (body.winners.length > 0) {
-                    setHaveWinners(true);
-                    for (let i = 0; i < body.winners.length; i++) {
-                        if (body.winners[i].winner_type === 1) {
-                            setWin1Data(body.winners[i]);
-                        }
-                        if (body.winners[i].winner_type === 2) {
-                            setWin2Data(body.winners[i]);
-                        }
-                        if (body.winners[i].winner_type === 3) {
-                            setWin3Data(body.winners[i]);
-                        }
-                    }
-                } else {
-                    setHaveWinners(false);
-                }
-                setIsLoading(false);
-            } else {
-                Swal.fire({
-                    title: "Error!",
-                    text: body.message,
-                    icon: "error",
-                    timer: 3000
-                });
-                setIsLoading(false);
-            }
-            //eslint-disable-next-line
-        } catch (error: any) {
-            Swal.fire({
-                title: "Error!",
-                text: error.message,
-                icon: "error",
-                timer: 4000
-            });
-        }
-    }
+    const { data, isError, error, isSuccess, isLoading } = useGetPublicWinners();
 
     useEffect(() => {
-        getWinners();
-    }, []);
+        if (isSuccess) {
+            if (data.winners && data.winners.length) {
+                setHaveWinners(true);
+                for (let i = 0; i < data.winners.length; i++) {
+                    if (data.winners[i].winner_type === 1) {
+                        setWin1Data(data.winners[i]);
+                    }
+                    if (data.winners[i].winner_type === 2) {
+                        setWin2Data(data.winners[i]);
+                    }
+                    if (data.winners[i].winner_type === 3) {
+                        setWin3Data(data.winners[i]);
+                    }
+                }
+            } else {
+                setHaveWinners(false);
+            }
+        }
+
+        QF_TQ_UEF_CatchErrorCB(isError, error);
+    }, [data, isSuccess, isError, error]);
 
     return (
         <>

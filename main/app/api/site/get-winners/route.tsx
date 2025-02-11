@@ -2,20 +2,8 @@ import prisma from "@/app/libs/db";
 import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
 import { getWinnerPosTxt } from "@/app/libs/helpers/helperFunctions";
-
-interface WinUsrFrm {
-    winner_id: string,
-    winner_type: number,
-    winning_position_text: string,
-    user_full_name: string,
-    user_profile_picture?: string
-}
-
-interface Respo {
-    success: boolean,
-    message: string,
-    winners?: WinUsrFrm[]
-}
+import { CommonAPIResponse } from "@/app/types/commonTypes";
+import { WinnersType } from "@/app/types/pages/website/winnersPageTypes";
 
 const getUserDetails = async (user_id: string, onlyName: boolean) => {
     const data = await prisma.qF_User.findFirst({
@@ -32,7 +20,7 @@ const getUserDetails = async (user_id: string, onlyName: boolean) => {
 
 export async function GET() {
 
-    let resp: Respo = {
+    let resp: (CommonAPIResponse & { winners?: WinnersType[] }) = {
         success: false,
         message: ''
     }
@@ -45,7 +33,7 @@ export async function GET() {
 
         if (data.length > 0) {
 
-            const arr: WinUsrFrm[] = [];
+            const arr: WinnersType[] = [];
 
             for (let i = 0; i < data.length; i++) {
                 const obj = {

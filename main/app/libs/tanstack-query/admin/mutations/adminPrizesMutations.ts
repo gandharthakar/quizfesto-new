@@ -39,6 +39,9 @@ export const useDeleteSinglePrize = (callbacks?: TQ_CBtype) => {
                 await queryClient.invalidateQueries({
                     queryKey: ["getAdminStats", callbacks?.token]
                 });
+                await queryClient.invalidateQueries({
+                    queryKey: ["getPublicPrizes"]
+                });
             }
         },
     });
@@ -75,6 +78,9 @@ export const useUpdateSinglePrize = (callbacks?: TQ_CBtype) => {
             } else {
                 await queryClient.invalidateQueries({
                     queryKey: ["readSinglePrize", callbacks?.prize_type]
+                });
+                await queryClient.invalidateQueries({
+                    queryKey: ["getPublicPrizes"]
                 });
             }
         },

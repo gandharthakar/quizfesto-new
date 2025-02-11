@@ -42,6 +42,9 @@ export const useDeleteAllAdminCategories = (callbacks?: TQ_CBtype) => {
                 await queryClient.invalidateQueries({
                     queryKey: ["readAllAdminHomeCategories", callbacks?.token]
                 });
+                await queryClient.invalidateQueries({
+                    queryKey: ["getHomeFeCats"]
+                });
             }
         },
     });
@@ -84,6 +87,9 @@ export const useDeleteSelectedAdminCategories = (callbacks?: TQ_CBtype) => {
                 });
                 await queryClient.invalidateQueries({
                     queryKey: ["readAllAdminHomeCategories", callbacks?.token]
+                });
+                await queryClient.invalidateQueries({
+                    queryKey: ["getHomeFeCats"]
                 });
             }
         },
@@ -168,6 +174,9 @@ export const useUpdateSingleCategory = (callbacks?: TQ_CBtype) => {
                 await queryClient.invalidateQueries({
                     queryKey: ["readAllAdminHomeCategories", callbacks?.token]
                 });
+                await queryClient.invalidateQueries({
+                    queryKey: ["getHomeFeCats"]
+                });
             }
         },
     });
@@ -211,6 +220,9 @@ export const useDeleteSingleCategory = (callbacks?: TQ_CBtype) => {
                 await queryClient.invalidateQueries({
                     queryKey: ["readAllAdminHomeCategories", callbacks?.token]
                 });
+                await queryClient.invalidateQueries({
+                    queryKey: ["getHomeFeCats"]
+                });
             }
         },
     });
@@ -248,6 +260,9 @@ export const useDeleteAllAdminHomeCategories = (callbacks?: TQ_CBtype) => {
                 await queryClient.invalidateQueries({
                     queryKey: ["readAllAdminHomeCategories", callbacks?.token]
                 });
+                await queryClient.invalidateQueries({
+                    queryKey: ["getHomeFeCats"]
+                });
             }
         },
     });
@@ -284,6 +299,9 @@ export const useCreateUpdateHomeCategories = (callbacks?: TQ_CBtype) => {
             } else {
                 await queryClient.invalidateQueries({
                     queryKey: ["readAllAdminHomeCategories", callbacks?.token]
+                });
+                await queryClient.invalidateQueries({
+                    queryKey: ["getHomeFeCats"]
                 });
             }
         },

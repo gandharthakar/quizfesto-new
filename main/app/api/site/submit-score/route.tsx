@@ -1,11 +1,7 @@
 import prisma from "@/app/libs/db";
 import { NextResponse } from "next/server";
 import { sanitize } from "@/app/libs/sanitize";
-
-interface Respo {
-    success: boolean,
-    message: string
-}
+import { CommonAPIResponse } from "@/app/types/commonTypes";
 
 const getTodaysDate = () => {
     const date = new Date();
@@ -23,7 +19,7 @@ const getCurrentTime = () => {
 }
 
 export async function POST(req: Request) {
-    let resp: Respo = {
+    let resp: CommonAPIResponse = {
         success: false,
         message: ''
     }

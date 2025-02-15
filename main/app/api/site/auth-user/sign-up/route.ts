@@ -3,15 +3,10 @@ import { NextResponse } from "next/server";
 import { hash } from "bcrypt";
 import { sanitize } from "@/app/libs/sanitize";
 import { userRegisterValidationSchema } from "@/app/libs/zod/schemas/userAreaValidationSchemas";
-import { zodIssuesMyType } from "@/app/types/commonTypes";
+import { CommonAPIResponseWithZodError } from "@/app/types/commonTypes";
 
-interface Respo {
-    success: boolean,
-    message: string,
-    errors?: zodIssuesMyType[]
-}
 export async function POST(req: Request) {
-    let resp: Respo = {
+    let resp: CommonAPIResponseWithZodError = {
         success: false,
         message: ''
     }

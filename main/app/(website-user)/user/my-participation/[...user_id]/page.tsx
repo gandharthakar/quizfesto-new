@@ -5,16 +5,17 @@ import SitePagination from "@/app/components/sitePagination";
 // import { dump_my_participation } from "@/app/constant/datafaker";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import { GFG } from "@/app/libs/helpers/helperFunctions";
+import { GFG, QF_TQ_UEF_CatchErrorCB } from "@/app/libs/helpers/helperFunctions";
 import { MyParticipationCardDataType } from "@/app/types/pages/website/user-area/userAreaPageTypes";
 import TokenChecker from "@/app/libs/tokenChecker";
 import AuthChecker from "@/app/libs/authChecker";
 import { siteAuthUserCookieName } from "@/app/constant/datafaker";
 import { getCookie } from "cookies-next/client";
-import Swal from "sweetalert2";
+import { useGetWebsiteAuthUserParticipation } from "@/app/libs/tanstack-query/website/queries/websiteQueries";
 
 export default function Page() {
 
+    const token = getCookie(siteAuthUserCookieName);
     const params = useParams<{ user_id: string[] }>();
     const user_id = params.user_id[0];
 
@@ -23,53 +24,31 @@ export default function Page() {
     const [mpData, setMpData] = useState<MyParticipationCardDataType[]>([]);
     const [totalPages, setTotalPages] = useState<number>(Math.ceil(mpData.length / dataPerPage));
     const [mpListData, setMpListData] = useState<MyParticipationCardDataType[]>([]);
-    const [isLoading, setIsLoading] = useState<boolean>(true);
+    // const [isLoading, setIsLoading] = useState<boolean>(true);
 
     const handlePageChange = (newPage: number) => {
         setCurrentPage(newPage);
         setMpListData(GFG(mpData, newPage, dataPerPage));
     };
 
-    const getParticipationData = async () => {
-        const baseURI = window.location.origin;
-        const token = getCookie(siteAuthUserCookieName);
-        try {
-            const resp = await fetch(`${baseURI}/api/site/auth-user/get-my-participation?token=${token}`, {
-                method: "GET",
-            });
-            if (!resp.ok) {
-                setIsLoading(false);
-            }
-            const body = await resp.json();
-            if (body.success) {
-                setIsLoading(false);
-                setMpData(body.participation_data);
-                setTotalPages(Math.ceil(body.participation_data.length / dataPerPage));
-                setMpListData(GFG(body.participation_data, currentPage, dataPerPage));
-            } else {
-                Swal.fire({
-                    title: "Error!",
-                    text: body.message,
-                    icon: "error",
-                    timer: 4000
-                });
-                setIsLoading(false);
-            }
-            //eslint-disable-next-line
-        } catch (error: any) {
-            Swal.fire({
-                title: "Error!",
-                text: error.message,
-                icon: "error",
-                timer: 4000
-            });
-        }
-    }
+    const { data, isError, error, isSuccess, isLoading } = useGetWebsiteAuthUserParticipation(token ?? "");
 
     useEffect(() => {
-        getParticipationData();
+        if (isSuccess) {
+            if (data.participation_data && data.participation_data.length) {
+                setMpData(data.participation_data);
+                setTotalPages(Math.ceil(data.participation_data.length / dataPerPage));
+                setMpListData(GFG(data.participation_data, currentPage, dataPerPage));
+            } else {
+                setMpData([]);
+                setTotalPages(Math.ceil(mpData.length / dataPerPage));
+                setMpListData(GFG([], 1, dataPerPage));
+            }
+        }
+
+        QF_TQ_UEF_CatchErrorCB(isError, error);
         //eslint-disable-next-line
-    }, []);
+    }, [data, isSuccess, isError, error, setMpData]);
 
     return (
         <>

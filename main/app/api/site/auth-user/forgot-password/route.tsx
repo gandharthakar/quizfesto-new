@@ -4,17 +4,11 @@ import { NextResponse } from "next/server";
 const emailTransporter = require("@/app/libs/nodemailer/emailConfig");
 import jwt from "jsonwebtoken";
 import { sanitize } from "@/app/libs/sanitize";
-import { zodIssuesMyType } from "@/app/types/commonTypes";
 import { userForgotPasswordValidationSchema } from "@/app/libs/zod/schemas/userAreaValidationSchemas";
-
-interface Respo {
-    success: boolean,
-    message: string,
-    errors?: zodIssuesMyType[]
-}
+import { CommonAPIResponseWithZodError } from "@/app/types/commonTypes";
 
 export async function POST(req: Request) {
-    let resp: Respo = {
+    let resp: CommonAPIResponseWithZodError = {
         success: false,
         message: ''
     }

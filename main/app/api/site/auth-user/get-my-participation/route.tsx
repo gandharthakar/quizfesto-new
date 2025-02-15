@@ -3,28 +3,11 @@ import { NextResponse } from "next/server";
 import { type NextRequest } from 'next/server';
 import jwt from "jsonwebtoken";
 import { sanitize } from "@/app/libs/sanitize";
-
-interface MyPartCrd {
-    user_participation_id: string,
-    quiz_title: string,
-    quiz_cover_photo: string,
-    quiz_display_time: string,
-    quiz_total_question: number,
-    quiz_total_marks: number,
-    quiz_estimated_time: string,
-    quiz_time_taken: string,
-    quiz_correct_answers_count: number,
-    quiz_total_score: number
-}
-
-interface Respo {
-    success: boolean,
-    message: string,
-    participation_data?: MyPartCrd[]
-}
+import { CommonAPIResponse } from "@/app/types/commonTypes";
+import { MyParticipationCardDataType } from "@/app/types/pages/website/user-area/userAreaPageTypes";
 
 export async function GET(req: NextRequest) {
-    let resp: Respo = {
+    let resp: (CommonAPIResponse & { participation_data?: MyParticipationCardDataType[] }) = {
         success: false,
         message: ''
     }

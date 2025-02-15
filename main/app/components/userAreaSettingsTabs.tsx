@@ -2,13 +2,29 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { RootState } from "@/app/libs/redux-service/store";
-import { useSelector } from "react-redux";
+// import { RootState } from "@/app/libs/redux-service/store";
+// import { useSelector } from "react-redux";
+import { JWTDec } from "../types/commonTypes";
+import { jwtDecode } from "jwt-decode";
+import { getCookie } from "cookies-next/client";
+import { useEffect, useState } from "react";
 
 export default function UserAreaSettingsTabs() {
 
     const pathName = usePathname();
-    const AuthUser = useSelector((state: RootState) => state.auth_user_id.auth_user_id);
+    const [AuthUser, setAuthUser] = useState<string>('');
+    // const AuthUser = useSelector((state: RootState) => state.auth_user_id.auth_user_id);
+    // let AuthUser: string = '';
+
+    useEffect(() => {
+        const gau = getCookie('is_auth_user');
+        if (gau) {
+            const user_id_ck: JWTDec = jwtDecode(gau);
+            setAuthUser(user_id_ck.is_auth_user);
+        } else {
+            setAuthUser("");
+        }
+    }, []);
 
     return (
         <>

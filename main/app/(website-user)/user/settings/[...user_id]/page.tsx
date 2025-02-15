@@ -3,112 +3,56 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { useEffect, useState } from "react";
-import Swal from "sweetalert2";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { userGeneralSettingsFormVS, userGeneralSettingsValidationSchema } from "@/app/libs/zod/schemas/userAreaValidationSchemas";
 import TokenChecker from "@/app/libs/tokenChecker";
 import AuthChecker from "@/app/libs/authChecker";
 import { siteAuthUserCookieName } from "@/app/constant/datafaker";
 import { getCookie } from "cookies-next/client";
+import { useUpdateWebAuthUserGenSettings } from "@/app/libs/tanstack-query/website/mutations/websiteAuthUserMutations";
+import { callbackErrT1S2_ST1, callbackOnErrT1S2_ST1, callbackOnSucT1S2_ST1, QF_TQ_UEF_CatchErrorCB } from "@/app/libs/helpers/helperFunctions";
+import { useGetWebsiteAuthUserInfo } from "@/app/libs/tanstack-query/website/queries/websiteQueries";
 
 export default function Page() {
 
-    const router = useRouter();
+    const token = getCookie(siteAuthUserCookieName);
     const params = useParams<{ user_id: string[] }>();
     const user_id = params.user_id[0];
 
-    const [isLoading, setIsLoading] = useState<boolean>(true);
+    // const [isLoading, setIsLoading] = useState<boolean>(true);
     const [gender, setGender] = useState<string>('');
 
     const { register, handleSubmit, setValue, formState: { errors } } = useForm<userGeneralSettingsFormVS>({
         resolver: zodResolver(userGeneralSettingsValidationSchema),
     });
 
+    const updAuthUser = useUpdateWebAuthUserGenSettings({
+        onSuccessCB: (resp) => callbackOnSucT1S2_ST1(resp),
+        errorCB: (resp) => callbackErrT1S2_ST1(resp),
+        onErrorCB: (resp) => callbackOnErrT1S2_ST1(resp),
+        token
+    });
+
     const handleFormSubmit: SubmitHandler<userGeneralSettingsFormVS> = async (formdata) => {
-        setIsLoading(true);
-        const baseURI = window.location.origin;
-        const token = getCookie(siteAuthUserCookieName);
-        try {
-            const resp = await fetch(`${baseURI}/api/site/auth-user/update-single-user/general`, {
-                method: 'POST',
-                body: JSON.stringify({ token, user_full_name: formdata.full_name, user_email: formdata.email, user_gender: gender })
-            });
-            if (!resp.ok) {
-                setIsLoading(false);
-            }
-            const body = await resp.json();
-            if (body.success) {
-                Swal.fire({
-                    title: "Success!",
-                    text: body.message,
-                    icon: "success",
-                    timer: 4000
-                });
-                //this will reload the page without doing SSR
-                router.refresh();
-                setIsLoading(false);
-            } else {
-                Swal.fire({
-                    title: "Error!",
-                    text: body.message,
-                    icon: "error",
-                    timer: 4000
-                });
-                setIsLoading(false);
-            }
-            //eslint-disable-next-line
-        } catch (error: any) {
-            Swal.fire({
-                title: "Error!",
-                text: error.message,
-                icon: "error",
-                timer: 4000
-            });
-        }
+        const tokenSub = getCookie(siteAuthUserCookieName);
+        updAuthUser.mutate({ token: tokenSub ?? "", user_full_name: formdata.full_name, user_email: formdata.email, user_gender: gender });
     }
 
-    const getUser = async () => {
-        const baseURI = window.location.origin;
-        const token = getCookie(siteAuthUserCookieName);
-        try {
-            const resp = await fetch(`${baseURI}/api/site/auth-user/get-single-user?token=${token}`, {
-                method: 'GET',
-            });
-            if (!resp.ok) {
-                setIsLoading(false);
-            }
-            const body = await resp.json();
-            if (body.success) {
-                setValue("full_name", body.user.user_full_name);
-                setValue("email", body.user.user_email);
-                if (body.user.user_gender !== null) {
-                    setGender(body.user.user_gender);
-                }
-                setIsLoading(false);
-            } else {
-                Swal.fire({
-                    title: "Error!",
-                    text: body.message,
-                    icon: "error",
-                    timer: 4000
-                });
-                setIsLoading(false);
-            }
-            //eslint-disable-next-line
-        } catch (error: any) {
-            Swal.fire({
-                title: "Error!",
-                text: error.message,
-                icon: "error",
-                timer: 4000
-            });
-        }
-    }
+    const { data, isError, error, isSuccess, isLoading } = useGetWebsiteAuthUserInfo(token ?? "");
 
     useEffect(() => {
-        getUser();
+        if (isSuccess) {
+            if (data.user) {
+                setValue("full_name", data.user.user_full_name);
+                setValue("email", data.user.user_email);
+                if (data.user.user_gender !== null) {
+                    setGender(data.user.user_gender);
+                }
+            }
+        }
+        QF_TQ_UEF_CatchErrorCB(isError, error);
         //eslint-disable-next-line
-    }, []);
+    }, [data, isSuccess, isError, error]);
 
     return (
         <>
@@ -173,7 +117,7 @@ export default function Page() {
                         </div>
                         <div className="text-right pt-[15px]">
                             {
-                                isLoading ?
+                                isLoading || updAuthUser.isPending ?
                                     (<div className="transition-all delay-75 font-noto_sans text-[14px] md:text-[16px] text-zinc-800 dark:text-zinc-200 font-semibold">Loading...</div>)
                                     :
                                     (

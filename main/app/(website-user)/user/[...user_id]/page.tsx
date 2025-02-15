@@ -15,13 +15,16 @@ import TokenChecker from "@/app/libs/tokenChecker";
 import AuthChecker from "@/app/libs/authChecker";
 import { siteAuthUserCookieName } from "@/app/constant/datafaker";
 import { getCookie } from "cookies-next/client";
+import { useGetWebsiteAuthUserStats } from "@/app/libs/tanstack-query/website/queries/websiteQueries";
+import { QF_TQ_UEF_CatchErrorCB } from "@/app/libs/helpers/helperFunctions";
 
 export default function Page() {
 
+    const token = getCookie(siteAuthUserCookieName);
     const params = useParams<{ user_id: string[] }>();
     const user_id = params.user_id[0];
 
-    const [isLoading, setIsLoading] = useState<boolean>(true);
+    // const [isLoading, setIsLoading] = useState<boolean>(true);
     const [userStats, setUserStats] = useState<UserStatsType>({
         user_score: 0,
         user_participation: 0,
@@ -29,40 +32,6 @@ export default function Page() {
     });
     const [checkWinner, setCheckWinner] = useState<CheckWinnerType>();
     const [isAdminBlockedYou, setIsAdminBlockedYou] = useState<boolean>(false);
-
-    const getUserStats = async () => {
-        const baseURI = window.location.origin;
-        const token = getCookie(siteAuthUserCookieName);
-        try {
-            const resp = await fetch(`${baseURI}/api/site/auth-user/get-user-stats?token=${token}`, {
-                method: "GET",
-            });
-            if (!resp.ok) {
-                setIsLoading(false);
-            }
-            const body = await resp.json();
-            if (body.success) {
-                setUserStats(body.user_stats);
-                setIsLoading(false);
-            } else {
-                Swal.fire({
-                    title: "Error!",
-                    text: body.message,
-                    icon: "error",
-                    timer: 4000
-                });
-                setIsLoading(false);
-            }
-            //eslint-disable-next-line
-        } catch (error: any) {
-            Swal.fire({
-                title: "Error!",
-                text: error.message,
-                icon: "error",
-                timer: 4000
-            });
-        }
-    }
 
     const checkIfWinner = async () => {
         const baseURI = window.location.origin;
@@ -128,10 +97,21 @@ export default function Page() {
     }
 
     useEffect(() => {
-        getUserStats();
         checkIfWinner();
         checkIfBlock();
     }, []);
+
+    const { data, isError, error, isSuccess, isLoading } = useGetWebsiteAuthUserStats(token ?? "");
+
+    useEffect(() => {
+        if (isSuccess) {
+            if (data.user_stats) {
+                setUserStats(data.user_stats);
+            }
+        }
+
+        QF_TQ_UEF_CatchErrorCB(isError, error);
+    }, [data, isSuccess, isError, error]);
 
     return (
         <>

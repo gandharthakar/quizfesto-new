@@ -14,10 +14,12 @@ import { close_user_area_menu } from "@/app/libs/redux-service/slices/user-area/
 import { useEffect, useState } from "react";
 import { getCookie } from "cookies-next/client";
 import { siteAuthUserCookieName } from "@/app/constant/datafaker";
-import Swal from "sweetalert2";
+import { useGetWebsiteAuthUserInfo } from "@/app/libs/tanstack-query/website/queries/websiteQueries";
+import { QF_TQ_UEF_CatchErrorCB } from "@/app/libs/helpers/helperFunctions";
 
 export default function UserAreaNavBar() {
 
+    const token = getCookie(siteAuthUserCookieName);
     const dispatch = useDispatch();
     const pathName = usePathname();
     const params = useParams<{ user_id: string[] }>();
@@ -29,40 +31,18 @@ export default function UserAreaNavBar() {
     const [userName, setUserName] = useState<string>("");
     const settingRoutes: string[] = [`/user/settings/${user_id}`, `/user/settings/password/${user_id}`, `/user/settings/phone/${user_id}`, `/user/settings/profle-photo/${user_id}`];
 
-    const getUser = async () => {
-        const baseURI = window.location.origin;
-        const token = getCookie(siteAuthUserCookieName);
-        try {
-            const resp = await fetch(`${baseURI}/api/site/auth-user/get-single-user?token=${token}`, {
-                method: 'GET',
-            });
-            const body = await resp.json();
-            if (body.success) {
-                setNameLetter(body.user.user_full_name.charAt(0));
-                setProfilePict(body.user.user_photo);
-                setUserName(body.user.user_full_name);
-            } else {
-                Swal.fire({
-                    title: "Error!",
-                    text: body.message,
-                    icon: "error",
-                    timer: 4000
-                });
-            }
-            //eslint-disable-next-line
-        } catch (error: any) {
-            Swal.fire({
-                title: "Error!",
-                text: error.message,
-                icon: "error",
-                timer: 4000
-            });
-        }
-    }
+    const { data, isError, error, isSuccess } = useGetWebsiteAuthUserInfo(token ?? "");
 
     useEffect(() => {
-        getUser();
-    }, []);
+        if (isSuccess) {
+            if (data.user) {
+                setNameLetter(data.user.user_full_name.charAt(0));
+                setProfilePict(data.user.user_photo);
+                setUserName(data.user.user_full_name);
+            }
+        }
+        QF_TQ_UEF_CatchErrorCB(isError, error);
+    }, [data, isSuccess, isError, error]);
 
     return (
         <>

@@ -4,21 +4,11 @@ import { getWinnerPosTxt } from "@/app/libs/helpers/helperFunctions";
 import { type NextRequest } from 'next/server';
 import jwt from "jsonwebtoken";
 import { sanitize } from "@/app/libs/sanitize";
-
-interface Check_Winner {
-    winner_type: number,
-    winning_position_text: string,
-    winning_score: number
-}
-
-interface Respo {
-    success: boolean,
-    message: string,
-    winner?: Check_Winner
-}
+import { CommonAPIResponse } from "@/app/types/commonTypes";
+import { CheckWinnerType } from "@/app/types/pages/website/user-area/userAreaPageTypes";
 
 export async function GET(req: NextRequest) {
-    let resp: Respo = {
+    let resp: (CommonAPIResponse & { winner?: CheckWinnerType }) = {
         success: false,
         message: ''
     }

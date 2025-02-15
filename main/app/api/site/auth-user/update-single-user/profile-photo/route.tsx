@@ -2,16 +2,12 @@ import prisma from "@/app/libs/db";
 import { NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
 import { sanitize } from "@/app/libs/sanitize";
-
-interface ShtResp {
-    success: boolean,
-    message: string
-}
+import { CommonAPIResponse } from "@/app/types/commonTypes";
 
 export async function POST(req: Request) {
     let sts: number = 200;
 
-    let resp: ShtResp = {
+    let resp: CommonAPIResponse = {
         success: false,
         message: '',
     }

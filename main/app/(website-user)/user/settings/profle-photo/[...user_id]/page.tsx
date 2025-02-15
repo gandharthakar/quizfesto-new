@@ -1,22 +1,23 @@
 'use client';
 
 import Image from "next/image";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { FaRegTrashAlt } from "react-icons/fa";
 import { FaCloudUploadAlt } from "react-icons/fa";
-import Swal from "sweetalert2";
-import { convertBase64 } from "@/app/libs/helpers/helperFunctions";
+import { callbackErrT1S1_ST1, callbackOnErrT1S1_ST1, callbackOnSucT1S1_ST1, convertBase64, QF_TQ_UEF_CatchErrorCB } from "@/app/libs/helpers/helperFunctions";
 import TokenChecker from "@/app/libs/tokenChecker";
 import AuthChecker from "@/app/libs/authChecker";
 import { siteAuthUserCookieName } from "@/app/constant/datafaker";
 import { getCookie } from "cookies-next/client";
+import { useGetWebsiteAuthUserInfo } from "@/app/libs/tanstack-query/website/queries/websiteQueries";
+import { useUpdateWebAuthUserPhotoSettings } from "@/app/libs/tanstack-query/website/mutations/websiteAuthUserMutations";
 
 export default function Page() {
 
     const defaultImage = "https://placehold.co/1000x1000/png";
 
-    const router = useRouter();
+    const token = getCookie(siteAuthUserCookieName);
     const params = useParams<{ user_id: string[] }>();
     const user_id = params.user_id[0];
 
@@ -26,10 +27,10 @@ export default function Page() {
     const [imageFileSize, setImageFileSize] = useState<boolean>(false);
     const [imageDimensions, setImageDimensions] = useState<boolean>(false);
     const [errorInput, setErrorInput] = useState<string>('');
-    const [isLoading, setIsLoading] = useState<boolean>(true);
+    // const [isLoading, setIsLoading] = useState<boolean>(true);
     const [alreadyHaveImage, setAlreadyHaveImage] = useState<boolean>(false);
     const [userImage, setUserImage] = useState<string>("");
-    const [isLoadRmv, setIsLoadRmv] = useState<boolean>(false);
+    // const [isLoadRmv, setIsLoadRmv] = useState<boolean>(false);
 
     const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files && e.target.files[0];
@@ -66,88 +67,34 @@ export default function Page() {
         setImageFile(base64);
     }
 
-    const removeImageButtonClick = async () => {
-        setIsLoadRmv(true);
-        const baseURI = window.location.origin;
-        const token = getCookie(siteAuthUserCookieName);
-        try {
-            const resp = await fetch(`${baseURI}/api/site/auth-user/update-single-user/profile-photo`, {
-                method: 'POST',
-                body: JSON.stringify({ token, user_photo: '' })
-            });
-            if (!resp.ok) {
-                setIsLoading(false);
-            }
-            const body = await resp.json();
-            if (body.success) {
-                Swal.fire({
-                    title: "Success!",
-                    text: body.message,
-                    icon: "success",
-                    timer: 4000
-                });
-                router.refresh();
-                setUserImage("");
-                setAlreadyHaveImage(false);
-                setIsLoadRmv(false);
-            } else {
-                Swal.fire({
-                    title: "Error!",
-                    text: body.message,
-                    icon: "error",
-                    timer: 4000
-                });
-                setIsLoading(false);
-            }
-            //eslint-disable-next-line
-        } catch (error: any) {
-            Swal.fire({
-                title: "Error!",
-                text: error.message,
-                icon: "error",
-                timer: 4000
-            });
-        }
+    const cbRmvPht = () => {
+        setUserImage("");
+        setAlreadyHaveImage(false);
     }
 
-    const getUser = async () => {
-        const baseURI = window.location.origin;
-        const token = getCookie(siteAuthUserCookieName);
-        try {
-            const resp = await fetch(`${baseURI}/api/site/auth-user/get-single-user?token=${token}`, {
-                method: 'GET',
-            });
-            if (!resp.ok) {
-                setIsLoading(false);
-            }
-            const body = await resp.json();
-            if (body.success) {
-                setUserImage(body.user.user_photo);
-                if (body.user.user_photo == '') {
-                    setAlreadyHaveImage(false);
-                } else {
-                    setAlreadyHaveImage(true);
-                }
-                setIsLoading(false);
-            } else {
-                Swal.fire({
-                    title: "Error!",
-                    text: body.message,
-                    icon: "error",
-                    timer: 4000
-                });
-                setIsLoading(false);
-            }
-            //eslint-disable-next-line
-        } catch (error: any) {
-            Swal.fire({
-                title: "Error!",
-                text: error.message,
-                icon: "error",
-                timer: 4000
-            });
-        }
+    const rmvPhoto = useUpdateWebAuthUserPhotoSettings({
+        onSuccessCB: (resp) => callbackOnSucT1S1_ST1(resp, cbRmvPht),
+        errorCB: (resp) => callbackErrT1S1_ST1(resp),
+        onErrorCB: (resp) => callbackOnErrT1S1_ST1(resp),
+        token
+    });
+
+    const removeImageButtonClick = async () => {
+        const tokenRmv = getCookie(siteAuthUserCookieName);
+        rmvPhoto.mutate({ token: tokenRmv ?? "", user_photo: '' });
     }
+
+    const cbAddPht = () => {
+        setUserImage(imageFile);
+        setAlreadyHaveImage(true);
+    }
+
+    const addPhoto = useUpdateWebAuthUserPhotoSettings({
+        onSuccessCB: (resp) => callbackOnSucT1S1_ST1(resp, cbAddPht),
+        errorCB: (resp) => callbackErrT1S1_ST1(resp),
+        onErrorCB: (resp) => callbackOnErrT1S1_ST1(resp),
+        token
+    });
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -177,54 +124,26 @@ export default function Page() {
         }
 
         if (isValidImage) {
-            setIsLoading(true);
-            const baseURI = window.location.origin;
-            const token = getCookie(siteAuthUserCookieName);
-            try {
-                const resp = await fetch(`${baseURI}/api/site/auth-user/update-single-user/profile-photo`, {
-                    method: 'POST',
-                    body: JSON.stringify({ token, user_photo: imageFile })
-                });
-                if (!resp.ok) {
-                    setIsLoading(false);
-                }
-                const body = await resp.json();
-                if (body.success) {
-                    Swal.fire({
-                        title: "Success!",
-                        text: body.message,
-                        icon: "success",
-                        timer: 4000
-                    });
-                    //this will reload the page without doing SSR
-                    router.refresh();
-                    setUserImage(imageFile);
-                    setIsLoading(false);
-                    setAlreadyHaveImage(true);
-                } else {
-                    Swal.fire({
-                        title: "Error!",
-                        text: body.message,
-                        icon: "error",
-                        timer: 4000
-                    });
-                    setIsLoading(false);
-                }
-                //eslint-disable-next-line
-            } catch (error: any) {
-                Swal.fire({
-                    title: "Error!",
-                    text: error.message,
-                    icon: "error",
-                    timer: 4000
-                });
-            }
+            const tokenSub = getCookie(siteAuthUserCookieName);
+            addPhoto.mutate({ token: tokenSub ?? "", user_photo: imageFile });
         }
     }
 
+    const { data, isError, error, isSuccess, isLoading } = useGetWebsiteAuthUserInfo(token ?? "");
+
     useEffect(() => {
-        getUser();
-    }, []);
+        if (isSuccess) {
+            if (data.user) {
+                setUserImage(data.user.user_photo);
+                if (data.user.user_photo == '') {
+                    setAlreadyHaveImage(false);
+                } else {
+                    setAlreadyHaveImage(true);
+                }
+            }
+        }
+        QF_TQ_UEF_CatchErrorCB(isError, error);
+    }, [data, isSuccess, isError, error]);
 
     return (
         <>
@@ -242,7 +161,7 @@ export default function Page() {
                                     </div>
                                     <div className="text-center">
                                         {
-                                            isLoadRmv ?
+                                            rmvPhoto.isPending ?
                                                 (<div className="transition-all delay-75 font-noto_sans text-[14px] md:text-[16px] text-zinc-800 dark:text-zinc-200 font-semibold">Loading...</div>)
                                                 :
                                                 (
@@ -341,7 +260,7 @@ export default function Page() {
 
                                         <div className="text-right pt-[25px]">
                                             {
-                                                isLoading ?
+                                                isLoading || addPhoto.isPending ?
                                                     (<div className="transition-all delay-75 font-noto_sans text-[14px] md:text-[16px] text-zinc-800 dark:text-zinc-200 font-semibold">Loading...</div>)
                                                     :
                                                     (

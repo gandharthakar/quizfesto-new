@@ -3,21 +3,11 @@ import { NextResponse } from "next/server";
 import { type NextRequest } from 'next/server';
 import jwt from "jsonwebtoken";
 import { sanitize } from "@/app/libs/sanitize";
-
-interface QF_User_Stats {
-    user_score: number,
-    user_participation: number,
-    user_winnings: number
-}
-
-interface Respo {
-    success: boolean,
-    message: string,
-    user_stats?: QF_User_Stats
-}
+import { CommonAPIResponse } from "@/app/types/commonTypes";
+import { QF_WebsiteGetUserStatsDataType } from "@/app/types/libs/tanstack-query/website/websiteAuthUserTypes";
 
 export async function GET(req: NextRequest) {
-    let resp: Respo = {
+    let resp: (CommonAPIResponse & { user_stats?: QF_WebsiteGetUserStatsDataType }) = {
         success: false,
         message: ''
     }

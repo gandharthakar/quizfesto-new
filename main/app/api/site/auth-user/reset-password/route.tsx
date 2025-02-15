@@ -2,18 +2,12 @@ import prisma from "@/app/libs/db";
 import { NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
 import { hash } from "bcrypt";
-import { zodIssuesMyType } from "@/app/types/commonTypes";
 import { sanitize } from "@/app/libs/sanitize";
 import { userResetPasswordValidationSchema } from "@/app/libs/zod/schemas/userAreaValidationSchemas";
-
-interface Respo {
-    success: boolean,
-    message: string,
-    errors?: zodIssuesMyType[]
-}
+import { CommonAPIResponseWithZodError } from "@/app/types/commonTypes";
 
 export async function POST(req: Request) {
-    let resp: Respo = {
+    let resp: CommonAPIResponseWithZodError = {
         success: false,
         message: ''
     }

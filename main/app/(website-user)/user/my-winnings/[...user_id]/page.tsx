@@ -8,53 +8,28 @@ import TokenChecker from "@/app/libs/tokenChecker";
 import AuthChecker from "@/app/libs/authChecker";
 import { siteAuthUserCookieName } from "@/app/constant/datafaker";
 import { getCookie } from "cookies-next/client";
-import Swal from "sweetalert2";
+import { useGetWebsiteAuthUserWinning } from "@/app/libs/tanstack-query/website/queries/websiteQueries";
+import { QF_TQ_UEF_CatchErrorCB } from "@/app/libs/helpers/helperFunctions";
 
 export default function Page() {
 
+    const token = getCookie(siteAuthUserCookieName);
     const params = useParams<{ user_id: string[] }>();
     const user_id = params.user_id[0];
 
-    const [isLoading, setIsLoading] = useState<boolean>(true);
+    // const [isLoading, setIsLoading] = useState<boolean>(true);
     const [winData, setWindata] = useState<WinnerUserDataType>();
 
-    const checkIfWinner = async () => {
-        const baseURI = window.location.origin;
-        const token = getCookie(siteAuthUserCookieName);
-        try {
-            const resp = await fetch(`${baseURI}/api/site/auth-user/get-my-winning?token=${token}`, {
-                method: "GET",
-            });
-            if (!resp.ok) {
-                setIsLoading(false);
-            }
-            const body = await resp.json();
-            if (body.success) {
-                setWindata(body.winner);
-                setIsLoading(false);
-            } else {
-                Swal.fire({
-                    title: "Error!",
-                    text: body.message,
-                    icon: "error",
-                    timer: 4000
-                });
-                setIsLoading(false);
-            }
-            //eslint-disable-next-line
-        } catch (error: any) {
-            Swal.fire({
-                title: "Error!",
-                text: error.message,
-                icon: "error",
-                timer: 4000
-            });
-        }
-    }
+    const { data, isError, error, isSuccess, isLoading } = useGetWebsiteAuthUserWinning(token ?? "");
 
     useEffect(() => {
-        checkIfWinner();
-    }, []);
+        if (isSuccess) {
+            if (data.winner) {
+                setWindata(data.winner);
+            }
+        }
+        QF_TQ_UEF_CatchErrorCB(isError, error);
+    }, [data, isSuccess, isError, error]);
 
     return (
         <>

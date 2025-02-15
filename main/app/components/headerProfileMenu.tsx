@@ -10,53 +10,26 @@ import { CgProfile } from "react-icons/cg";
 import { IoSettingsOutline } from "react-icons/io5";
 import { getCookie } from "cookies-next/client";
 import { siteAuthUserCookieName } from "@/app/constant/datafaker";
-import Swal from "sweetalert2";
-import { JWTDec } from "../types/commonTypes";
+import { JWTDec } from "@/app/types/commonTypes";
 import { jwtDecode } from "jwt-decode";
+import { useGetWebsiteAuthUserInfo } from "@/app/libs/tanstack-query/website/queries/websiteQueries";
+import { QF_TQ_UEF_CatchErrorCB } from "@/app/libs/helpers/helperFunctions";
 
 export default function HeaderProfileMenu() {
 
+    let fintkn: string = 'null';
+    const token = getCookie(siteAuthUserCookieName);
+    if (token) {
+        fintkn = token;
+    } else {
+        fintkn = 'null';
+    }
     // const AuthUser = useSelector((state: RootState) => state.auth_user_id.auth_user_id);
     const [nameLetter, setNameLetter] = useState<string>('');
     const [profilePict, setProfilePict] = useState<string>("");
     const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
     const menuRef = useRef<HTMLDivElement>(null);
     const [authUser, setAuthUser] = useState<string>('');
-
-    const getUser = async () => {
-
-        const baseURI = window.location.origin;
-        const token = getCookie(siteAuthUserCookieName);
-        try {
-            const resp = await fetch(`${baseURI}/api/site/auth-user/get-single-user?token=${token}`, {
-                method: 'GET',
-            });
-            const body = await resp.json();
-            if (body.success) {
-                setNameLetter(body.user.user_full_name.charAt(0));
-                setProfilePict(body.user.user_photo);
-                let user_id: JWTDec = {
-                    is_auth_user: '',
-                    exp: 0,
-                    iat: 0
-                };
-                if (token) {
-                    user_id = jwtDecode(token);
-                    setAuthUser(user_id.is_auth_user);
-                }
-            } else {
-                setAuthUser('');
-            }
-            //eslint-disable-next-line
-        } catch (error: any) {
-            Swal.fire({
-                title: "Error!",
-                text: error.message,
-                icon: "error",
-                timer: 4000
-            });
-        }
-    }
 
     useEffect(() => {
 
@@ -71,9 +44,27 @@ export default function HeaderProfileMenu() {
         document.addEventListener('mousedown', menuHandler);
     }, []);
 
+    const { data, isError, error, isSuccess } = useGetWebsiteAuthUserInfo(fintkn);
+
     useEffect(() => {
-        getUser();
-    }, []);
+        if (isSuccess) {
+            if (data.user) {
+                setNameLetter(data.user.user_full_name.charAt(0));
+                setProfilePict(data.user.user_photo);
+                let user_id: JWTDec = {
+                    is_auth_user: '',
+                    exp: 0,
+                    iat: 0
+                };
+                if (token) {
+                    user_id = jwtDecode(token);
+                    setAuthUser(user_id.is_auth_user);
+                }
+            }
+        }
+        QF_TQ_UEF_CatchErrorCB(isError, error);
+        //eslint-disable-next-line
+    }, [data, isSuccess, isError, error]);
 
     return (
         <>

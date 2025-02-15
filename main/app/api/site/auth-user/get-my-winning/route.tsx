@@ -4,23 +4,11 @@ import { convertDigitIn, getWinnerPosTxt } from "@/app/libs/helpers/helperFuncti
 import { type NextRequest } from 'next/server';
 import jwt from "jsonwebtoken";
 import { sanitize } from "@/app/libs/sanitize";
-
-interface WinUsrFrm {
-    winner_id: string,
-    winning_type: number,
-    winning_position_text: string,
-    winning_description: string,
-    winning_date: string
-}
-
-interface Respo {
-    success: boolean,
-    message: string,
-    winner?: WinUsrFrm
-}
+import { WinnerUserDataType } from "@/app/types/pages/website/user-area/userAreaPageTypes";
+import { CommonAPIResponse } from "@/app/types/commonTypes";
 
 export async function GET(req: NextRequest) {
-    let resp: Respo = {
+    let resp: (CommonAPIResponse & { winner?: WinnerUserDataType }) = {
         success: false,
         message: ''
     }

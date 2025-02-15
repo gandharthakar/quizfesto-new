@@ -4,17 +4,10 @@ import { compare } from "bcrypt";
 import jwt from "jsonwebtoken";
 import { sanitize } from "@/app/libs/sanitize";
 import { userLoginValidationSchema } from "@/app/libs/zod/schemas/userAreaValidationSchemas";
-import { zodIssuesMyType } from "@/app/types/commonTypes";
-
-interface Respo {
-    success: boolean,
-    message: string,
-    token?: string,
-    errors?: zodIssuesMyType[]
-}
+import { CommonAPIResponseWithZodError } from "@/app/types/commonTypes";
 
 export async function POST(req: Request) {
-    let resp: Respo = {
+    let resp: CommonAPIResponseWithZodError = {
         success: false,
         message: ''
     }

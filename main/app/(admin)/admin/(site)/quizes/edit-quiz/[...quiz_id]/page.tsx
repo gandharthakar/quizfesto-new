@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from "react";
-import Select from "react-tailwindcss-select";
+import Select from "react-select";
 import { FaRegTrashAlt } from "react-icons/fa";
 import Image from "next/image";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -602,22 +602,15 @@ function Page() {
                                                 Categories
                                             </label>
                                             <Select
-                                                primaryColor={"indigo"}
                                                 value={quizCats}
+                                                isMulti={true}
                                                 onChange={handleChangeSelect}
                                                 options={options ?? []}
-                                                isMultiple={true}
                                                 isSearchable={true}
                                                 placeholder="Select ..."
-                                                classNames={{
-                                                    menuButton: () => `flex cursor-pointer text-sm text-gray-500 border border-gray-300 shadow-sm transition-all duration-75 focus:outline-0 bg-zinc-100 hover:border-gray-400 dark:bg-zinc-900 dark:border-zinc-500`,
-                                                    menu: `font_noto_sans absolute z-10 w-full bg-white shadow-lg border rounded py-1 mt-1.5 text-sm text-gray-700 dark:bg-zinc-900 dark:border-zinc-500`,
-                                                    tagItem: () => `bg-gray-200 border rounded-sm flex space-x-1 pl-1 dark:bg-zinc-800 dark:border-zinc-500 dark:text-zinc-200`,
-                                                    tagItemText: `text-zinc-900 font_noto_sans truncate cursor-default select-none dark:text-zinc-200`,
-                                                    listItem: () => `block font_noto_sans transition duration-200 px-3 py-3 cursor-pointer select-none truncate rounded text-zinc-500 hover:bg-zinc-100 dark:text-zinc-200 dark:hover:bg-zinc-800`,
-                                                    searchContainer: `relative py-[10px] px-[15px]`,
-                                                    searchBox: `w-full font_noto_sans py-2 pl-8 pr-2 text-sm text-zinc-800 bg-gray-100 border border-gray-200 focus:outline-0 dark:bg-zinc-800 dark:border-zinc-600 dark:text-zinc-200`,
-                                                }}
+                                                isDisabled={false}
+                                                classNamePrefix="my-select"
+                                            // menuIsOpen={false}
                                             />
                                         </div>
                                         <div className="w-full text-right">

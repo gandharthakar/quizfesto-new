@@ -236,6 +236,7 @@ export async function POST(req: NextRequest) {
                             prize_type: 3
                         }
                     }))?.winning_score_limit
+
                     const data = await prisma.qF_Aggrigate_Scores.findMany();
                     if (data.length > 0) {
                         const propData = data.map((item) => {
@@ -247,7 +248,10 @@ export async function POST(req: NextRequest) {
                             }
                         });
 
-                        const first_winner = getWinner(propData, (f2 ? f2 : 20000), (f1 ? f1 : 25000), false);
+                        console.log(f1);
+                        console.log(f2);
+                        console.log(f3);
+                        const first_winner = getWinner(propData, (f2 ? f2 : 20000), (f1 ? f1 : 25000), true);
                         const second_winner = getWinner(propData, (f3 ? f3 : 15000), (f2 ? f2 : 20000), false);
                         const third_winner = getWinner(propData, 0, (f3 ? f3 : 15000), false);
 

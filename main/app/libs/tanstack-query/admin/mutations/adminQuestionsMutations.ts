@@ -157,6 +157,9 @@ export const useUpdateSingleQuestion = (callbacks?: TQ_CBtype) => {
                     queryKey: ["readAllAdminQuestions", callbacks?.token]
                 });
                 await queryClient.invalidateQueries({
+                    queryKey: ["readAllAdminOptions", callbacks?.token]
+                });
+                await queryClient.invalidateQueries({
                     queryKey: ["readSingleQuestion", callbacks?.question_id]
                 });
             }

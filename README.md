@@ -6,7 +6,7 @@ QuizeFesto is the online platform where you can participate on many quizzes crea
 
 ### Project Demo / View Link
 
-Here is the link --> <a href="https://quizfesto-platform.vercel.app/" title="Click Here" target="_blank">Click Here</a>
+Here is the link --> <a href="https://quizfesto-new.vercel.app/" title="Click Here" target="_blank">Click Here</a>
 
 ### Screenshot Of The Project
 
@@ -53,11 +53,10 @@ Here is the link --> <a href="https://quizfesto-platform.vercel.app/" title="Cli
 - Fully Responsive with Cross-Browser Support Added for legacy browser.
 - Dark Mode Support.
 - Share Quiz With Anyone.
-- Forgot Password Functionality Added.
 
 ### Technical Know How Of Project
 
-I am using Next JS for both front-end & back-end. I have used prisma ORM and PostgreSQL for database. used <code>/app</code> directory of Next Js. 
+I am using Next JS for both front-end & back-end. I have used prisma ORM and PostgreSQL for database. used <code>/app</code> directory of Next Js. Used TypeScript for better type-safety. Added client side caching layer to reduce server load using TanStack Query.
 
 ### Connect With Me On
 

@@ -29,7 +29,8 @@ const getOpts = async () => {
             option_id: data[i].option_id,
             options: data[i].options,
             question_text: await getQT(data[i].questionid) ?? "",
-            search_tems: data[i].options
+            search_tems: data[i].options,
+            correct_option: data[i].correct_option
         }
         opts.push(obj);
     }

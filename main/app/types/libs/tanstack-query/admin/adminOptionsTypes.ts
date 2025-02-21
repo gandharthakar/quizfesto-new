@@ -7,7 +7,8 @@ export type QF_ARAOptsDataType = {
     option_id: string,
     options: string[],
     question_text: string,
-    search_tems: string[]
+    search_tems: string[],
+    correct_option: string
 }
 
 export type QF_ACreOptionsPayloadType = {

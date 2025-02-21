@@ -327,6 +327,7 @@ function Page() {
                                                     option_id={itm.option_id}
                                                     options={itm.options}
                                                     question_text={itm.question_text}
+                                                    correct_option={itm.correct_option}
                                                     checkboxName={"options_list"}
                                                     checkboxValue={itm.option_id}
                                                     checkboxChecked={selectedItems.includes(itm.option_id)}

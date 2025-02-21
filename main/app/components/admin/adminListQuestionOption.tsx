@@ -18,6 +18,7 @@ function AdminListQuestionOption(props: AdminOptionsListCardType) {
         option_id,
         options,
         question_text,
+        correct_option,
         checkboxName,
         checkboxChecked,
         checkboxValue,
@@ -106,7 +107,7 @@ function AdminListQuestionOption(props: AdminOptionsListCardType) {
                                 <span className="font-semibold">Question :</span> {question_text ? question_text : "This is main question text ?"}
                             </h3>
                         </div>
-                        <div>
+                        <div className="pb-[10px]">
                             {
                                 options?.length ?
                                     (
@@ -126,6 +127,11 @@ function AdminListQuestionOption(props: AdminOptionsListCardType) {
                                     :
                                     ("")
                             }
+                        </div>
+                        <div>
+                            <div className="font-noto_sans text-[14px] text-zinc-800 dark:text-zinc-200 md:text-[16px] break-words">
+                                <span className="font-semibold">Correct Answer : </span> {correct_option}
+                            </div>
                         </div>
                     </div>
                     <div ref={menuRef} className="relative h-[18px]">

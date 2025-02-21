@@ -176,7 +176,7 @@ const dump_faqs_content = [
     {
         id: 4,
         question: "What is the criteria for winning prizes ?",
-        answer: '<p>We follow 1<sup>st</sup> come 1<sup>st</sup> serve strategy. 1<sup>st</sup> winner needs to complete the quizzes within month and get score 10000 to win 1st prize. To get 2<sup>nd</sup> winner prize user needs to do score 8000 within month. And lastly to get 3<sup>rd</sup> winner prize user needs to score 6000 within month.</p>'
+        answer: '<p>We follow 1<sup>st</sup> come 1<sup>st</sup> serve strategy. 1<sup>st</sup> winner needs to complete the quizzes among the first (by early time) within month and get or meet mentioned score criteria to win 1st prize. Same apply for both 2<sup>nd</sup> & 3<sup>rd</sup> winner.</p>'
     },
     {
         id: 5,

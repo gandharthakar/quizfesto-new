@@ -47,7 +47,7 @@ export default function UserAreaNavBar() {
     return (
         <>
             <div className="hidden fixed top-0 left-0 w-full h-full z-[20] bg-black opacity-[0.4]"></div>
-            <div className={`transition-all delay-75 min-w-[265px] lg:min-w-[300px] fixed top-0 lg:relative lg:left-0 lg:top-0 h-screen lg:h-auto bg-white border-r border-solid border-zinc-300 dark:bg-zinc-950 dark:border-zinc-700 ${isMenuOpen ? 'left-0' : 'left-[-100%]'}`}>
+            <div className={`transition-all delay-75 z-[20] min-w-[265px] lg:min-w-[300px] fixed top-0 lg:relative lg:left-0 lg:top-0 h-screen lg:h-auto bg-white border-r border-solid border-zinc-300 dark:bg-zinc-950 dark:border-zinc-700 ${isMenuOpen ? 'left-0' : 'left-[-100%]'}`}>
                 <div className="flex flex-col max-h-screen min-h-screen overflow-y-auto lg:fixed lg:left-0 lg:top-0 lg:w-full lg:max-w-[300px]">
                     <div>
                         <div className="pt-[25px] md:pt-[40px] px-[15px] w-full">

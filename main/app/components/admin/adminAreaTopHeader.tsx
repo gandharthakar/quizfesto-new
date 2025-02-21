@@ -34,7 +34,7 @@ function AdminAreaTopHeader() {
                         <div className="h-[40px]">
                             <AdminHeaderProfileMenu />
                         </div>
-                        <div className="lg:hidden">
+                        <div className="lg:hidden h-[25px]">
                             <AdminAreaMenuToggleButton />
                         </div>
                     </div>
